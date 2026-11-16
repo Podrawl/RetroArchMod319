@@ -3,7 +3,7 @@
 Base: RetroArch master (commit lido em 01-ANALISE/overlay-viewport*/00-commit.txt).
 
 ## Comportamento
-- Entrada de menu: Configurações > Tela e Overlay > "Editar layout do overlay" (mesmas listas que as outras opções).
+- Entrada de menu: Configurações > menu de overlay existente do RetroArch ("On-Screen Overlay" em inglês; nome exato em PT a confirmar no app) > "Editar layout do overlay". (Correção: "Tela e Overlay" era nome inventado.)
 - Pausa o jogo, mostra overlay ativo + caixa da tela do jogo. Arrastar botões, arrastar/redimensionar a caixa da tela. Salvar / Cancelar.
 - Ao salvar, pergunta: "Só este jogo" ou "Todos os jogos deste sistema (núcleo)".
 - Salva COPIA ao lado do .cfg original (ex.: psx.cfg -> psx-meu.cfg), mantendo caminhos das imagens. Original nunca é alterado.
@@ -27,3 +27,9 @@ Base: RetroArch master (commit lido em 01-ANALISE/overlay-viewport*/00-commit.tx
 2. Arrastar/redimensionar botões e viewport (só na memória).
 3. Salvar cópia .cfg + escolha jogo/núcleo.
 4. Acabamento (grade, desfazer, várias páginas, retrato/paisagem).
+
+## Ajustes pedidos pelo usuário (16/11)
+- Editar SÓ mover/redimensionar botões e posicionar a tela. Função de cada botão NÃO é editada: já vem no .cfg (nome do bind em cada overlayN_descM).
+- Várias páginas por .cfg (ex.: horizontal e vertical): o editor edita a página ativa e deixa trocar de página; viewport é por página.
+- Opção de renomear a cópia ao salvar (ex.: psx-meu.cfg -> nome escolhido).
+- RISCO a verificar: se a imagem do overlay for UMA imagem de tela cheia com os botões desenhados, mover o hitbox não move o desenho. Só funciona bem com imagem por botão (overlayN_descM_overlay). Checar nos .cfg da pasta flat.
