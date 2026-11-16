@@ -1,0 +1,38 @@
+name: Ler o código de overlay e viewport (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/overlay-viewport
+          mkdir -p $S
+          cd ra
+          git log -1 --format='%H %cd' > ../$S/00-commit.txt
+          cp input/input_overlay.h ../$S/10-input_overlay.h.txt
+          grep -n "overlay" input/input_driver.c | grep -E "^[0-9]+:(static |bool |void |int |float |unsigned |size_t |input_overlay|[a-z_]+ \*?input_overlay|[a-z_ ]+\*? *input_overlay)" > ../$S/11-funcoes-overlay-input_driver.txt
+          grep -n "input_overlay_\w*(" input/input_driver.c | grep -vE "^\s*[0-9]+:\s{2,}" | head -150 > ../$S/12-definicoes-overlay.txt
+          grep -n -i "overlay" configuration.c configuration.h | head -200 > ../$S/20-config-overlay.txt
+          grep -n -i "overlay" menu/menu_setting.c | head -250 > ../$S/21-menu-setting-overlay.txt
+          grep -n -i "viewport_custom\|custom_vp\|custom_viewport" --include=*.c --include=*.h -r . | grep -v "^./intl\|msg_hash" | head -200 > ../$S/30-viewport-custom.txt
+          grep -n -i "overlay_" -r menu/menu_displaylist.c | head -120 > ../$S/31-displaylist-overlay.txt
+          grep -rn "overlay_scale\|overlay_aspect\|overlay_offset\|overlay_auto_scale\|overlay_landscape\|overlay_portrait" --include=*.c --include=*.h . | grep -v "msg_hash\|intl/" | head -120 > ../$S/22-overlay-escala-aspecto.txt
+          grep -n "input_overlay_poll\|overlay_ptr\|overlay_pointer\|input_overlay_state\|input_overlay_enable" -r input/drivers/android_input.c input/input_driver.c | head -80 > ../$S/40-toque-overlay.txt
+          grep -rn "video_viewport_get_scaled_integer\|video_viewport_get_custom\|menu_input_dialog\|RARCH_CTL_.*VIEWPORT\|viewport_custom_" gfx/video_driver.c gfx/video_driver.h | head -60 > ../$S/32-video-viewport.txt
+          grep -n "overlay_enable\|overlay_hide_in_menu\|overlay_show_inputs\|overlay_opacity\|overlay_dpad\|overlay_abxy\|overlay_lightgun" configuration.h > ../$S/23-config-chaves.txt
+          wc -l input/input_driver.c input/input_overlay.h menu/menu_setting.c gfx/video_driver.c > ../$S/01-tamanhos.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura de overlay e viewport" && git pull --rebase -q && git push
