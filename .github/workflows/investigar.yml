@@ -1,0 +1,63 @@
+name: Investigar o código do RetroArch (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  investigar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Ler o código oficial
+        run: |
+          set +e
+          mkdir -p saida
+          S=saida
+          git ls-remote --tags --refs https://github.com/libretro/RetroArch.git | sed 's|.*refs/tags/||' | sort -V | tail -8 > $S/00-ultimas-versoes.txt
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          cd ra
+          git log -1 --format='%h %ad %s' --date=short > ../$S/00-commit.txt
+          grep -m3 "PACKAGE_VERSION" version.all.h* configuration.h 2>/dev/null >> ../$S/00-commit.txt
+          grep -rn "define PACKAGE_VERSION" --include=*.h . 2>/dev/null | head -2 >> ../$S/00-commit.txt
+          ls pkg/android/phoenix > ../$S/01-android-raiz.txt 2>&1
+          cp pkg/android/phoenix/build.gradle ../$S/01-build.gradle.raiz.txt 2>/dev/null
+          cp pkg/android/phoenix/settings.gradle ../$S/01-settings.gradle.txt 2>/dev/null
+          cp pkg/android/phoenix/retroarch/build.gradle ../$S/01-build.gradle.app.txt 2>/dev/null
+          cp pkg/android/phoenix/gradle.properties ../$S/01-gradle.properties.txt 2>/dev/null
+          cp pkg/android/phoenix/gradle/wrapper/gradle-wrapper.properties ../$S/01-gradle-wrapper.txt 2>/dev/null
+          ls pkg/android/phoenix/jni pkg/android/phoenix/retroarch 2>&1 > ../$S/01-jni-e-app.txt
+          find pkg/android -name "*.java" | head -60 > ../$S/01-java-android.txt
+          find pkg/android -name "*.kt" | head -40 >> ../$S/01-java-android.txt
+          head -80 pkg/android/phoenix/jni/Android.mk > ../$S/01-Android.mk.txt 2>&1
+          # Overlay
+          wc -l input/input_overlay.c input/input_overlay.h menu/menu_displaylist.c gfx/video_driver.c > ../$S/02-tamanhos.txt 2>&1
+          grep -n -i "overlay" msg_hash_us.h | grep -i "LABEL_VALUE" | head -120 > ../$S/02-textos-overlay.txt
+          grep -rn -i "overlay.*edit\|edit.*overlay\|OVERLAY_EDIT\|overlay_move\|overlay_drag" --include=*.c --include=*.h . | head -40 > ../$S/02-edicao-overlay.txt
+          grep -n "^[a-z].*(" input/input_overlay.c | grep -v "^.*;" | head -120 > ../$S/02-funcoes-overlay.txt
+          # Viewport personalizado
+          grep -rn -i "custom_viewport\|viewport_custom\|VIEWPORT_CUSTOM" --include=*.c --include=*.h . | head -80 > ../$S/03-viewport-custom.txt
+          grep -n -i "viewport" msg_hash_us.h | grep -i "LABEL_VALUE" | head -40 > ../$S/03-textos-viewport.txt
+          # Touch e menu
+          grep -rln -i "pointer\|touch" menu/drivers/*.c input/drivers/android_input.c 2>/dev/null | head -20 > ../$S/04-arquivos-toque.txt
+          ls menu/drivers > ../$S/04-menu-drivers.txt
+          cd ..
+          # Tarefas do Gradle
+          cd ra/pkg/android/phoenix
+          chmod +x gradlew 2>/dev/null
+          (./gradlew --no-daemon tasks --all 2>&1 | grep -i -E "assemble|bundle|BUILD|FAIL|error" | head -40) > ../../../../$S/05-gradle-tarefas.txt 2>&1
+          cd ../../../..
+          rm -rf 01-ANALISE/inicial
+          mkdir -p 01-ANALISE
+          mv saida 01-ANALISE/inicial
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add 01-ANALISE
+          git commit -m "Investigacao inicial do RetroArch (leitura)" || echo "nada novo"
+          git push
