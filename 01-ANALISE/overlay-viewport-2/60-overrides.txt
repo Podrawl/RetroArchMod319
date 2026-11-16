@@ -1,0 +1,42 @@
+1124:#define SETTING_OVERRIDE_FOR(field, override_setting) \
+3141:   SETTING_OVERRIDE_FOR(bools.log_to_file, RARCH_OVERRIDE_SETTING_LOG_TO_FILE);
+4541:   SETTING_OVERRIDE(RARCH_OVERRIDE_SETTING_NETPLAY_IP_PORT);
+5862:   SETTING_OVERRIDE_FOR(ints.netplay_check_frames,
+5863:         RARCH_OVERRIDE_SETTING_NETPLAY_CHECK_FRAMES);
+6398:   if (!retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL))
+6400:   if (!retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL))
+7026:   if (retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_LOG_TO_FILE, NULL))
+7042:   if (retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_VERBOSITY, NULL))
+7378:         retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_OVERLAY_PRESET, NULL);
+8073:   /* The "without-overrides" load (config_save_overrides) is a
+8079:         && !retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL)
+8100:         && !retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL)
+8242:    * live settings: config_save_overrides() loads the base config into
+8272: * config_load_override:
+8290:bool config_load_override(void *data)
+8435:   retroarch_override_setting_unset(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL);
+8436:   retroarch_override_setting_unset(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL);
+8446:      size_t _len = strlcpy(msg, msg_hash_to_str(MSG_CONFIG_OVERRIDE_LOADED), sizeof(msg));
+8452:   retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL);
+8453:   retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL);
+8466:bool config_load_override_file(const char *config_path)
+8482:   retroarch_override_setting_unset(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL);
+8483:   retroarch_override_setting_unset(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL);
+8491:      size_t _len = strlcpy(msg, msg_hash_to_str(MSG_CONFIG_OVERRIDE_LOADED), sizeof(msg));
+8497:   retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL);
+8498:   retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL);
+8529:   retroarch_override_setting_unset(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL);
+8530:   retroarch_override_setting_unset(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL);
+8566:   retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_STATE_PATH, NULL);
+8567:   retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL);
+10275:   if (!retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_VERBOSITY, NULL))
+10445: * config_save_overrides:
+10452:int8_t config_save_overrides(enum override_type type,
+10503:       || (!has_content && (type != OVERRIDE_CORE)))
+10602:         RARCH_OVERRIDE_SETTING_SAVE_PATH, NULL);
+10604:         RARCH_OVERRIDE_SETTING_STATE_PATH, NULL);
+10989:         case OVERRIDE_CORE:
+10996:         case OVERRIDE_GAME:
+11004:         case OVERRIDE_CONTENT_DIR:
+11017:         case OVERRIDE_AS:
+11024:         case OVERRIDE_NONE:

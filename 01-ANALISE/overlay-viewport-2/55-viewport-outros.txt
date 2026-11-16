@@ -1,0 +1,57 @@
+input/drivers/rwebinput_input.c:681:            struct video_viewport vp    = {0};
+input/drivers/gx_input.c:292:            struct video_viewport vp    = {0};
+input/drivers/winraw_input.c:1305:   struct video_viewport viewport;
+input/drivers/android_input.c:1403:   struct video_viewport vp = {0};
+input/drivers/ps3_input.c:657:   struct video_viewport vp;
+input/drivers/psp_input.c:526:               struct video_viewport vp    = {0};
+input/drivers/qnx_input.c:77:      struct video_viewport *vp, int x, int y)
+input/drivers/qnx_input.c:435:               struct video_viewport vp;
+input/drivers/qnx_input.c:483:               struct video_viewport vp;
+input/drivers/udev_input.c:826:   struct video_viewport vp    = udev_vp;
+input/drivers/udev_input.c:850:   if (!video_driver_translate_coord_viewport(&vp, scaled_x, scaled_y,
+input/drivers/udev_input.c:1887:   return udev_vp_ok && video_driver_translate_coord_viewport(target_vp,
+input/drivers/udev_input.c:3672:   const struct video_viewport view = udev_vp;
+input/drivers/udev_input.c:3801:   const struct video_viewport view = udev_vp;
+input/drivers/sdl3_input.c:884:      if (input_driver_poll_viewport(&vp))
+input/drivers/switch_input.c:175:         struct video_viewport vp;
+input/input_pointer_frame.h:46:   struct video_viewport vp;
+input/input_pointer_frame.h:52:   uint16_t have_viewport;
+input/input_pointer_frame.h:55:   uint32_t have_touch_viewport;
+input/input_pointer_frame.h:100:   input_pointers.have_viewport = 0;
+input/input_pointer_frame.h:129:   input_pointers.have_touch_viewport  = 0;
+input/input_pointer_frame.h:132:static bool input_pointer_viewport(void)
+input/input_pointer_frame.h:180:      ? &input_pointers.have_confined : &input_pointers.have_viewport;
+input/input_pointer_frame.h:187:   if (!in_window && !input_pointer_viewport())
+input/input_pointer_frame.h:199:      if (!video_driver_translate_coord_viewport(&input_pointers.vp,
+input/input_pointer_frame.h:227:      ? &input_pointers.have_touch : &input_pointers.have_touch_viewport;
+input/input_pointer_frame.h:237:   if (!in_window && !input_pointer_viewport())
+input/input_pointer_frame.h:248:      if (!video_driver_translate_coord_viewport(&input_pointers.vp,
+input/input_pointer_frame.h:702: * at 0x7fff, outside -0x8000, as video_driver_translate_coord_viewport()
+input/common/wayland_common.h:308:   struct wp_viewport *viewport;
+input/drivers_joypad/wiiu/wpad_driver.c:114:      struct video_viewport *viewport, VPADStatus *vpad, unsigned channel)
+input/drivers_joypad/wiiu/wpad_driver.c:123:static void wpad_apply_clamping(VPADTouchData *point, struct video_viewport *viewport, bool *clamped)
+input/drivers_joypad/wiiu/wpad_driver.c:151:      VPADChan channel, struct video_viewport *viewport, bool *clamped)
+input/drivers_joypad/wiiu/wpad_driver.c:161:   struct video_viewport viewport = {0};
+input/drivers_joypad/gekko_joypad.c:136:      const struct video_viewport *vp)
+input/drivers_joypad/gekko_joypad.c:365:   struct video_viewport vp = {0};
+input/input_driver.h:1576:bool input_driver_poll_viewport(struct video_viewport *vp);
+input/input_driver.h:1581:   (input_driver_poll_viewport(vp) ? video_driver_translate_coord_viewport(vp, mouse_x, mouse_y, res_pos, res_screen_pos, true) : false)
+input/input_driver.h:1584:   (input_driver_poll_viewport(vp) ? video_driver_translate_coord_viewport(vp, mouse_x, mouse_y, res_pos, res_screen_pos, false) : false)
+tasks/task_translation.c:988:   struct video_viewport vp;
+tasks/task_translation.c:1058:          * read_viewport for OCR -- not ideal (the viewport may
+tasks/task_translation.c:1079:         if (!(      video_st->current_video->read_viewport
+tasks/task_translation.c:1080:                  && video_st->current_video->read_viewport(
+tasks/task_overlay.c:1408:      strlcpy_lit(conf_key + _len, "_viewport", sizeof(conf_key) - _len);
+tasks/task_overlay.c:1437:            overlay->viewport.x  = (float)rstrtod(elems[0], NULL);
+tasks/task_overlay.c:1438:            overlay->viewport.y  = (float)rstrtod(elems[1], NULL);
+tasks/task_overlay.c:1439:            overlay->viewport.w  = (float)rstrtod(elems[2], NULL);
+tasks/task_overlay.c:1440:            overlay->viewport.h  = (float)rstrtod(elems[3], NULL);
+tasks/task_overlay.c:1443:                  overlay->viewport.x, overlay->viewport.y,
+tasks/task_overlay.c:1444:                  overlay->viewport.w, overlay->viewport.h);
+tasks/task_screenshot.c:971:static bool take_screenshot_viewport(
+tasks/task_screenshot.c:982:   struct video_viewport vp;
+tasks/task_screenshot.c:999:    * straight through to the ordinary 8-bit SDR read_viewport below, so
+tasks/task_screenshot.c:1041:   if ((   video_st->current_video->read_viewport
+tasks/task_screenshot.c:1042:         && video_st->current_video->read_viewport(
+tasks/task_screenshot.c:1200:      return take_screenshot_viewport(screenshot_dir,
+tasks/task_screenshot.c:1235:   bool supports_vp_read          = video_st->current_video->read_viewport

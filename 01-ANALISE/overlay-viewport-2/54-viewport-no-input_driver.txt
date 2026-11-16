@@ -1,0 +1,16 @@
+2295:bool input_driver_poll_viewport(struct video_viewport *vp)
+2297:   if (!input_pointer_viewport())
+6118: * video_driver_translate_coord_viewport().
+6130:   video_viewport_t vp;
+6143:         && input_driver_poll_viewport(&vp))
+7428:   /* Need viewport pointers for pointer and lightgun */
+13722:/* The video side reads the active overlay's viewport override from a
+13723: * copy (video_driver_update_viewport() may run on the threaded video
+13726:static void input_overlay_viewport_publish(void)
+13729:   video_driver_set_overlay_viewport(ol ? ol->active : NULL);
+13736:   input_overlay_viewport_publish();
+13761:   input_overlay_viewport_publish();
+13776:   input_overlay_viewport_publish();
+14108:   input_overlay_viewport_publish();
+14117:      input_overlay_viewport_publish();
+14138:   /* Trigger viewport recalculation - overlay may have viewport override */

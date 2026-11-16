@@ -1,0 +1,14 @@
+menu/menu_driver.h:430:         enum menu_input_pointer_gesture gesture,
+menu/menu_driver.h:587:   menu_input_pointer_hw_state_t input_pointer_hw_state;
+menu/menu_driver.h:662:   enum menu_input_pointer_gesture gesture;
+menu/menu_input.h:132:enum menu_input_pointer_press_direction
+menu/menu_input.h:141:enum menu_input_pointer_gesture
+menu/menu_input.h:226:typedef struct menu_input_pointer_hw_state
+menu/menu_input.h:230:} menu_input_pointer_hw_state_t;
+menu/menu_input.h:232:typedef struct menu_input_pointer
+menu/menu_input.h:241:   enum menu_input_pointer_press_direction press_direction;
+menu/menu_input.h:245:} menu_input_pointer_t;
+menu/menu_input.h:249:   menu_input_pointer_t pointer; /* retro_time_t alignment */
+menu/menu_input.h:291: * Copy parameters from the global menu_input_state to a menu_input_pointer_t
+menu/menu_input.h:294: * @param copy_target  menu_input_pointer_t struct where values will be copied
+menu/menu_input.h:296:void menu_input_get_pointer_state(menu_input_pointer_t *copy_target);

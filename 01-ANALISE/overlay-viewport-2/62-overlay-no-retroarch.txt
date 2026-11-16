@@ -1,0 +1,50 @@
+retroarch.c:3595:   ENSURE_DIRECTORY(settings->paths.directory_overlay);
+retroarch.c:3596:   ENSURE_DIRECTORY(settings->paths.directory_osk_overlay);
+retroarch.c:3947:         input_overlay_unload();
+retroarch.c:3950:         /* Because the overlay is a display widget,
+retroarch.c:3953:         if (gfx_widgets_ai_service_overlay_get_state() != 0)
+retroarch.c:3954:            gfx_widgets_ai_service_overlay_unload();
+retroarch.c:3959:         input_overlay_init();
+retroarch.c:4077:                  gfx_widgets_ai_service_overlay_unload();
+retroarch.c:5033:         /* Switch to the next available overlay screen. */
+retroarch.c:5041:            bool inp_overlay_auto_rotate   = settings->bools.input_overlay_auto_rotate;
+retroarch.c:5042:            input_overlay_t *ol            = input_st->overlay_ptr;
+retroarch.c:5043:            float input_overlay_opacity;
+retroarch.c:5047:            input_overlay_next_move_touch_masks(ol);
+retroarch.c:5050:            ol->active                     = &ol->overlays[ol->index];
+retroarch.c:5051:            video_driver_set_overlay_viewport(ol->active);
+retroarch.c:5053:            input_overlay_opacity          = (ol->flags & INPUT_OVERLAY_IS_OSK)
+retroarch.c:5054:                  ? settings->floats.input_osk_overlay_opacity
+retroarch.c:5055:                  : settings->floats.input_overlay_opacity;
+retroarch.c:5057:            input_overlay_load_active(ol, input_overlay_opacity);
+retroarch.c:5062:            /* Trigger viewport recalculation - overlay may have viewport override */
+retroarch.c:5067:            if (inp_overlay_auto_rotate)
+retroarch.c:5070:                     input_overlay_auto_rotate_(output_size,
+retroarch.c:5071:                           settings->bools.input_overlay_enable,
+retroarch.c:5084:            else if (*settings->paths.path_osk_overlay)
+retroarch.c:5384:            overlay_layout_desc_t layout_desc;
+retroarch.c:5387:            input_overlay_t *ol            = input_st->overlay_ptr;
+retroarch.c:5394:               memset(&layout_desc, 0, sizeof(overlay_layout_desc_t));
+retroarch.c:5398:               layout_desc.auto_scale              = settings->bools.input_osk_overlay_auto_scale;
+retroarch.c:5402:               layout_desc.scale_landscape         = settings->floats.input_overlay_scale_landscape;
+retroarch.c:5403:               layout_desc.aspect_adjust_landscape = settings->floats.input_overlay_aspect_adjust_landscape;
+retroarch.c:5404:               layout_desc.x_separation_landscape  = settings->floats.input_overlay_x_separation_landscape;
+retroarch.c:5405:               layout_desc.y_separation_landscape  = settings->floats.input_overlay_y_separation_landscape;
+retroarch.c:5406:               layout_desc.x_offset_landscape      = settings->floats.input_overlay_x_offset_landscape;
+retroarch.c:5407:               layout_desc.y_offset_landscape      = settings->floats.input_overlay_y_offset_landscape;
+retroarch.c:5408:               layout_desc.scale_portrait          = settings->floats.input_overlay_scale_portrait;
+retroarch.c:5409:               layout_desc.aspect_adjust_portrait  = settings->floats.input_overlay_aspect_adjust_portrait;
+retroarch.c:5410:               layout_desc.x_separation_portrait   = settings->floats.input_overlay_x_separation_portrait;
+retroarch.c:5411:               layout_desc.y_separation_portrait   = settings->floats.input_overlay_y_separation_portrait;
+retroarch.c:5412:               layout_desc.x_offset_portrait       = settings->floats.input_overlay_x_offset_portrait;
+retroarch.c:5413:               layout_desc.y_offset_portrait       = settings->floats.input_overlay_y_offset_portrait;
+retroarch.c:5415:               layout_desc.auto_scale              = settings->bools.input_overlay_auto_scale;
+retroarch.c:5419:            input_overlay_set_scale_factor(ol, &layout_desc, output_size);
+retroarch.c:5425:          * The alpha factor is applied for all overlays. */
+retroarch.c:5429:            input_overlay_t *ol            = input_st->overlay_ptr;
+retroarch.c:5433:               float input_overlay_opacity = (ol->flags & INPUT_OVERLAY_IS_OSK)
+retroarch.c:5434:                     ? settings->floats.input_osk_overlay_opacity
+retroarch.c:5435:                     : settings->floats.input_overlay_opacity;
+retroarch.c:5437:               input_overlay_set_alpha_mod(ol, input_overlay_opacity);
+retroarch.c:5444:         input_overlay_set_eightway_diagonal_sensitivity();
+retroarch.c:6219:            input_overlay_check_mouse_cursor();

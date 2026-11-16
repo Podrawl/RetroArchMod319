@@ -1,0 +1,161 @@
+{
+   input_game_focus_state_t *game_focus_st = &input_driver_st.game_focus_state;
+
+   /* Ensure that game focus mode is disabled */
+   if (game_focus_st->enabled)
+   {
+      enum input_game_focus_cmd_type game_focus_cmd = GAME_FOCUS_CMD_OFF;
+      command_event(CMD_EVENT_GAME_FOCUS_TOGGLE, &game_focus_cmd);
+   }
+
+   game_focus_st->enabled        = false;
+   game_focus_st->core_requested = false;
+}
+
+#ifdef HAVE_OVERLAY
+static void input_overlay_enable_(bool enable)
+{
+   settings_t *settings           = config_get_ptr();
+   input_driver_state_t *input_st = &input_driver_st;
+   input_overlay_t *ol            = input_st->overlay_ptr;
+   float opacity                  = (ol && (ol->flags & INPUT_OVERLAY_IS_OSK))
+      ? settings->floats.input_osk_overlay_opacity
+      : settings->floats.input_overlay_opacity;
+   bool auto_rotate               = settings->bools.input_overlay_auto_rotate;
+   bool hide_mouse_cursor         = !settings->bools.input_overlay_show_mouse_cursor
+         && settings->bools.video_fullscreen;
+
+   if (!ol)
+      return;
+
+   if (enable)
+   {
+      /* Set video interface */
+      if (     !video_driver_get_overlay_interface(&ol->iface, &ol->iface_data)
+            || !ol->iface)
+      {
+         RARCH_ERR("[Input] Overlay interface is not present in video driver.\n");
+         ol->flags &= ~INPUT_OVERLAY_ALIVE;
+         return;
+      }
+
+      /* Load last-active overlay */
+      ol->flags &= ~INPUT_OVERLAY_TEXTURES_DECLINED;
+      input_overlay_load_active(ol, opacity);
+
+      /* Adjust to current settings */
+      command_event(CMD_EVENT_OVERLAY_SET_SCALE_FACTOR, NULL);
+
+      if (auto_rotate)
+      {
+         input_overlay_auto_rotate_(
+               video_driver_get_output_dims(), true, ol);
+      }
+
+      /* Enable */
+      if (ol->iface->enable)
+         ol->iface->enable(ol->iface_data, true);
+
+      ol->flags |= (INPUT_OVERLAY_ENABLE | INPUT_OVERLAY_BLOCKED);
+
+      if (hide_mouse_cursor)
+         video_driver_show_mouse(false);
+   }
+   else
+   {
+      /* Disable and clear input state */
+      ol->flags       &= ~INPUT_OVERLAY_ENABLE;
+      input_st->flags &= ~INP_FLAG_BLOCK_POINTER_INPUT;
+
+      if (ol->iface && ol->iface->enable)
+         ol->iface->enable(ol->iface_data, false);
+      /* The pack's textures stay: the driver they were made on is
+       * still here, and a pack that comes back from the cache shows
+       * its pages without an upload. Only the video teardown unloads
+       * them (input_overlay_video_teardown), the driver still there. */
+      ol->iface = NULL;
+
+      memset(ol->overlay_states, 0, sizeof(ol->overlay_states));
+      memset(&ol->pointer_state, 0, sizeof(input_overlay_pointer_state_t));
+   }
+}
+
+/* The video side reads the active overlay's viewport override from a
+ * copy (video_driver_update_viewport() may run on the threaded video
+ * worker, and the overlay is freed and replaced here); refreshed
+ * whenever overlay_ptr or the overlay it shows changes. */
+static void input_overlay_viewport_publish(void)
+{
+   input_overlay_t *ol = input_driver_st.overlay_ptr;
+   video_driver_set_overlay_viewport(ol ? ol->active : NULL);
+}
+
+static void input_overlay_deinit(void)
+{
+   input_overlay_free(input_driver_st.overlay_ptr);
+   input_driver_st.overlay_ptr = NULL;
+   input_overlay_viewport_publish();
+
+   input_overlay_free(input_driver_st.overlay_cache_ptr);
+   input_driver_st.overlay_cache_ptr = NULL;
+
+   input_driver_st.flags &= ~INP_FLAG_BLOCK_POINTER_INPUT;
+}
+
+static void input_overlay_move_to_cache(void)
+{
+   input_driver_state_t *input_st = &input_driver_st;
+   input_overlay_t      *ol       = input_st->overlay_ptr;
+
+   if (!ol)
+      return;
+
+   /* Free existing cache */
+   input_overlay_free(input_driver_st.overlay_cache_ptr);
+
+   /* Disable current overlay */
+   input_overlay_enable_(false);
+
+   /* Move to cache */
+   input_st->overlay_cache_ptr = ol;
+   input_st->overlay_ptr       = NULL;
+   input_overlay_viewport_publish();
+}
+
+static void input_overlay_swap_with_cached(void)
+{
+   input_driver_state_t *input_st = &input_driver_st;
+   input_overlay_t      *ol;
+
+   /* Disable current overlay */
+   input_overlay_enable_(false);
+
+   /* Swap with cached */
+   ol                          = input_st->overlay_cache_ptr;
+   input_st->overlay_cache_ptr = input_st->overlay_ptr;
+   input_st->overlay_ptr       = ol;
+   input_overlay_viewport_publish();
+
+   /* Enable and update to current settings */
+   input_overlay_enable_(true);
+}
+
+void input_overlay_unload(void)
+{
+   bool input_overlay_enable   = config_get_ptr()->bools.input_overlay_enable;
+   runloop_state_t *runloop_st = runloop_state_get_ptr();
+
+   /* Free if overlays disabled or initing/deiniting core */
+   if (     !input_overlay_enable
+         || !runloop_is_inited()
+         ||  (runloop_st->flags & RUNLOOP_FLAG_SHUTDOWN_INITIATED))
+      input_overlay_deinit();
+   else
+      input_overlay_move_to_cache();
+}
+
+void input_overlay_leds_enable(bool enable)
+{
+   input_driver_state_t *input_st = &input_driver_st;
+
+   input_st->overlay_leds_lit = 0;

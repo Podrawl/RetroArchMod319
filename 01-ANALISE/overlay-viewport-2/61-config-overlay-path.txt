@@ -1,0 +1,5 @@
+configuration.c:2263:   SETTING_PATH("input_overlay",                 settings->paths.path_overlay, false, NULL, true);
+configuration.c:2265:   SETTING_PATH("overlay_directory",             settings->paths.directory_overlay, true, NULL, true);
+configuration.c:2266:   SETTING_PATH("osk_overlay_directory",         settings->paths.directory_osk_overlay, true, NULL, true);
+configuration.c:7342:      config_get_path(conf, "input_overlay", old_overlay_path, sizeof(old_overlay_path));
+configuration.c:7376:      config_get_path(conf, "input_overlay", new_overlay_path, sizeof(new_overlay_path));

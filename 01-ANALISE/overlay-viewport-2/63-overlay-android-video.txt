@@ -1,0 +1,51 @@
+input/drivers/android_input.c:60:#include "../common/overlay_contact.h"
+input/drivers/android_input.c:262: * touch overlay while the S-Pen is in use. */
+input/drivers/android_input.c:1556:      /* Refresh overlay auto-hide timer (runloop.c reads this) only after the
+input/drivers/android_input.c:1557:       * enable gate, so a passing pen does not hide the overlay for a user
+input/drivers/android_input.c:1715:            /* Prevent the quick tap if a button on the overlay is down */
+input/drivers/android_input.c:2043:         ret = 0; /* touch overlay is always user 1 */
+input/drivers/android_input.c:3451:   /* each finger's contact, for the overlay's D-pad and face buttons */
+gfx/video_driver.c:72:/* Float <-> bits, for the overlay viewport's atomic fields. */
+gfx/video_driver.c:173:#include "../input/input_overlay.h"
+gfx/video_driver.c:684:  NULL, /* overlay_interface */
+gfx/video_driver.c:1848: * through the poke interface, the overlay interface and the driver's
+gfx/video_driver.c:1871:/* The driver's overlay interface, and the data to call it with.
+gfx/video_driver.c:1873:bool video_driver_get_overlay_interface(
+gfx/video_driver.c:1874:      const video_overlay_interface_t **iface, void **iface_data)
+gfx/video_driver.c:1878:   if (!video_st->current_video || !video_st->current_video->overlay_interface)
+gfx/video_driver.c:1880:   video_st->current_video->overlay_interface(video_st->data, iface);
+gfx/video_driver.c:3816:   input_overlay_video_teardown();
+gfx/video_driver.c:4876:void video_driver_set_overlay_viewport(const struct overlay *active)
+gfx/video_driver.c:4878:   /* The overlay whose override was last logged: compared, never read
+gfx/video_driver.c:4879:    * through, so logged once per overlay shown, not per publish */
+gfx/video_driver.c:4880:   static const struct overlay *logged = NULL;
+gfx/video_driver.c:4887:      int seq0 = retro_atomic_load_relaxed_int(&video_st->overlay_vp_seq);
+gfx/video_driver.c:4888:      retro_atomic_store_release_int(&video_st->overlay_vp_seq, seq0 + 1);
+gfx/video_driver.c:4894:      retro_atomic_store_relaxed_int(&video_st->overlay_vp_bits[0],
+gfx/video_driver.c:4896:      retro_atomic_store_relaxed_int(&video_st->overlay_vp_bits[1],
+gfx/video_driver.c:4898:      retro_atomic_store_relaxed_int(&video_st->overlay_vp_bits[2],
+gfx/video_driver.c:4900:      retro_atomic_store_relaxed_int(&video_st->overlay_vp_bits[3],
+gfx/video_driver.c:4902:      retro_atomic_store_release_int(&video_st->overlay_vp_seq, seq0 + 2);
+gfx/video_driver.c:4904:   retro_atomic_store_release_int(&video_st->overlay_vp_flags, flags);
+gfx/video_driver.c:5949:   /* The active overlay's viewport override, if it has one: from the
+gfx/video_driver.c:5950:    * copy the main thread publishes, never the overlay, which it frees
+gfx/video_driver.c:5951:    * and replaces (video_driver_set_overlay_viewport()). Only applied
+gfx/video_driver.c:5954:         && retro_atomic_load_acquire_int(&video_st->overlay_vp_flags))
+gfx/video_driver.c:5958:      flags    = retro_atomic_load_acquire_int(&video_st->overlay_vp_flags);
+gfx/video_driver.c:5960:       * landed across the copy (changed). Rewrites happen at overlay
+gfx/video_driver.c:5965:         int s1 = retro_atomic_load_acquire_int(&video_st->overlay_vp_seq);
+gfx/video_driver.c:5969:               &video_st->overlay_vp_bits[0]));
+gfx/video_driver.c:5971:               &video_st->overlay_vp_bits[1]));
+gfx/video_driver.c:5973:               &video_st->overlay_vp_bits[2]));
+gfx/video_driver.c:5975:               &video_st->overlay_vp_bits[3]));
+gfx/video_driver.c:5977:         if (retro_atomic_load_relaxed_int(&video_st->overlay_vp_seq) == s1)
+gfx/video_driver.c:5982:         /* Calculate overlay's viewport bounds in pixels */
+gfx/video_driver.c:5990:            /* Fill mode: stretch to fill overlay viewport exactly */
+gfx/video_driver.c:5996:            /* Fit mode: preserve aspect ratio within overlay viewport.
+gfx/video_driver.c:7602:   video_info->overlay_behind_menu         = settings->bools.input_overlay_behind_menu;
+gfx/video_driver.c:7740:   video_info->overlay_behind_menu         = false;
+gfx/video_driver.c:9078:   input_overlay_unload();
+gfx/video_driver.c:9079:   input_overlay_init();
+gfx/video_driver.c:9115:   input_overlay_check_mouse_cursor();
+gfx/video_driver.c:9406:/* The statistics overlay's text. Cold, so out of the frame body. */
+gfx/video_driver.c:10145:          * Menu with content actively running behind it (overlay-

@@ -1,0 +1,281 @@
+
+#ifdef HAVE_MENU
+   /* Update menu entries if this is the main overlay */
+   if (!(ol->flags & INPUT_OVERLAY_IS_OSK))
+   {
+      struct menu_state *menu_st = menu_state_get_ptr();
+
+      if (menu_st->overlay_types != overlay_types)
+      {
+         menu_st->overlay_types = overlay_types;
+         menu_st->flags        |=  MENU_ST_FLAG_ENTRIES_NEED_REFRESH;
+      }
+   }
+#endif
+}
+
+#define SYSTEM_OVERLAY_DIR "gamepads/Named_Overlays"
+
+static const char *input_overlay_path(bool want_osk)
+{
+   static char   system_overlay_path[PATH_MAX_LENGTH] = {0};
+   char          overlay_directory[PATH_MAX_LENGTH];
+   const char *a = NULL;
+   settings_t   *settings                             = config_get_ptr();
+   playlist_t   *playlist                             = playlist_get_cached();
+   core_info_t  *core_info                            = NULL;
+   const char   *content_path                         = path_get(RARCH_PATH_CONTENT);
+
+   if (want_osk)
+      return settings->paths.path_osk_overlay;
+   /* If the option is set to turn this off, just return default */
+   if (!settings->bools.input_overlay_enable_autopreferred)
+       return settings->paths.path_overlay;
+   /* If there's an override, use it */
+   if (retroarch_override_setting_is_set(RARCH_OVERRIDE_SETTING_OVERLAY_PRESET, NULL))
+       return settings->paths.path_overlay;
+   /* If there's no core, just return the default */
+   a = path_get(RARCH_PATH_CORE);
+   if (!a || !*a)
+      return settings->paths.path_overlay;
+   /* Let's go hunting */
+   fill_pathname_expand_special(overlay_directory,
+         settings->paths.directory_overlay,
+         sizeof(overlay_directory));
+
+   /* Try based on the playlist entry first */
+   if (playlist)
+   {
+      if (content_path && *content_path)
+      {
+         const struct playlist_entry *entry = NULL;
+         playlist_get_index_by_path(playlist, content_path, &entry);
+         if (entry && entry->db_name)
+         {
+            size_t _len = fill_pathname_join_special_ext(system_overlay_path,
+                  overlay_directory, SYSTEM_OVERLAY_DIR, entry->db_name, "",
+                  sizeof(system_overlay_path));
+            char *ext = path_get_extension_mutable(system_overlay_path);
+            if (!ext)
+               ext = system_overlay_path + _len;
+            strlcpy_lit(ext, ".cfg", 5);
+            if (path_is_valid(system_overlay_path))
+               return system_overlay_path;
+         }
+      }
+   }
+
+   /* Maybe the core info will have some clues... */
+   core_info_get_current_core(&core_info);
+   if (core_info)
+   {
+      if (core_info->databases_list && core_info->databases_list->size == 1)
+      {
+         fill_pathname_join_special_ext(system_overlay_path,
+               overlay_directory, SYSTEM_OVERLAY_DIR, core_info->databases_list->elems[0].data, ".cfg",
+               sizeof(system_overlay_path));
+         if (path_is_valid(system_overlay_path))
+            return system_overlay_path;
+      }
+
+      if (core_info->display_name)
+      {
+         fill_pathname_join_special_ext(system_overlay_path,
+               overlay_directory, SYSTEM_OVERLAY_DIR, core_info->display_name, ".cfg",
+               sizeof(system_overlay_path));
+         if (path_is_valid(system_overlay_path))
+            return system_overlay_path;
+      }
+   }
+
+   /* Maybe based on the content's directory name... */
+   if (content_path && *content_path)
+   {
+      char dirname[DIR_MAX_LENGTH];
+      fill_pathname_parent_dir_name(dirname, content_path, sizeof(dirname));
+      fill_pathname_join_special_ext(system_overlay_path,
+            overlay_directory, SYSTEM_OVERLAY_DIR, dirname, ".cfg",
+            sizeof(system_overlay_path));
+      if (path_is_valid(system_overlay_path))
+         return system_overlay_path;
+   }
+
+   /* I give up */
+   return settings->paths.path_overlay;
+}
+
+void input_overlay_init(void)
+{
+   settings_t *settings           = config_get_ptr();
+   input_driver_state_t *input_st = &input_driver_st;
+   input_overlay_t *ol            = input_st->overlay_ptr;
+   input_overlay_t *ol_cache      = input_st->overlay_cache_ptr;
+   bool want_osk                  =
+            (input_st->flags & INP_FLAG_KB_LINEFEED_ENABLE)
+         && *settings->paths.path_osk_overlay;
+   const char *path_overlay       = input_overlay_path(want_osk);
+   bool want_hidden               = input_overlay_want_hidden();
+   bool overlay_shown             = ol
+         && (ol->flags & INPUT_OVERLAY_ENABLE)
+         && string_is_equal(path_overlay, ol->path);
+   /* A cached pack is reusable only while it still has something to
+    * upload from: the pixels are released once they are on the GPU,
+    * so a pack whose textures went with a video reinit is reloaded
+    * from its path instead. */
+   bool overlay_cached            = ol_cache
+         && (ol_cache->flags & INPUT_OVERLAY_ALIVE)
+         && string_is_equal(path_overlay, ol_cache->path)
+         && input_overlay_has_source(ol_cache);
+   bool overlay_hidden            = !ol && overlay_cached;
+
+#if defined(GEKKO)
+   /* Avoid a crash at startup or even when toggling overlay in rgui */
+   if (mem_stats_free() < (3 * 1024 * 1024))
+      return;
+#endif
+
+   /* Cancel if overlays disabled or task already done */
+   if (     !settings->bools.input_overlay_enable
+         || ( want_hidden && overlay_hidden)
+         || (!want_hidden && overlay_shown))
+      return;
+
+   /* Restore if cached */
+   if (!want_hidden && overlay_cached)
+   {
+      input_overlay_swap_with_cached();
+      return;
+   }
+
+   /* Cache current overlay when loading a different type */
+   if (want_osk != (ol && (ol->flags & INPUT_OVERLAY_IS_OSK)))
+      input_overlay_unload();
+   else
+      input_overlay_deinit();
+
+   /* Start task */
+   task_push_overlay_load_default(
+         input_overlay_loaded, path_overlay, want_osk, NULL);
+}
+#endif
+
+void input_pad_connect(unsigned port, input_device_driver_t *driver)
+{
+   if (port >= MAX_USERS || !driver)
+   {
+      RARCH_ERR("[Input] input_pad_connect: Bad parameters.\n");
+      return;
+   }
+
+   input_autoconfigure_connect(driver->name(port), NULL, NULL, driver->ident,
+          port, 0, 0);
+}
+
+static bool input_keys_pressed_other_sources(
+      input_driver_state_t *input_st,
+      unsigned i,
+      input_bits_t *p_new_state)
+{
+#ifdef HAVE_COMMAND
+   int j;
+   for (j = 0; j < (int)ARRAY_SIZE(input_st->command); j++)
+      if ((i < RARCH_BIND_LIST_END) && input_st->command[j]
+         && input_st->command[j]->state[i])
+      {
+         if (i < 16)
+            input_st->system_buttons_not_overlay |= (uint16_t)(1u << i);
+         return true;
+      }
+#endif
+
+#ifdef HAVE_NETWORKGAMEPAD
+   /* Only process key presses related to game input if using Remote RetroPad */
+   if (i < RARCH_CUSTOM_BIND_LIST_END
+         && input_st->remote
+         && INPUT_REMOTE_KEY_PRESSED(input_st, i, 0))
+   {
+      if (i < 16)
+         input_st->system_buttons_not_overlay |= (uint16_t)(1u << i);
+      return true;
+   }
+#endif
+
+#ifdef HAVE_OPENXR
+   if (input_openxr_hotkey(i))
+      return true;
+#endif
+
+#ifdef HAVE_OVERLAY
+   if (               input_st->overlay_ptr &&
+         ((BIT256_GET(INPUT_OVERLAY_ST(input_st->overlay_ptr)->buttons, i))))
+      return true;
+#endif
+
+   return false;
+}
+
+/* The RetroPad's sixteen buttons as the other sources hold them, in
+ * one word: a command interface and the remote pad - whose buttons are
+ * not the overlay's alone, which is noted - and then the overlay. */
+static unsigned input_pad_buttons_other_sources(
+      input_driver_state_t *input_st)
+{
+   unsigned held = 0;
+#ifdef HAVE_COMMAND
+   int j;
+   for (j = 0; j < (int)ARRAY_SIZE(input_st->command); j++)
+      if (input_st->command[j])
+      {
+         unsigned i;
+         for (i = 0; i < RARCH_FIRST_CUSTOM_BIND; i++)
+            if (input_st->command[j]->state[i])
+               held |= (1u << i);
+      }
+#endif
+
+#ifdef HAVE_NETWORKGAMEPAD
+   /* Only process key presses related to game input if using Remote RetroPad */
+   if (input_st->remote)
+      held |= (unsigned)(input_st->remote_st_ptr.buttons[0] & 0xffff);
+#endif
+
+#if defined(HAVE_MENU) && defined(HAVE_CORE_SIGNATURES)
+   if (held && menu_core_warning_user_only())
+      held = 0;
+#endif
+
+   input_st->system_buttons_not_overlay |= (uint16_t)held;
+
+#ifdef HAVE_OVERLAY
+   if (input_st->overlay_ptr)
+      held |= INPUT_OVERLAY_ST(input_st->overlay_ptr)->buttons.data[0] & 0xffff;
+#endif
+
+   return held;
+}
+
+/* User @user's controller, read with another user's binds. */
+static void input_user_joypad_info(rarch_joypad_info_t *info,
+      unsigned user, float axis_threshold)
+{
+   info->axis_threshold = axis_threshold;
+   info->joy_idx        = config_get_ptr()->uints.input_joypad_index[user];
+   if (info->joy_idx >= MAX_USERS)
+      info->joy_idx     = 0;
+   info->auto_binds     = input_autoconf_binds[info->joy_idx];
+}
+
+/* A hotkey's button and axis on a controller sharing the hotkeys' core
+ * port, by user: its own, then its profile's, never the set's. Made
+ * when a bind changes. */
+typedef struct
+{
+   unsigned gen;                      /* the change count + 1 it was made at */
+   const struct retro_keybind *autob; /* the sharer's profile it was made for */
+   uint32_t has_pad[(RARCH_BIND_LIST_END + 31) / 32];
+   uint32_t axis[RARCH_BIND_LIST_END - RARCH_FIRST_META_KEY];
+   uint16_t key[RARCH_BIND_LIST_END - RARCH_FIRST_META_KEY];
+} input_share_hot_t;
+
+static input_share_hot_t input_share_hot[MAX_USERS];
+

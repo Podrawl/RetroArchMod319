@@ -1,0 +1,161 @@
+         free(anim_list->elems[i].attr.p);
+#endif
+}
+
+/* task_data = overlay_task_data_t* */
+static void input_overlay_loaded(retro_task_t *task,
+      void *task_data, void *user_data, const char *err)
+{
+#ifdef HAVE_MENU
+   uint16_t overlay_types;
+#endif
+   overlay_task_data_t  *data     = (overlay_task_data_t*)task_data;
+   input_overlay_t      *ol       = NULL;
+   input_driver_state_t *input_st = &input_driver_st;
+   bool enable_overlay            = !input_overlay_want_hidden()
+         && config_get_ptr()->bools.input_overlay_enable;
+
+   if (err)
+      return;
+
+   /* NULL-check task_data: the task producer (task_overlay_handler
+    * in tasks/task_overlay.c) can legitimately fail its data
+    * alloc under OOM and pass NULL here; data->overlays below
+    * would NULL-deref.  Nothing useful to do with a NULL payload
+    * so bail cleanly. */
+   if (!data)
+      return;
+
+   ol              = (input_overlay_t*)calloc(1, sizeof(*ol));
+   /* NULL-check the ol calloc: the field writes below NULL-deref
+    * on OOM.  Task_data ownership transferred to us by the
+    * retro_task framework via task_set_data - we must tear it
+    * down cleanly.  image_list entries each have a heap
+    * texture_image* in elems[i].attr.p that move_images would
+    * normally transfer into ol->images; since ol doesn't exist,
+    * free each texture explicitly before string_list_free
+    * (string_list_free only frees the list struct and its
+    * entries' .data strings, not their .attr.p attachments). */
+   if (!ol)
+   {
+      if (data->image_list)
+      {
+         size_t i;
+         for (i = 0; i < data->image_list->size; i++)
+            image_texture_free((struct texture_image*)data->image_list->elems[i].attr.p);
+         string_list_free(data->image_list);
+      }
+      if (data->anim_list)
+      {
+         size_t i;
+         for (i = 0; i < data->anim_list->size; i++)
+         {
+            overlay_anim_src_t *src =
+               (overlay_anim_src_t*)data->anim_list->elems[i].attr.p;
+            if (src)
+               free(src->data);
+            free(src);
+         }
+         string_list_free(data->anim_list);
+      }
+      free(data);
+      return;
+   }
+   ol->overlays    = data->overlays;
+   ol->size        = data->size;
+   ol->active      = data->active;
+   ol->path        = data->overlay_path;
+   ol->num_images  = data->image_list->size;
+   ol->next_index  = (unsigned)((ol->index + 1) % ol->size);
+   ol->flags      |= INPUT_OVERLAY_ALIVE;
+   if (data->flags & OVERLAY_LOADER_IS_OSK)
+      ol->flags   |= INPUT_OVERLAY_IS_OSK;
+   if (data->flags & OVERLAY_LOADER_HAS_LEDS)
+      ol->flags   |= INPUT_OVERLAY_HAS_LEDS;
+
+   /* One block for the sent alphas and the pass's scratch, sized for
+    * the page with the most images. Without it every alpha is set
+    * every pass, as before. */
+   {
+      size_t i, cap = 0;
+      for (i = 0; i < ol->size; i++)
+         if (ol->overlays[i].load_images_size > cap)
+            cap = ol->overlays[i].load_images_size;
+      if (cap && (ol->alpha_sent = (float*)malloc(2 * cap * sizeof(float))))
+      {
+         ol->alpha_want = ol->alpha_sent + cap;
+         ol->alpha_cap  = cap;
+         input_overlay_alpha_forget(ol);
+      }
+   }
+#ifdef HAVE_MENU
+   overlay_types   = data->overlay_types;
+#endif
+
+   if (ol->num_images > 0)
+      input_overlay_loaded_move_images(ol, data->image_list, data->anim_list);
+   string_list_free(data->image_list);
+   if (data->anim_list)
+      string_list_free(data->anim_list);
+
+   free(data);
+
+   /* Due to the asynchronous nature of overlay loading
+    * it is possible for overlay_ptr to be non-NULL here
+    * > Ensure it is free()'d before assigning new pointer */
+   if (input_st->overlay_ptr)
+      input_overlay_free(input_st->overlay_ptr);
+   input_st->overlay_ptr = ol;
+   input_overlay_viewport_publish();
+
+   /* Enable or disable the overlay */
+   input_overlay_enable_(enable_overlay);
+
+   /* Abort if enable failed */
+   if (!(ol->flags & INPUT_OVERLAY_ALIVE))
+   {
+      input_st->overlay_ptr = NULL;
+      input_overlay_viewport_publish();
+      input_overlay_free(ol);
+      return;
+   }
+
+   /* Cache or free if hidden */
+   if (!enable_overlay)
+      input_overlay_unload();
+
+   /* Soft-hide when gamepad connected but pointer input enabled */
+   {
+      settings_t *settings = config_get_ptr();
+      if (enable_overlay
+            && settings->bools.input_overlay_hide_when_gamepad_connected
+            && settings->bools.input_overlay_pointer_enable
+            && input_config_get_device_name(0) != NULL)
+         ol->flags |= INPUT_OVERLAY_GAMEPAD_HIDDEN;
+   }
+
+   input_overlay_set_eightway_diagonal_sensitivity();
+
+   /* Trigger viewport recalculation - overlay may have viewport override */
+   command_event(CMD_EVENT_VIDEO_SET_ASPECT_RATIO, NULL);
+
+#ifdef HAVE_MENU
+   /* Update menu entries if this is the main overlay */
+   if (!(ol->flags & INPUT_OVERLAY_IS_OSK))
+   {
+      struct menu_state *menu_st = menu_state_get_ptr();
+
+      if (menu_st->overlay_types != overlay_types)
+      {
+         menu_st->overlay_types = overlay_types;
+         menu_st->flags        |=  MENU_ST_FLAG_ENTRIES_NEED_REFRESH;
+      }
+   }
+#endif
+}
+
+#define SYSTEM_OVERLAY_DIR "gamepads/Named_Overlays"
+
+static const char *input_overlay_path(bool want_osk)
+{
+   static char   system_overlay_path[PATH_MAX_LENGTH] = {0};
