@@ -1,80 +1,80 @@
-	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:166)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:59)
-	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:53)
-	at org.gradle.launcher.exec.RunAsBuildOperationBuildActionExecutor.execute(RunAsBuildOperationBuildActionExecutor.java:61)
-	at org.gradle.launcher.exec.RunAsWorkerThreadBuildActionExecutor.lambda$execute$0(RunAsWorkerThreadBuildActionExecutor.java:36)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.lambda$withLocksAcquired$0(DefaultWorkerLeaseService.java:269)
-	at org.gradle.internal.work.ResourceLockStatistics$1.measure(ResourceLockStatistics.java:42)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocksAcquired(DefaultWorkerLeaseService.java:267)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:259)
-	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
-	at org.gradle.launcher.exec.RunAsWorkerThreadBuildActionExecutor.execute(RunAsWorkerThreadBuildActionExecutor.java:36)
-	at org.gradle.tooling.internal.provider.continuous.ContinuousBuildActionExecutor.execute(ContinuousBuildActionExecutor.java:110)
-	at org.gradle.tooling.internal.provider.SubscribableBuildActionExecutor.execute(SubscribableBuildActionExecutor.java:64)
-	at org.gradle.internal.session.DefaultBuildSessionContext.execute(DefaultBuildSessionContext.java:46)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor$ActionImpl.apply(BuildSessionLifecycleBuildActionExecutor.java:106)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor$ActionImpl.apply(BuildSessionLifecycleBuildActionExecutor.java:94)
-	at org.gradle.internal.session.BuildSessionState.run(BuildSessionState.java:73)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor.execute(BuildSessionLifecycleBuildActionExecutor.java:67)
-	at org.gradle.internal.buildprocess.execution.BuildSessionLifecycleBuildActionExecutor.execute(BuildSessionLifecycleBuildActionExecutor.java:45)
-	at org.gradle.internal.buildprocess.execution.StartParamsValidatingActionExecutor.execute(StartParamsValidatingActionExecutor.java:57)
-	at org.gradle.internal.buildprocess.execution.StartParamsValidatingActionExecutor.execute(StartParamsValidatingActionExecutor.java:32)
-	at org.gradle.internal.buildprocess.execution.SessionFailureReportingActionExecutor.execute(SessionFailureReportingActionExecutor.java:51)
-	at org.gradle.internal.buildprocess.execution.SessionFailureReportingActionExecutor.execute(SessionFailureReportingActionExecutor.java:39)
-	at org.gradle.internal.buildprocess.execution.SetupLoggingActionExecutor.execute(SetupLoggingActionExecutor.java:47)
-	at org.gradle.internal.buildprocess.execution.SetupLoggingActionExecutor.execute(SetupLoggingActionExecutor.java:31)
-	at org.gradle.launcher.daemon.server.exec.ExecuteBuild.doBuild(ExecuteBuild.java:70)
-	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.WatchForDisconnection.execute(WatchForDisconnection.java:39)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.ResetDeprecationLogger.execute(ResetDeprecationLogger.java:29)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.RequestStopIfSingleUsedDaemon.execute(RequestStopIfSingleUsedDaemon.java:35)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.lambda$execute$0(ForwardClientInput.java:40)
-	at org.gradle.internal.daemon.clientinput.ClientInputForwarder.forwardInput(ClientInputForwarder.java:80)
-	at org.gradle.launcher.daemon.server.exec.ForwardClientInput.execute(ForwardClientInput.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.LogAndCheckHealth.execute(LogAndCheckHealth.java:53)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.LogToClient.doBuild(LogToClient.java:63)
-	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.EstablishBuildEnvironment.doBuild(EstablishBuildEnvironment.java:84)
-	at org.gradle.launcher.daemon.server.exec.BuildCommandOnly.execute(BuildCommandOnly.java:37)
-	at org.gradle.launcher.daemon.server.api.DaemonCommandExecution.proceed(DaemonCommandExecution.java:104)
-	at org.gradle.launcher.daemon.server.exec.StartBuildOrRespondWithBusy$1.run(StartBuildOrRespondWithBusy.java:52)
-	at org.gradle.launcher.daemon.server.DaemonStateCoordinator.lambda$runCommand$0(DaemonStateCoordinator.java:321)
-	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
-	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:47)
-Caused by: org.gradle.internal.metaobject.AbstractDynamicObject$CustomMessageMissingMethodException: Could not find method jcenter() for arguments [] on repository container of type org.gradle.api.internal.artifacts.dsl.DefaultRepositoryHandler.
-	at org.gradle.internal.metaobject.AbstractDynamicObject$CustomMissingMethodExecutionFailed.<init>(AbstractDynamicObject.java:195)
-	at org.gradle.internal.metaobject.AbstractDynamicObject.methodMissingException(AbstractDynamicObject.java:189)
-	at org.gradle.internal.metaobject.ConfigureDelegate.invokeMethod(ConfigureDelegate.java:84)
-	at build_2ce6hf22mfobihjwklpmgx8bk$_run_closure1$_closure2.doCall$original(/home/runner/work/RetroArchMod319/RetroArchMod319/ra/pkg/android/phoenix/build.gradle:4)
-	at build_2ce6hf22mfobihjwklpmgx8bk$_run_closure1$_closure2.doCall(/home/runner/work/RetroArchMod319/RetroArchMod319/ra/pkg/android/phoenix/build.gradle)
-	at org.gradle.util.internal.ClosureBackedAction.execute(ClosureBackedAction.java:73)
-	at org.gradle.util.internal.ConfigureUtil.configureTarget(ConfigureUtil.java:166)
-	at org.gradle.util.internal.ConfigureUtil.configureSelf(ConfigureUtil.java:142)
-	at org.gradle.api.internal.artifacts.DefaultArtifactRepositoryContainer.configure(DefaultArtifactRepositoryContainer.java:65)
-	at org.gradle.api.internal.artifacts.DefaultArtifactRepositoryContainer.configure(DefaultArtifactRepositoryContainer.java:35)
-	at org.gradle.util.internal.ConfigureUtil.configure(ConfigureUtil.java:105)
-	at org.gradle.api.internal.initialization.DefaultScriptHandler.repositories(DefaultScriptHandler.java:137)
-	at org.gradle.internal.metaobject.BeanDynamicObject$MetaClassAdapter.invokeMethod(BeanDynamicObject.java:583)
-	at org.gradle.internal.metaobject.BeanDynamicObject.tryInvokeMethod(BeanDynamicObject.java:225)
-	at org.gradle.internal.metaobject.ConfigureDelegate.invokeMethod(ConfigureDelegate.java:65)
-	at build_2ce6hf22mfobihjwklpmgx8bk$_run_closure1.doCall$original(/home/runner/work/RetroArchMod319/RetroArchMod319/ra/pkg/android/phoenix/build.gradle:2)
-	at build_2ce6hf22mfobihjwklpmgx8bk$_run_closure1.doCall(/home/runner/work/RetroArchMod319/RetroArchMod319/ra/pkg/android/phoenix/build.gradle)
-	at org.gradle.util.internal.ClosureBackedAction.execute(ClosureBackedAction.java:73)
-	at org.gradle.util.internal.ConfigureUtil.configureTarget(ConfigureUtil.java:166)
-	at org.gradle.util.internal.ConfigureUtil.configure(ConfigureUtil.java:107)
-	at org.gradle.api.internal.project.DefaultProject.buildscript(DefaultProject.java:1292)
-	at org.gradle.api.internal.project.ProjectScript.buildscript(ProjectScript.java:47)
-	at build_2ce6hf22mfobihjwklpmgx8bk.run(/home/runner/work/RetroArchMod319/RetroArchMod319/ra/pkg/android/phoenix/build.gradle:1)
-	at org.gradle.groovy.scripts.internal.DefaultScriptRunnerFactory$ScriptRunnerImpl.run(DefaultScriptRunnerFactory.java:91)
-	... 166 more
+Unzipping /home/runner/.gradle/wrapper/dists/gradle-9.3.1-bin/23ovyewtku6u96viwx3xl3oks/gradle-9.3.1-bin.zip to /home/runner/.gradle/wrapper/dists/gradle-9.3.1-bin/23ovyewtku6u96viwx3xl3oks
+Set executable permissions for: /home/runner/.gradle/wrapper/dists/gradle-9.3.1-bin/23ovyewtku6u96viwx3xl3oks/gradle-9.3.1/bin/gradle
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
 
+> Configure project :
+WARNING: [CXX5202] This app only has 32-bit [armeabi-v7a,x86] native libraries. Beginning August 1, 2019 Google Play store requires that all apps that include native libraries must provide 64-bit versions. For more information, visit https://g.co/64-bit-requirement
+[CXX5202] This app only has 32-bit [armeabi-v7a,x86] native libraries. Beginning August 1, 2019 Google Play store requires that all apps that include native libraries must provide 64-bit versions. For more information, visit https://g.co/64-bit-requirement
+WARNING: [CXX5202] This app only has 32-bit [armeabi-v7a,x86] native libraries. Beginning August 1, 2019 Google Play store requires that all apps that include native libraries must provide 64-bit versions. For more information, visit https://g.co/64-bit-requirement
+[CXX5202] This app only has 32-bit [armeabi-v7a,x86] native libraries. Beginning August 1, 2019 Google Play store requires that all apps that include native libraries must provide 64-bit versions. For more information, visit https://g.co/64-bit-requirement
 
-BUILD FAILED in 7s
+> Task :preBuild UP-TO-DATE
+> Task :preAarch64DebugBuild UP-TO-DATE
+> Task :mergeAarch64DebugNativeDebugMetadata NO-SOURCE
+> Task :generateAarch64DebugBuildConfig
+> Task :generateAarch64DebugResValues
+> Task :generateAarch64DebugResources
+> Task :packageAarch64DebugResources
+> Task :processAarch64DebugNavigationResources
+> Task :javaPreCompileAarch64Debug
+> Task :generateAarch64DebugAssets UP-TO-DATE
+> Task :mergeAarch64DebugAssets
+> Task :compressAarch64DebugAssets
+> Task :parseAarch64DebugLocalResources
+> Task :checkAarch64DebugDuplicateClasses
+> Task :generateAarch64DebugRFile
+> Task :desugarAarch64DebugFileDependencies
+> Task :compileAarch64DebugKotlin NO-SOURCE
+
+> Task :compileAarch64DebugJavaWithJavac
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processAarch64DebugJavaRes NO-SOURCE
+> Task :mergeAarch64DebugJavaResource
+> Task :mergeLibDexAarch64Debug
+> Task :checkAarch64DebugAarMetadata
+> Task :mergeExtDexAarch64Debug
+> Task :mapAarch64DebugSourceSetPaths
+> Task :compileAarch64DebugNavigationResources
+> Task :createAarch64DebugCompatibleScreenManifests
+> Task :extractDeepLinksAarch64Debug
+> Task :mergeAarch64DebugResources
+
+> Task :processAarch64DebugMainManifest
+/home/runner/work/RetroArchMod319/RetroArchMod319/ra/pkg/android/phoenix/AndroidManifest.xml:29:9-41 Warning:
+	android:extractNativeLibs should not be specified in this source AndroidManifest.xml file. See https://d.android.com/guide/topics/manifest/application-element#extractNativeLibs for more information.
+The AGP Upgrade Assistant can remove the attribute from the AndroidManifest.xml file and update the build file accordingly. See https://d.android.com/studio/build/agp-upgrade-assistant for more information.
+
+> Task :processAarch64DebugManifest
+> Task :configureNdkBuildDebug[arm64-v8a]
+> Task :processAarch64DebugManifestForPackage
+> Task :processAarch64DebugResources
+> Task :buildNdkBuildDebug[arm64-v8a]
+> Task :dexBuilderAarch64Debug
+> Task :mergeProjectDexAarch64Debug
+> Task :configureNdkBuildDebug[x86_64]
+> Task :buildNdkBuildDebug[x86_64]
+> Task :mergeAarch64DebugJniLibFolders
+> Task :mergeAarch64DebugNativeLibs
+> Task :validateSigningAarch64Debug
+> Task :writeAarch64DebugAppMetadata
+> Task :writeAarch64DebugSigningConfigVersions
+> Task :stripAarch64DebugDebugSymbols
+> Task :packageAarch64Debug
+> Task :createAarch64DebugApkListingFileRedirect
+> Task :assembleAarch64Debug
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run_3-1794858052698.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/RetroArchMod319/RetroArchMod319/ra/pkg/android/phoenix/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 1m 40s
+40 actionable tasks: 40 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.3.1/userguide/configuration_cache_enabling.html

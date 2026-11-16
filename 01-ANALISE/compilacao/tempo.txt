@@ -1,1 +1,1 @@
-codigo=1 tempo_segundos=8
+codigo=0 tempo_segundos=100
