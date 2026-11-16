@@ -1,0 +1,34 @@
+name: Ler botões especiais, ocultar e analógico (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/overlay-botoes-analogico
+          mkdir -p $S
+          cd ra
+          F=input/input_driver.c
+          grep -n "overlay_next\|OVERLAY_NEXT\|next_index\|next_target" $F tasks/task_overlay.c input/input_overlay.h input/input_keymaps.c input/input_defines.h | head -120 > ../$S/10-overlay-next.txt
+          grep -n "\"overlay_next\"\|\"menu_toggle\"\|\"save_state\"\|\"load_state\"\|\"hold_fast_forward\"\|\"toggle_fast_forward\"\|\"analog_left\"\|\"dpad_area\"\|\"abxy_area\"" -r tasks/task_overlay.c input/ | head -60 > ../$S/11-nomes-de-botoes.txt
+          grep -n "hide\|HIDE" $F | head -80 > ../$S/20-ocultar-input_driver.txt
+          grep -rn "input_overlay_hide\|overlay_hide\|hide_when\|input_overlay_.*timeout\|overlay_.*fade\|auto_hide" --include=*.h --include=*.c settings/ configuration.h menu/menu_setting.c | head -60 > ../$S/21-ocultar-config.txt
+          sed -n '6004,6070p' $F > ../$S/30-analogico-estado.txt
+          sed -n '6174,6310p' $F > ../$S/31-poll-overlay.txt
+          grep -n "analog" $F | sed -n '1,120p' > ../$S/32-analogico-linhas.txt
+          grep -rn "analog.*saturate\|analog_saturate\|OVERLAY_TYPE_ANALOG\|analog_dpad_mode\|input_analog_deadzone\|input_analog_sensitivity" --include=*.c --include=*.h . | grep -v "msg_hash\|intl/\|gfx/drivers\|deps/" | head -60 > ../$S/33-analogico-config.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 3: botões especiais, ocultar, analógico" && git pull --rebase -q && git push
