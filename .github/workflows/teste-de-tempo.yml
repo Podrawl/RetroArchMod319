@@ -5,7 +5,7 @@ on:
     inputs:
       tag:
         description: "Versão do RetroArch"
-        default: "v1.22.2"
+        default: "master"
 
 permissions:
   contents: write
@@ -34,7 +34,8 @@ jobs:
           START=$(date +%s)
           ls ra/pkg/android > build.log 2>&1
           cd ra/pkg/android/phoenix || { echo "codigo=99 sem_pasta" > tempo.txt; exit 0; }
-          gradle assembleAarch64Debug --no-daemon --stacktrace > ../../../../build.log 2>&1
+          G=gradle; [ -x ./gradlew ] && G=./gradlew
+          $G assembleAarch64Debug --no-daemon --stacktrace > ../../../../build.log 2>&1
           RC=$?
           END=$(date +%s)
           echo "codigo=$RC tempo_segundos=$((END-START))" > ../../../../tempo.txt
