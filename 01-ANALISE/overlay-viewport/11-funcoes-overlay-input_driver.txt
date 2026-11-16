@@ -1,0 +1,205 @@
+4017:static int16_t input_overlay_device_mouse_state(
+4018:      input_overlay_t *ol, unsigned id)
+4021:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+4052:static int16_t input_overlay_lightgun_state(
+4053:      bool input_overlay_lightgun_allow_offscreen,
+4054:      input_overlay_t *ol, unsigned id)
+4057:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+4102:static int16_t input_overlay_pointer_state(input_overlay_t *ol,
+4103:      input_overlay_pointer_state_t *ptr_st,
+4127:static int16_t input_overlay_pointing_device_state(
+4128:      int input_overlay_lightgun_port,
+4129:      bool input_overlay_lightgun_allow_offscreen,
+4130:      input_overlay_t *ol, unsigned port, unsigned device,
+4136:         return input_overlay_device_mouse_state(ol, id);
+4140:            return input_overlay_lightgun_state(
+4141:                  input_overlay_lightgun_allow_offscreen,
+4145:         return input_overlay_pointer_state(ol,
+4648:                  input_overlay_state_t
+4740:                           input_overlay_state_t *ol_state =
+5724: * input_overlay_add_inputs:
+5737:static bool input_overlay_add_inputs_inner(overlay_desc_t *desc,
+5740:      input_overlay_state_t *ol_state, unsigned port)
+5847:static bool input_overlay_add_inputs(input_overlay_t *ol,
+5848:      input_overlay_state_t *ol_state,
+5871:static void input_overlay_get_eightway_slope_limits(
+5891: * input_overlay_set_eightway_diagonal_sensitivity:
+5895:void input_overlay_set_eightway_diagonal_sensitivity(void)
+5900:   input_overlay_get_eightway_slope_limits(
+5905:   input_overlay_get_eightway_slope_limits(
+5912: * input_overlay_get_eightway_state:
+5920:static INLINE void input_overlay_get_eightway_state(
+5992: * input_overlay_get_analog_state:
+6004:static void input_overlay_get_analog_state(
+6005:      input_overlay_state_t *out, struct overlay_desc *desc,
+6058: * input_overlay_coords_inside_hitbox:
+6070:static bool input_overlay_coords_inside_hitbox(const struct overlay_desc *desc,
+6107: * input_overlay_poll:
+6125:static void input_overlay_get_eightway_contact(const input_overlay_t *ol,
+6174:static bool input_overlay_poll(
+6175:      input_overlay_t *ol,
+6176:      input_overlay_state_t *out,
+6265:                  input_overlay_get_eightway_state(
+6269:                  input_overlay_get_eightway_contact(ol, desc,
+6279:            input_overlay_get_analog_state(
+6303: * input_overlay_update_desc_geom:
+6309:static void input_overlay_update_desc_geom(input_overlay_t *ol,
+6337:static bool input_overlay_update_apng_frame(input_overlay_t *ol,
+6364:static void input_overlay_update_2frame(input_overlay_t *ol)
+6384:            input_overlay_atlas_frames(ol, i);
+6394:static gfx_surface_t *input_overlay_anim_surface(void *user, unsigned dims,
+6405:static void input_overlay_anim_shown(void *user, gfx_surface_t *s)
+6418:void input_overlay_animate(input_overlay_t *ol, retro_time_t now)
+6444:            input_overlay_anim_submit(ol, i);
+6470:static const unsigned *input_overlay_led_map(void)
+6478: * input_overlay_post_poll:
+6483:static void input_overlay_post_poll(
+6484:      input_overlay_t *ol,
+6489:   input_overlay_alpha_pass(ol, opacity, show_input, opacity,
+6509:      input_overlay_update_desc_geom(ol, desc);
+6516:   input_overlay_update_2frame(ol);
+6520:static void input_overlay_desc_init_hitbox(struct overlay_desc *desc)
+6543: * input_overlay_scale:
+6550:static void input_overlay_scale(struct overlay *ol,
+6598:      input_overlay_desc_init_hitbox(desc);
+6602:static void input_overlay_parse_layout(
+6720:static void input_overlay_set_vertex_geom(input_overlay_t *ol)
+6744: * input_overlay_set_scale_factor:
+6751:void input_overlay_set_scale_factor(
+6752:      input_overlay_t *ol, const overlay_layout_desc_t *layout_desc,
+6770:      input_overlay_parse_layout(current_overlay,
+6772:      input_overlay_scale(current_overlay, &overlay_layout);
+6775:   input_overlay_set_vertex_geom(ol);
+6782:void input_overlay_video_teardown(void)
+6784:   input_overlay_release_textures(input_driver_st.overlay_ptr);
+6785:   input_overlay_release_textures(input_driver_st.overlay_cache_ptr);
+6788:static void input_overlay_load_active_geom(
+6789:      input_overlay_t *ol, float opacity);
+6791:void input_overlay_load_active(input_overlay_t *ol, float opacity)
+6796:      input_overlay_load_active_geom(ol, opacity);
+6801:static void input_overlay_load_active_geom(
+6802:      input_overlay_t *ol, float opacity)
+6804:   input_overlay_set_alpha_mod(ol, opacity);
+6805:   input_overlay_set_vertex_geom(ol);
+6813: * input_overlay_next_move_touch_masks
+6819:void input_overlay_next_move_touch_masks(input_overlay_t *ol)
+6847: * input_overlay_poll_clear:
+6853:static void input_overlay_poll_clear(
+6854:      input_overlay_t *ol, float opacity)
+6860:   input_overlay_set_alpha_mod(ol, opacity);
+6869:      input_overlay_update_desc_geom(ol, desc);
+6873:   input_overlay_update_2frame(ol);
+6877:void input_overlay_set_alpha_mod(input_overlay_t *ol, float mod)
+6879:   input_overlay_alpha_pass(ol, mod, false, mod,
+6883:static void input_overlay_free_images(input_overlay_t *ol)
+6894:   input_overlay_anim_stop(ol);
+6930:static void input_overlay_free_overlays(input_overlay_t *ol)
+6938:      input_overlay_free_overlay(&ol->overlays[i]);
+6944:void input_overlay_free_overlay(struct overlay *overlay)
+6967: * input_overlay_free:
+6972:static void input_overlay_free(input_overlay_t *ol)
+6983:   input_overlay_release_textures(ol);
+6984:   input_overlay_free_images(ol);
+6986:   input_overlay_free_overlays(ol);
+7000:void input_overlay_auto_rotate_(
+7002:      bool input_overlay_enable,
+7003:      input_overlay_t *ol)
+7068: * input_overlay_poll_lightgun
+7075:static void input_overlay_poll_lightgun(settings_t *settings,
+7076:      input_overlay_t *ol, const int old_ptr_count)
+7078:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+7144:static void input_overlay_get_mouse_scale(settings_t *settings,
+7189: * input_overlay_poll_mouse
+7198:static void input_overlay_poll_mouse(settings_t *settings,
+7199:      struct input_overlay_mouse_state *mouse_st,
+7200:      input_overlay_t *ol,
+7204:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+7231:   input_overlay_get_mouse_scale(settings,
+7359: * input_overlay_track_touch_inputs
+7366:static void input_overlay_track_touch_inputs(
+7367:      input_overlay_state_t *state, input_overlay_state_t *old_state)
+7414:static void input_overlay_update_pointer_coords(
+7415:      input_overlay_pointer_state_t *ptr_st, int touch_idx)
+7485:   input_overlay_state_t *old_ol_state;
+7487:   input_overlay_t *ol                      = (input_overlay_t*)ol_data;
+7495:   input_overlay_state_t *ol_state          = INPUT_OVERLAY_ST(ol);
+7496:   input_overlay_pointer_state_t *ptr_state = &ol->pointer_state;
+7499:         input_overlay_show_inputs          = (enum overlay_show_input_type)
+7501:   unsigned input_overlay_show_inputs_port  = settings->uints.input_overlay_show_inputs_port;
+7582:      input_overlay_track_touch_inputs(ol_state, old_ol_state);
+7587:         input_overlay_state_t polled_data;
+7654:            input_overlay_update_pointer_coords(ptr_state, i);
+7663:         input_overlay_poll_lightgun(settings, ol, old_ptr_count);
+7665:         input_overlay_poll_mouse(settings, &ptr_state->mouse, ol,
+7770:         input_overlay_show_inputs_port);
+7817:      input_overlay_post_poll(ol,
+7820:      input_overlay_poll_clear(ol, opacity);
+13655:static void input_overlay_enable_(bool enable)
+13659:   input_overlay_t *ol            = input_st->overlay_ptr;
+13683:      input_overlay_load_active(ol, opacity);
+13690:         input_overlay_auto_rotate_(
+13726:static void input_overlay_viewport_publish(void)
+13728:   input_overlay_t *ol = input_driver_st.overlay_ptr;
+13732:static void input_overlay_deinit(void)
+13734:   input_overlay_free(input_driver_st.overlay_ptr);
+13736:   input_overlay_viewport_publish();
+13738:   input_overlay_free(input_driver_st.overlay_cache_ptr);
+13744:static void input_overlay_move_to_cache(void)
+13747:   input_overlay_t      *ol       = input_st->overlay_ptr;
+13753:   input_overlay_free(input_driver_st.overlay_cache_ptr);
+13756:   input_overlay_enable_(false);
+13761:   input_overlay_viewport_publish();
+13764:static void input_overlay_swap_with_cached(void)
+13767:   input_overlay_t      *ol;
+13770:   input_overlay_enable_(false);
+13776:   input_overlay_viewport_publish();
+13779:   input_overlay_enable_(true);
+13782:void input_overlay_unload(void)
+13784:   bool input_overlay_enable   = config_get_ptr()->bools.input_overlay_enable;
+13791:      input_overlay_deinit();
+13793:      input_overlay_move_to_cache();
+13796:void input_overlay_leds_enable(bool enable)
+13809:      input_overlay_set_alpha_mod(input_st->overlay_ptr,
+13816:void input_overlay_set_led(int led, bool lit)
+13819:   input_overlay_t      *ol       = input_st->overlay_ptr;
+13836:      input_overlay_hide_leds(ol, input_st->overlay_leds_lit,
+13837:            input_overlay_led_map());
+13840:static bool input_overlay_want_hidden(void)
+13861:   input_overlay_t *ol            = input_st->overlay_ptr;
+13885:void input_overlay_check_mouse_cursor(void)
+13888:   input_overlay_t *ol            = input_st->overlay_ptr;
+13899:static void input_overlay_loaded_move_images(input_overlay_t *ol,
+14005:static void input_overlay_loaded(retro_task_t *task,
+14012:   input_overlay_t      *ol       = NULL;
+14087:         input_overlay_alpha_forget(ol);
+14095:      input_overlay_loaded_move_images(ol, data->image_list, data->anim_list);
+14106:      input_overlay_free(input_st->overlay_ptr);
+14108:   input_overlay_viewport_publish();
+14111:   input_overlay_enable_(enable_overlay);
+14117:      input_overlay_viewport_publish();
+14118:      input_overlay_free(ol);
+14124:      input_overlay_unload();
+14136:   input_overlay_set_eightway_diagonal_sensitivity();
+14158:static const char *input_overlay_path(bool want_osk)
+14246:void input_overlay_init(void)
+14250:   input_overlay_t *ol            = input_st->overlay_ptr;
+14251:   input_overlay_t *ol_cache      = input_st->overlay_cache_ptr;
+14285:      input_overlay_swap_with_cached();
+14291:      input_overlay_unload();
+14293:      input_overlay_deinit();
+14297:         input_overlay_loaded, path_overlay, want_osk, NULL);
+17244:bool input_config_overlay_configured(void)
+17834:bool input_driver_overlay_alive(void)
+17836:   const input_overlay_t *ol = input_driver_st.overlay_ptr;
+17843:float *input_driver_overlay_eightway_slopes(bool abxy)
+17849:bool input_driver_overlay_active_page(void)
+17851:   const input_overlay_t *ol = input_driver_st.overlay_ptr;
+17856:bool input_driver_overlay_takes_input(void)
+17858:   const input_overlay_t *ol = input_driver_st.overlay_ptr;
+18585:      float input_overlay_opacity     = (input_st->overlay_ptr->flags & INPUT_OVERLAY_IS_OSK)
+18600:         input_overlay_load_active_geom(
+18603:      input_overlay_animate(input_st->overlay_ptr, cpu_features_get_time_usec());
+18609:            input_overlay_opacity,
+18649:      input_overlay_t *overlay_pointer = (input_overlay_t*)input_st->overlay_ptr;
+18934:                     input_overlay_state_t *ol_state  = overlay_pointer
+18999:                     input_overlay_state_t *ol_state  =

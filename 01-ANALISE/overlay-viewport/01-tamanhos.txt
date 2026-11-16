@@ -1,0 +1,5 @@
+  21357 input/input_driver.c
+    719 input/input_overlay.h
+  21831 menu/menu_setting.c
+  11844 gfx/video_driver.c
+  55751 total

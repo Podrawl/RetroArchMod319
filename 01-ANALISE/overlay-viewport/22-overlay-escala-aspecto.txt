@@ -1,0 +1,43 @@
+./gfx/drivers/drm_gfx.c:1806:static bool drm_overlay_scale(struct drm_overlay_image *o,
+./gfx/drivers/drm_gfx.c:1888:            || !drm_overlay_scale(o, o->sw, o->sh))
+./configuration.c:2618:#include "settings/settings_def_overlay_auto_scale.h"
+./configuration.c:2950:   CFG_ROW(bools.input_osk_overlay_auto_scale, INPUT_OSK_OVERLAY_AUTO_SCALE, DEFAULT_INPUT_OVERLAY_AUTO_SCALE),
+./configuration.c:3458:#include "settings/settings_def_overlay_auto_scale.h"
+./configuration.c:4103:#include "settings/settings_def_overlay_auto_scale.h"
+./configuration.c:4903:#include "settings/settings_def_overlay_auto_scale.h"
+./configuration.c:5547:#include "settings/settings_def_overlay_auto_scale.h"
+./settings/settings_def_overlay_auto_scale.h:10:S_BOOL_EX(input_overlay_auto_scale, INPUT_OVERLAY_AUTO_SCALE,
+./settings/settings_def_overlay_auto_scale.h:11:      "input_overlay_auto_scale",
+./settings/settings_def_osk_overlay.h:18:S_BOOL_EX(input_osk_overlay_auto_scale, INPUT_OSK_OVERLAY_AUTO_SCALE,
+./settings/settings_def_osk_overlay.h:19:      "input_osk_overlay_auto_scale",
+./settings/settings_def_overlay_appearance.h:10:S_FLOAT_EX(input_overlay_scale_landscape, OVERLAY_SCALE_LANDSCAPE,
+./settings/settings_def_overlay_appearance.h:11:      "input_overlay_scale_landscape",
+./settings/settings_def_overlay_appearance.h:19:S_FLOAT_EX(input_overlay_aspect_adjust_landscape, OVERLAY_ASPECT_ADJUST_LANDSCAPE,
+./settings/settings_def_overlay_appearance.h:20:      "input_overlay_aspect_adjust_landscape",
+./settings/settings_def_overlay_appearance.h:64:S_FLOAT_EX(input_overlay_scale_portrait, OVERLAY_SCALE_PORTRAIT,
+./settings/settings_def_overlay_appearance.h:65:      "input_overlay_scale_portrait",
+./settings/settings_def_overlay_appearance.h:73:S_FLOAT_EX(input_overlay_aspect_adjust_portrait, OVERLAY_ASPECT_ADJUST_PORTRAIT,
+./settings/settings_def_overlay_appearance.h:74:      "input_overlay_aspect_adjust_portrait",
+./menu/menu_displaylist.c:13692:            bool input_overlay_auto_scale   = settings->bools.input_overlay_auto_scale;
+./menu/menu_displaylist.c:13768:                         !input_overlay_auto_scale;
+./menu/menu_setting.c:14761:/* GENERATED: rows come from settings_def_overlay_auto_scale.h in order. */
+./menu/menu_setting.c:14762:#include "../settings/settings_def_overlay_auto_scale.h"
+./samples/gfx/rsx_alloc/rsx_alloc_test.c:1560:   u32 overlay_offset, core_offset;
+./samples/gfx/rsx_alloc/rsx_alloc_test.c:1576:   overlay_offset = rsx->overlay[0].texture.tex.offset;
+./samples/gfx/rsx_alloc/rsx_alloc_test.c:1596:            && fake_draw_trace[2] == overlay_offset
+./samples/gfx/rsx_alloc/rsx_alloc_test.c:1616:            && fake_draw_trace[1] == (i == 0 ? overlay_offset : FAKE_DRAW_OSD)
+./retroarch.c:5398:               layout_desc.auto_scale              = settings->bools.input_osk_overlay_auto_scale;
+./retroarch.c:5402:               layout_desc.scale_landscape         = settings->floats.input_overlay_scale_landscape;
+./retroarch.c:5403:               layout_desc.aspect_adjust_landscape = settings->floats.input_overlay_aspect_adjust_landscape;
+./retroarch.c:5408:               layout_desc.scale_portrait          = settings->floats.input_overlay_scale_portrait;
+./retroarch.c:5409:               layout_desc.aspect_adjust_portrait  = settings->floats.input_overlay_aspect_adjust_portrait;
+./retroarch.c:5415:               layout_desc.auto_scale              = settings->bools.input_overlay_auto_scale;
+./input/input_driver.c:6543: * input_overlay_scale:
+./input/input_driver.c:6550:static void input_overlay_scale(struct overlay *ol,
+./input/input_driver.c:6772:      input_overlay_scale(current_overlay, &overlay_layout);
+./configuration.h:667:      float input_overlay_scale_landscape;
+./configuration.h:668:      float input_overlay_aspect_adjust_landscape;
+./configuration.h:674:      float input_overlay_scale_portrait;
+./configuration.h:675:      float input_overlay_aspect_adjust_portrait;
+./configuration.h:847:      bool input_overlay_auto_scale;
+./configuration.h:848:      bool input_osk_overlay_auto_scale;

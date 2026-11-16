@@ -1,0 +1,120 @@
+5262:                     msg_hash_to_str(MENU_ENUM_LABEL_VALUE_ONSCREEN_OVERLAY_SETTINGS),
+5263:                     MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS_STR,
+5264:                     MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS,
+10026:               else if (key == RARCH_OVERLAY_NEXT)
+12584:               {MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS,                             PARSE_ACTION,      true},
+12654:                  case MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS:
+13688:      case DISPLAYLIST_ONSCREEN_OVERLAY_SETTINGS_LIST:
+13690:            bool input_overlay_enable       = settings->bools.input_overlay_enable;
+13691:            bool input_overlay_ptr_enable   = settings->bools.input_overlay_pointer_enable;
+13692:            bool input_overlay_auto_scale   = settings->bools.input_overlay_auto_scale;
+13693:            enum overlay_show_input_type
+13694:                  input_overlay_show_inputs = (enum overlay_show_input_type)
+13695:                        settings->uints.input_overlay_show_inputs;
+13698:               {MENU_ENUM_LABEL_INPUT_OVERLAY_ENABLE,                      PARSE_ONLY_BOOL,  true  },
+13699:               {MENU_ENUM_LABEL_OVERLAY_AUTOLOAD_PREFERRED,                PARSE_ONLY_BOOL,  false },
+13700:               {MENU_ENUM_LABEL_OVERLAY_PRESET,                            PARSE_ONLY_PATH,  false },
+13701:               {MENU_ENUM_LABEL_OVERLAY_OPACITY,                           PARSE_ONLY_FLOAT, false },
+13702:               {MENU_ENUM_LABEL_INPUT_OVERLAY_BEHIND_MENU,                 PARSE_ONLY_BOOL,  false },
+13703:               {MENU_ENUM_LABEL_INPUT_OVERLAY_HIDE_IN_MENU,                PARSE_ONLY_BOOL,  false },
+13704:               {MENU_ENUM_LABEL_INPUT_OVERLAY_HIDE_WHEN_GAMEPAD_CONNECTED, PARSE_ONLY_BOOL,  false },
+13705:               {MENU_ENUM_LABEL_INPUT_OVERLAY_SHOW_INPUTS,                 PARSE_ONLY_UINT,  false },
+13706:               {MENU_ENUM_LABEL_INPUT_OVERLAY_SHOW_INPUTS_PORT,            PARSE_ONLY_UINT,  false },
+13707:               {MENU_ENUM_LABEL_INPUT_OVERLAY_SHOW_MOUSE_CURSOR,           PARSE_ONLY_BOOL,  false },
+13708:               {MENU_ENUM_LABEL_INPUT_OVERLAY_DPAD_DIAGONAL_SENSITIVITY,   PARSE_ONLY_UINT,  false },
+13709:               {MENU_ENUM_LABEL_INPUT_OVERLAY_ABXY_DIAGONAL_SENSITIVITY,   PARSE_ONLY_UINT,  false },
+13710:               {MENU_ENUM_LABEL_INPUT_OVERLAY_DPAD_METHOD,                 PARSE_ONLY_UINT,  false },
+13711:               {MENU_ENUM_LABEL_INPUT_OVERLAY_ABXY_METHOD,                 PARSE_ONLY_UINT,  false },
+13712:               {MENU_ENUM_LABEL_INPUT_OVERLAY_CONTACT_SCALE,               PARSE_ONLY_UINT,  false },
+13713:               {MENU_ENUM_LABEL_INPUT_OVERLAY_ANALOG_RECENTER_ZONE,        PARSE_ONLY_UINT,  false },
+13714:               {MENU_ENUM_LABEL_INPUT_OVERLAY_AUTO_ROTATE,                 PARSE_ONLY_BOOL,  false },
+13715:               {MENU_ENUM_LABEL_INPUT_OVERLAY_AUTO_SCALE,                  PARSE_ONLY_BOOL,  false },
+13716:               {MENU_ENUM_LABEL_OVERLAY_SCALE_LANDSCAPE,                   PARSE_ONLY_FLOAT, false },
+13717:               {MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_LANDSCAPE,           PARSE_ONLY_FLOAT, false },
+13718:               {MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_LANDSCAPE,            PARSE_ONLY_FLOAT, false },
+13719:               {MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_LANDSCAPE,            PARSE_ONLY_FLOAT, false },
+13720:               {MENU_ENUM_LABEL_OVERLAY_X_OFFSET_LANDSCAPE,                PARSE_ONLY_FLOAT, false },
+13721:               {MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_LANDSCAPE,                PARSE_ONLY_FLOAT, false },
+13722:               {MENU_ENUM_LABEL_OVERLAY_SCALE_PORTRAIT,                    PARSE_ONLY_FLOAT, false },
+13723:               {MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_PORTRAIT,            PARSE_ONLY_FLOAT, false },
+13724:               {MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_PORTRAIT,             PARSE_ONLY_FLOAT, false },
+13725:               {MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_PORTRAIT,             PARSE_ONLY_FLOAT, false },
+13726:               {MENU_ENUM_LABEL_OVERLAY_X_OFFSET_PORTRAIT,                 PARSE_ONLY_FLOAT, false },
+13727:               {MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_PORTRAIT,                 PARSE_ONLY_FLOAT, false },
+13728:               {MENU_ENUM_LABEL_INPUT_OVERLAY_POINTER_ENABLE,              PARSE_ONLY_BOOL,  false },
+13729:               {MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS,                 PARSE_ACTION,     false },
+13730:               {MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS,                    PARSE_ACTION,     false },
+13731:               {MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS,                      PARSE_ACTION,     false },
+13738:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_BEHIND_MENU:
+13739:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_HIDE_IN_MENU:
+13740:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_HIDE_WHEN_GAMEPAD_CONNECTED:
+13741:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_SHOW_INPUTS:
+13742:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_SHOW_MOUSE_CURSOR:
+13743:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_AUTO_ROTATE:
+13744:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_AUTO_SCALE:
+13745:                  case MENU_ENUM_LABEL_OVERLAY_AUTOLOAD_PREFERRED:
+13746:                  case MENU_ENUM_LABEL_OVERLAY_PRESET:
+13747:                  case MENU_ENUM_LABEL_OVERLAY_OPACITY:
+13748:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_POINTER_ENABLE:
+13749:                     build_list[i].checked = input_overlay_enable;
+13751:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_SHOW_INPUTS_PORT:
+13752:                     build_list[i].checked = input_overlay_enable &&
+13753:                         (input_overlay_show_inputs == OVERLAY_SHOW_INPUT_PHYSICAL);
+13755:                  case MENU_ENUM_LABEL_OVERLAY_SCALE_LANDSCAPE:
+13756:                  case MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_LANDSCAPE:
+13757:                  case MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_LANDSCAPE:
+13758:                  case MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_LANDSCAPE:
+13759:                  case MENU_ENUM_LABEL_OVERLAY_X_OFFSET_LANDSCAPE:
+13760:                  case MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_LANDSCAPE:
+13761:                  case MENU_ENUM_LABEL_OVERLAY_SCALE_PORTRAIT:
+13762:                  case MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_PORTRAIT:
+13763:                  case MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_PORTRAIT:
+13764:                  case MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_PORTRAIT:
+13765:                  case MENU_ENUM_LABEL_OVERLAY_X_OFFSET_PORTRAIT:
+13766:                  case MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_PORTRAIT:
+13767:                     build_list[i].checked = input_overlay_enable &&
+13768:                         !input_overlay_auto_scale;
+13770:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_DPAD_DIAGONAL_SENSITIVITY:
+13771:                     build_list[i].checked = input_overlay_enable &&
+13772:                         BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_DPAD_AREA);
+13774:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_ABXY_DIAGONAL_SENSITIVITY:
+13775:                     build_list[i].checked = input_overlay_enable &&
+13776:                         BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_ABXY_AREA);
+13780:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_DPAD_METHOD:
+13781:                     build_list[i].checked = input_overlay_enable &&
+13782:                         BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_DPAD_AREA);
+13784:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_ABXY_METHOD:
+13785:                     build_list[i].checked = input_overlay_enable &&
+13786:                         BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_ABXY_AREA);
+13788:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_CONTACT_SCALE:
+13789:                     build_list[i].checked = input_overlay_enable
+13790:                        && (  (  BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_DPAD_AREA)
+13791:                              && settings->uints.input_overlay_dpad_method)
+13792:                           || (  BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_ABXY_AREA)
+13793:                              && settings->uints.input_overlay_abxy_method));
+13796:                  case MENU_ENUM_LABEL_INPUT_OVERLAY_ANALOG_RECENTER_ZONE:
+13797:                     build_list[i].checked = input_overlay_enable &&
+13798:                         (BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_ANALOG_LEFT)
+13799:                          || BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_ANALOG_RIGHT));
+13801:                  case MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS:
+13802:                  case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+13803:                     build_list[i].checked = input_overlay_enable && input_overlay_ptr_enable;
+13805:                  case MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS:
+13806:                     build_list[i].checked = input_overlay_enable;
+13825:      case DISPLAYLIST_OSK_OVERLAY_SETTINGS_LIST:
+13828:               { MENU_ENUM_LABEL_OSK_OVERLAY_PRESET, PARSE_ONLY_PATH, false },
+13829:               { MENU_ENUM_LABEL_INPUT_OSK_OVERLAY_AUTO_SCALE, PARSE_ONLY_BOOL, false },
+13830:               { MENU_ENUM_LABEL_OSK_OVERLAY_OPACITY, PARSE_ONLY_FLOAT, false },
+13836:      case DISPLAYLIST_OVERLAY_LIGHTGUN_SETTINGS_LIST:
+13839:               { MENU_ENUM_LABEL_INPUT_OVERLAY_LIGHTGUN_PORT, PARSE_ONLY_INT, false },
+13840:               { MENU_ENUM_LABEL_INPUT_OVERLAY_LIGHTGUN_TRIGGER_ON_TOUCH, PARSE_ONLY_BOOL, false },
+13841:               { MENU_ENUM_LABEL_INPUT_OVERLAY_LIGHTGUN_TRIGGER_DELAY, PARSE_ONLY_UINT, false },
+13842:               { MENU_ENUM_LABEL_INPUT_OVERLAY_LIGHTGUN_TWO_TOUCH_INPUT, PARSE_ONLY_UINT, false },
+13843:               { MENU_ENUM_LABEL_INPUT_OVERLAY_LIGHTGUN_THREE_TOUCH_INPUT, PARSE_ONLY_UINT, false },
+13844:               { MENU_ENUM_LABEL_INPUT_OVERLAY_LIGHTGUN_FOUR_TOUCH_INPUT, PARSE_ONLY_UINT, false },
+13845:               { MENU_ENUM_LABEL_INPUT_OVERLAY_LIGHTGUN_ALLOW_OFFSCREEN, PARSE_ONLY_BOOL, false },
+13851:      case DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST:
+13854:               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_SPEED, PARSE_ONLY_FLOAT, false },
+13855:               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_HOLD_TO_DRAG, PARSE_ONLY_BOOL, false },
+13856:               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_HOLD_MSEC, PARSE_ONLY_UINT, false },
+13857:               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_DTAP_TO_DRAG, PARSE_ONLY_BOOL, false },

@@ -1,0 +1,3 @@
+gfx/video_driver.c:5418: * video_viewport_get_scaled_integer:
+gfx/video_driver.c:5428:static void video_viewport_get_scaled_integer(
+gfx/video_driver.c:6024:      video_viewport_get_scaled_integer(video_st,

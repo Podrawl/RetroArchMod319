@@ -1,0 +1,143 @@
+158:#include "../input/common/overlay_contact.h"
+173:#if defined(HAVE_OVERLAY)
+174:#include "../input/input_overlay.h"
+423:   SETTINGS_LIST_OVERLAY,
+424:   SETTINGS_LIST_OSK_OVERLAY,
+425:   SETTINGS_LIST_OVERLAY_MOUSE,
+426:   SETTINGS_LIST_OVERLAY_LIGHTGUN,
+7069:#if defined(HAVE_OVERLAY)
+7070:static size_t setting_get_string_representation_uint_input_overlay_show_inputs(
+7077:         case OVERLAY_SHOW_INPUT_NONE:
+7082:         case OVERLAY_SHOW_INPUT_TOUCHED:
+7085:                     MENU_ENUM_LABEL_VALUE_INPUT_OVERLAY_SHOW_INPUTS_TOUCHED),
+7087:         case OVERLAY_SHOW_INPUT_PHYSICAL:
+7090:                     MENU_ENUM_LABEL_VALUE_INPUT_OVERLAY_SHOW_INPUTS_PHYSICAL),
+7097:static size_t setting_get_string_representation_uint_input_overlay_show_inputs_port(
+7106:static size_t setting_get_string_representation_overlay_lightgun_port(
+7113:               MENU_ENUM_LABEL_VALUE_INPUT_OVERLAY_LIGHTGUN_PORT_ANY), len);
+7119:static size_t setting_get_string_representation_overlay_lightgun_action(
+7126:         case OVERLAY_LIGHTGUN_ACTION_NONE:
+7129:         case OVERLAY_LIGHTGUN_ACTION_TRIGGER:
+7132:         case OVERLAY_LIGHTGUN_ACTION_RELOAD:
+7135:         case OVERLAY_LIGHTGUN_ACTION_AUX_A:
+7138:         case OVERLAY_LIGHTGUN_ACTION_AUX_B:
+7141:         case OVERLAY_LIGHTGUN_ACTION_AUX_C:
+7144:         case OVERLAY_LIGHTGUN_ACTION_SELECT:
+7147:         case OVERLAY_LIGHTGUN_ACTION_START:
+7150:         case OVERLAY_LIGHTGUN_ACTION_DPAD_UP:
+7153:         case OVERLAY_LIGHTGUN_ACTION_DPAD_DOWN:
+7156:         case OVERLAY_LIGHTGUN_ACTION_DPAD_LEFT:
+7159:         case OVERLAY_LIGHTGUN_ACTION_DPAD_RIGHT:
+7167:static size_t setting_get_string_representation_overlay_mouse_btn(
+7174:         case OVERLAY_MOUSE_BTN_NONE:
+7177:         case OVERLAY_MOUSE_BTN_LMB:
+7180:         case OVERLAY_MOUSE_BTN_RMB:
+7183:         case OVERLAY_MOUSE_BTN_MMB:
+9165:#ifdef HAVE_OVERLAY
+9166:static size_t setting_get_string_representation_overlay_contact_method(
+9169:   enum msg_hash_enums e = MENU_ENUM_LABEL_VALUE_OVERLAY_CONTACT_METHOD_VECTOR;
+9174:      case OVERLAY_CONTACT_METHOD_AREA:
+9175:         e = MENU_ENUM_LABEL_VALUE_OVERLAY_CONTACT_METHOD_AREA;
+9177:      case OVERLAY_CONTACT_METHOD_BOTH:
+9178:         e = MENU_ENUM_LABEL_VALUE_OVERLAY_CONTACT_METHOD_BOTH;
+9855:      SETTINGS_LIST_OVERLAY,
+9856:      SETTINGS_LIST_OSK_OVERLAY,
+9857:      SETTINGS_LIST_OVERLAY_MOUSE,
+9858:      SETTINGS_LIST_OVERLAY_LIGHTGUN,
+12331:#ifdef HAVE_OVERLAY
+12332:static void overlay_enable_toggle_change_handler(rarch_setting_t *setting)
+12337:   command_event(CMD_EVENT_OVERLAY_UNLOAD, NULL);
+12338:   command_event(CMD_EVENT_OVERLAY_INIT, NULL);
+12341:static void overlay_show_mouse_cursor_change_handler(rarch_setting_t *setting)
+12345:   input_overlay_check_mouse_cursor();
+12632:      system("/usr/bin/retroflag_picase_install_gpio-poweroff_overlay.sh enable");
+12636:      system("/usr/bin/retroflag_picase_install_gpio-poweroff_overlay.sh disable");
+14731:#ifdef HAVE_OVERLAY
+14733:/* GENERATED: rows come from settings_def_overlay_enable.h in order. */
+14734:#include "../settings/settings_def_overlay_enable.h"
+14737:#ifdef HAVE_OVERLAY
+14739:/* GENERATED: rows come from settings/settings_def_overlay_autoload.h in order. */
+14740:#include "../settings/settings_def_overlay_autoload.h"
+14744:#ifdef HAVE_OVERLAY
+14746:/* GENERATED: rows come from settings_def_overlay_display.h in order. */
+14747:#include "../settings/settings_def_overlay_display.h"
+14751:#ifdef HAVE_OVERLAY
+14753:/* GENERATED: rows come from settings_def_overlay_eightway.h in order. */
+14754:#include "../settings/settings_def_overlay_eightway.h"
+14759:#ifdef HAVE_OVERLAY
+14761:/* GENERATED: rows come from settings_def_overlay_auto_scale.h in order. */
+14762:#include "../settings/settings_def_overlay_auto_scale.h"
+14766:#ifdef HAVE_OVERLAY
+14767:static const setting_desc_t overlay2_desc_0[] = {
+14768:/* GENERATED: rows come from settings_def_overlay_preset_path.h in order. */
+14769:#include "../settings/settings_def_overlay_preset_path.h"
+14773:#ifdef HAVE_OVERLAY
+14775:/* GENERATED: rows come from settings_def_overlay_opacity.h in order. */
+14776:#include "../settings/settings_def_overlay_opacity.h"
+14780:#ifdef HAVE_OVERLAY
+14782:/* GENERATED: rows come from settings_def_overlay_appearance.h in order. */
+14783:#include "../settings/settings_def_overlay_appearance.h"
+14787:#ifdef HAVE_OVERLAY
+14788:static const setting_desc_t overlay_lightg_desc_0[] = {
+14789:/* GENERATED: rows come from settings_def_overlay_lightgun.h in order. */
+14790:#include "../settings/settings_def_overlay_lightgun.h"
+14794:#ifdef HAVE_OVERLAY
+14795:static const setting_desc_t overlay_mouse_desc_0[] = {
+14796:/* GENERATED: rows come from settings_def_overlay_mouse.h in order. */
+14797:#include "../settings/settings_def_overlay_mouse.h"
+15490:#ifdef HAVE_OVERLAY
+15491:static const setting_desc_t osk_overlay_desc_0[] = {
+15492:/* GENERATED: rows come from settings_def_osk_overlay.h in order. */
+15493:#include "../settings/settings_def_osk_overlay.h"
+17823:                  &settings->bools.input_stylus_hide_overlay,
+17824:                  MENU_ENUM_LABEL_INPUT_STYLUS_HIDE_OVERLAY,
+17825:                  MENU_ENUM_LABEL_VALUE_INPUT_STYLUS_HIDE_OVERLAY,
+18304:#ifdef HAVE_OVERLAY
+18305:/* Start on an overlay preset row: back to what a fresh configuration
+18307: * devices have no other controls, and elsewhere no overlay. The row's
+18309:static int setting_overlay_preset_action_start(rarch_setting_t *setting)
+18320:   if (*settings->paths.directory_overlay)
+18322:            settings->paths.directory_overlay,
+18323:            (setting->enum_idx == MENU_ENUM_LABEL_OSK_OVERLAY_PRESET)
+18324:            ? FILE_PATH_DEFAULT_OSK_OVERLAY : FILE_PATH_DEFAULT_OVERLAY,
+18333:static void settings_build_overlay(
+18344:#ifdef HAVE_OVERLAY
+18346:            msg_hash_to_str(MENU_ENUM_LABEL_VALUE_OVERLAY_SETTINGS),
+18349:      parent_group = MENU_ENUM_LABEL_OVERLAY_SETTINGS_STR;
+18356:            &settings->bools.input_overlay_enable,
+18357:            MENU_ENUM_LABEL_INPUT_OVERLAY_ENABLE,
+18358:            MENU_ENUM_LABEL_VALUE_INPUT_OVERLAY_ENABLE,
+18359:            config_overlay_enable_default(),
+18372:      SETTINGS_ACTION_SET(change, &(*list)[list_info->index - 1], overlay_enable_toggle_change_handler)
+18376:      if (video_driver_test_all_flags(GFX_CTX_FLAGS_OVERLAY_BEHIND_MENU_SUPPORTED))
+18384:            ADD_DESC(overlay2_desc_0);
+18385:            SETTINGS_ACTION_SET(start, &(*list)[list_info->index - 1], setting_overlay_preset_action_start)
+18398:static void settings_build_osk_overlay(
+18409:#ifdef HAVE_OVERLAY
+18411:            msg_hash_to_str(MENU_ENUM_LABEL_VALUE_OSK_OVERLAY_SETTINGS),
+18414:      parent_group = MENU_ENUM_LABEL_OVERLAY_SETTINGS_STR;
+18421:               ADD_DESC(osk_overlay_desc_0);
+18422:               SETTINGS_ACTION_SET(start, &(*list)[preset], setting_overlay_preset_action_start)
+20611:   { SETTINGS_LIST_OVERLAY, settings_build_overlay, NULL, 0, MSG_UNKNOWN, MSG_UNKNOWN, MSG_UNKNOWN },
+20612:   { SETTINGS_LIST_OSK_OVERLAY, settings_build_osk_overlay, NULL, 0, MSG_UNKNOWN, MSG_UNKNOWN, MSG_UNKNOWN },
+20613:   #ifdef HAVE_OVERLAY
+20614:   { SETTINGS_LIST_OVERLAY_LIGHTGUN, NULL,
+20615:     overlay_lightg_desc_0, (unsigned)ARRAY_SIZE(overlay_lightg_desc_0),
+20616:     MENU_ENUM_LABEL_VALUE_OVERLAY_LIGHTGUN_SETTINGS,
+20618:     MENU_ENUM_LABEL_OVERLAY_SETTINGS },
+20620:   #ifdef HAVE_OVERLAY
+20621:   { SETTINGS_LIST_OVERLAY_MOUSE, NULL,
+20622:     overlay_mouse_desc_0, (unsigned)ARRAY_SIZE(overlay_mouse_desc_0),
+20623:     MENU_ENUM_LABEL_VALUE_OVERLAY_MOUSE_SETTINGS,
+20625:     MENU_ENUM_LABEL_OVERLAY_SETTINGS },
+21089:#ifdef HAVE_OVERLAY
+21090:   { osk_overlay_desc_0, (uint16_t)ARRAY_SIZE(osk_overlay_desc_0) },
+21114:#ifdef HAVE_OVERLAY
+21116:#ifdef HAVE_OVERLAY
+21119:#ifdef HAVE_OVERLAY
+21122:#ifdef HAVE_OVERLAY
+21126:#ifdef HAVE_OVERLAY
+21129:#ifdef HAVE_OVERLAY
+21130:   { overlay2_desc_0, (uint16_t)ARRAY_SIZE(overlay2_desc_0) },
+21132:#ifdef HAVE_OVERLAY
+21135:#ifdef HAVE_OVERLAY

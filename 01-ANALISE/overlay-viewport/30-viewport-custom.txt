@@ -1,0 +1,122 @@
+./gfx/drivers/d3d8.c:661:   video_viewport_settings_t *custom_vp            = &settings->video_vp_custom;
+./gfx/drivers/d3d8.c:700:   if (!VIDEO_SCALE_W(custom_vp->dims))
+./gfx/drivers/d3d8.c:701:      VIDEO_SCALE_PUT_W(custom_vp->dims, width);
+./gfx/drivers/d3d8.c:703:   if (!VIDEO_SCALE_H(custom_vp->dims))
+./gfx/drivers/d3d8.c:704:      VIDEO_SCALE_PUT_H(custom_vp->dims, height);
+./gfx/video_driver.h:582:   int custom_vp_x;
+./gfx/video_driver.h:583:   int custom_vp_y;
+./gfx/video_driver.h:620:   unsigned custom_vp_dims;
+./gfx/video_views.c:305:   if (count == 1 && p->custom_vp && cdims == p->dims)
+./gfx/video_views.c:307:      fit[first] = *p->custom_vp;
+./gfx/video_driver.c:4439:   params->custom_vp       = NULL;
+./gfx/video_driver.c:4456:/* @custom_vp: the custom viewport, in the window's pixels, applies to
+./gfx/video_driver.c:4460:      bool custom_vp, unsigned exclude, video_views_layout_t *out)
+./gfx/video_driver.c:4474:      if (custom_vp && VIDEO_SCALE_W(custom.dims) && VIDEO_SCALE_H(custom.dims))
+./gfx/video_driver.c:4475:         params.custom_vp = &custom;
+./gfx/video_driver.c:4501:   params.custom_vp       = NULL;
+./gfx/video_driver.c:6288:       * custom_viewport_width=57874 / custom_viewport_x=
+./gfx/video_driver.c:7394:   video_viewport_settings_t *custom_vp             = NULL;
+./gfx/video_driver.c:7424:   custom_vp                               = &settings->video_vp_custom;
+./gfx/video_driver.c:7540:   video_info->custom_vp_x                 = VIDEO_POS_X(custom_vp->pos);
+./gfx/video_driver.c:7541:   video_info->custom_vp_y                 = VIDEO_POS_Y(custom_vp->pos);
+./gfx/video_driver.c:7542:   video_info->custom_vp_dims              = custom_vp->dims;
+./gfx/video_driver.c:8664:   video_viewport_settings_t *custom_vp            = NULL;
+./gfx/video_driver.c:8736:   custom_vp = &settings->video_vp_custom;
+./gfx/video_driver.c:8742:         (custom_vp->dims
+./gfx/video_driver.c:8743:          && VIDEO_SCALE_W(custom_vp->dims)
+./gfx/video_driver.c:8744:          && VIDEO_SCALE_H(custom_vp->dims))
+./gfx/video_driver.c:8745:         ? (float)VIDEO_SCALE_W(custom_vp->dims)
+./gfx/video_driver.c:8746:               / VIDEO_SCALE_H(custom_vp->dims) : default_aspect;
+./gfx/video_driver.c:9052:         (   !VIDEO_SCALE_W(custom_vp->dims)
+./gfx/video_driver.c:9053:          || !VIDEO_SCALE_H(custom_vp->dims)))
+./gfx/video_driver.c:9057:      vp.pos     = custom_vp->pos;
+./gfx/video_driver.c:9063:      custom_vp->pos    = vp.pos;
+./gfx/video_driver.c:9064:      custom_vp->dims   = vp.dims;
+./gfx/video_views.h:267:   /* One included screen only. custom_vp is the custom viewport in window
+./gfx/video_views.h:270:   const video_views_rect_t *custom_vp;
+./gfx/video_defines.h:337: * The config file still keeps custom_viewport_x/_y/_width/_height as
+./configuration.c:4473:   SETTING_UINT_HALF("custom_viewport_width",    &settings->video_vp_custom.dims, CFG_HALF_HI, false, 0 /* TODO */, false);
+./configuration.c:4474:   SETTING_UINT_HALF("custom_viewport_height",   &settings->video_vp_custom.dims, CFG_HALF_LO, false, 0 /* TODO */, false);
+./configuration.c:5217:   SETTING_INT_HALF("custom_viewport_x", (int*)&settings->video_vp_custom.pos,
+./configuration.c:5219:   SETTING_INT_HALF("custom_viewport_y", (int*)&settings->video_vp_custom.pos,
+./configuration.c:6066:   video_viewport_settings_t *custom_vp = &settings->video_vp_custom;
+./configuration.c:6393:   custom_vp->dims   = 0;
+./configuration.c:6394:   custom_vp->pos    = 0;
+./settings/settings_def_viewport_size.h:8:      | SDESC_OFF_HALF_HI, VIDEO_VIEWPORT_CUSTOM_WIDTH,
+./settings/settings_def_viewport_size.h:9:      "video_viewport_custom_width",
+./settings/settings_def_viewport_size.h:10:      0, SD_FLAG_ALLOW_INPUT, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, 1, 9999, 1, 0, NULL, setting_get_string_representation_uint_custom_vp_width, setting_action_start_custom_vp_width, NULL, setting_uint_action_left_custom_vp_width, setting_uint_action_right_custom_vp_width, 0,
+./settings/settings_def_viewport_size.h:14:      | SDESC_OFF_HALF_LO, VIDEO_VIEWPORT_CUSTOM_HEIGHT,
+./settings/settings_def_viewport_size.h:15:      "video_viewport_custom_height",
+./settings/settings_def_viewport_size.h:16:      0, SD_FLAG_ALLOW_INPUT, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, 1, 9999, 1, 0, NULL, setting_get_string_representation_uint_custom_vp_height, setting_action_start_custom_vp_height, NULL, setting_uint_action_left_custom_vp_height, setting_uint_action_right_custom_vp_height, 0,
+./settings/settings_def_aspect_ratio.h:18:      | SDESC_OFF_HALF_HI, VIDEO_VIEWPORT_CUSTOM_X,
+./settings/settings_def_aspect_ratio.h:19:      "video_viewport_custom_x",
+./settings/settings_def_aspect_ratio.h:24:      | SDESC_OFF_HALF_LO, VIDEO_VIEWPORT_CUSTOM_Y,
+./settings/settings_def_aspect_ratio.h:25:      "video_viewport_custom_y",
+./menu/menu_displaylist.c:13337:                           { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_X, PARSE_ONLY_INT, false },
+./menu/menu_displaylist.c:13338:                           { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_Y, PARSE_ONLY_INT, false },
+./menu/menu_displaylist.c:13339:                           { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_WIDTH, PARSE_ONLY_UINT, false },
+./menu/menu_displaylist.c:13340:                           { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_HEIGHT, PARSE_ONLY_UINT, false },
+./menu/drivers/rgui.c:7288:   video_viewport_settings_t *custom_vp      = &settings->video_vp_custom;
+./menu/drivers/rgui.c:7290:   video_settings->vp.dims          = custom_vp->dims;
+./menu/drivers/rgui.c:7291:   video_settings->vp.pos           = custom_vp->pos;
+./menu/drivers/rgui.c:7302:   video_viewport_settings_t *custom_vp            = &settings->video_vp_custom;
+./menu/drivers/rgui.c:7304:   custom_vp->dims                        = video_settings->vp.dims;
+./menu/drivers/rgui.c:7305:   custom_vp->pos                         = video_settings->vp.pos;
+./menu/drivers/rgui.c:7308:         (float)VIDEO_SCALE_W(custom_vp->dims)
+./menu/drivers/rgui.c:7309:               / VIDEO_SCALE_H(custom_vp->dims);
+./menu/cbs/menu_cbs_sublabel.c:2235:      { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_WIDTH, MENU_ENUM_SUBLABEL_VIDEO_VIEWPORT_CUSTOM_WIDTH },
+./menu/cbs/menu_cbs_sublabel.c:2236:      { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_HEIGHT, MENU_ENUM_SUBLABEL_VIDEO_VIEWPORT_CUSTOM_HEIGHT },
+./menu/cbs/menu_cbs_sublabel.c:2965:      { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_X, MENU_ENUM_SUBLABEL_VIDEO_VIEWPORT_CUSTOM_X },
+./menu/cbs/menu_cbs_sublabel.c:2966:      { MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_Y, MENU_ENUM_SUBLABEL_VIDEO_VIEWPORT_CUSTOM_Y },
+./menu/menu_setting.c:6495:static size_t setting_get_string_representation_uint_custom_vp_width(
+./menu/menu_setting.c:6520:static size_t setting_get_string_representation_uint_custom_vp_height(
+./menu/menu_setting.c:7516:static int setting_uint_action_left_custom_vp_width(
+./menu/menu_setting.c:7563:static int setting_uint_action_left_custom_vp_height(
+./menu/menu_setting.c:7865:static int setting_uint_action_right_custom_vp_width(
+./menu/menu_setting.c:7900:static int setting_uint_action_right_custom_vp_height(
+./menu/menu_setting.c:10174:static int setting_action_start_custom_vp_width(rarch_setting_t *setting)
+./menu/menu_setting.c:10211:static int setting_action_start_custom_vp_height(rarch_setting_t *setting)
+./menu/menu_setting.c:11258:            video_viewport_settings_t *custom_vp     = &settings->video_vp_custom;
+./menu/menu_setting.c:11267:               custom_vp->pos       = 0;
+./menu/menu_setting.c:11284:               vp_w = VIDEO_SCALE_W(custom_vp->dims);
+./menu/menu_setting.c:11285:               vp_h = VIDEO_SCALE_H(custom_vp->dims);
+./menu/menu_setting.c:11289:                  custom_vp->dims   = VIDEO_SCALE_PACK(
+./menu/menu_setting.c:11297:                  custom_vp->dims   = VIDEO_SCALE_PACK(
+./menu/menu_setting.c:11305:                     (float)VIDEO_SCALE_W(custom_vp->dims)
+./menu/menu_setting.c:11306:                           / VIDEO_SCALE_H(custom_vp->dims);
+./menu/menu_setting.c:11680:            video_viewport_settings_t *custom_vp          = &settings->video_vp_custom;
+./menu/menu_setting.c:11694:               custom_vp->pos       = 0;
+./menu/menu_setting.c:11713:               vp_w = VIDEO_SCALE_W(custom_vp->dims);
+./menu/menu_setting.c:11714:               vp_h = VIDEO_SCALE_H(custom_vp->dims);
+./menu/menu_setting.c:11718:                  custom_vp->dims   = VIDEO_SCALE_PACK(
+./menu/menu_setting.c:11724:                  custom_vp->dims   = VIDEO_SCALE_PACK(
+./menu/menu_setting.c:11732:                     (float)VIDEO_SCALE_W(custom_vp->dims)
+./menu/menu_setting.c:11733:                           / VIDEO_SCALE_H(custom_vp->dims);
+./menu/menu_setting.c:12145:      case MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_WIDTH:
+./menu/menu_setting.c:12146:      case MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_HEIGHT:
+./menu/menu_setting.c:12151:            video_viewport_settings_t *custom_vp = &settings->video_vp_custom;
+./menu/menu_setting.c:12155:                  (   custom_vp
+./menu/menu_setting.c:12156:                   && VIDEO_SCALE_W(custom_vp->dims)
+./menu/menu_setting.c:12157:                   && VIDEO_SCALE_H(custom_vp->dims))
+./menu/menu_setting.c:12158:                     ? ((float)VIDEO_SCALE_W(custom_vp->dims)
+./menu/menu_setting.c:12159:                           / (float)VIDEO_SCALE_H(custom_vp->dims)) :
+./menu/menu_setting_handlers.h:35:SDX(START, setting_action_start_custom_vp_width)
+./menu/menu_setting_handlers.h:36:SDX(START, setting_action_start_custom_vp_height)
+./menu/menu_setting_handlers.h:57:SDX(LEFT, setting_uint_action_left_custom_vp_width)
+./menu/menu_setting_handlers.h:58:SDX(LEFT, setting_uint_action_left_custom_vp_height)
+./menu/menu_setting_handlers.h:82:SDX(RIGHT, setting_uint_action_right_custom_vp_width)
+./menu/menu_setting_handlers.h:83:SDX(RIGHT, setting_uint_action_right_custom_vp_height)
+./samples/gfx/video_views/video_views_test.c:433:   p.custom_vp = &custom;
+./samples/gfx/video_views/video_views_test.c:452:   p.custom_vp = &custom;
+./samples/gfx/video_views/video_views_test.c:460:   p.custom_vp = &custom;
+./samples/gfx/video_views/video_views_test.c:555:   p.custom_vp = &custom;
+./samples/gfx/video_windows/video_windows_test.c:1324:   p.custom_vp = &custom;
+./samples/gfx/video_windows/video_windows_test.c:1328:   p.custom_vp = NULL;
+./samples/settings/packed_rows/packed_rows_test.c:156:         fprintf(cfg, "custom_viewport_width = \"960\"\n");
+./samples/settings/packed_rows/packed_rows_test.c:157:         fprintf(cfg, "custom_viewport_height = \"720\"\n");
+./samples/settings/packed_rows/packed_rows_test.c:158:         fprintf(cfg, "custom_viewport_x = \"-12\"\n");
+./samples/settings/packed_rows/packed_rows_test.c:159:         fprintf(cfg, "custom_viewport_y = \"34\"\n");
+./samples/settings/packed_rows/packed_rows_test.c:174:   w  = menu_setting_find_enum(MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_WIDTH);
+./samples/settings/packed_rows/packed_rows_test.c:175:   h  = menu_setting_find_enum(MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_HEIGHT);
+./samples/settings/packed_rows/packed_rows_test.c:176:   x  = menu_setting_find_enum(MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_X);
+./samples/settings/packed_rows/packed_rows_test.c:177:   y  = menu_setting_find_enum(MENU_ENUM_LABEL_VIDEO_VIEWPORT_CUSTOM_Y);

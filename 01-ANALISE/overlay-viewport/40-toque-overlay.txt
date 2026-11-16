@@ -1,0 +1,80 @@
+input/input_driver.c:4021:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+input/input_driver.c:4057:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+input/input_driver.c:4102:static int16_t input_overlay_pointer_state(input_overlay_t *ol,
+input/input_driver.c:4103:      input_overlay_pointer_state_t *ptr_st,
+input/input_driver.c:4145:         return input_overlay_pointer_state(ol,
+input/input_driver.c:4146:               (input_overlay_pointer_state_t*)&ol->pointer_state,
+input/input_driver.c:4529:   if (     (input_st->overlay_ptr)
+input/input_driver.c:4530:         && (input_st->overlay_ptr->flags & INPUT_OVERLAY_ENABLE)
+input/input_driver.c:4531:         && !(input_st->overlay_ptr->flags & INPUT_OVERLAY_STYLUS_HIDDEN)
+input/input_driver.c:4532:         && (settings->bools.input_overlay_pointer_enable))
+input/input_driver.c:4533:      main_count = input_overlay_pointer_state(input_st->overlay_ptr,
+input/input_driver.c:4534:            &input_st->overlay_ptr->pointer_state, 0,
+input/input_driver.c:4600:                   && input_st->overlay_ptr
+input/input_driver.c:4601:                   && (input_st->overlay_ptr->flags & INPUT_OVERLAY_ALIVE)
+input/input_driver.c:4602:                   && BIT256_GET(INPUT_OVERLAY_ST(input_st->overlay_ptr)->buttons, id))
+input/input_driver.c:4645:               if (input_st->overlay_ptr
+input/input_driver.c:4646:                     && (input_st->overlay_ptr->flags & INPUT_OVERLAY_ALIVE))
+input/input_driver.c:4648:                  input_overlay_state_t
+input/input_driver.c:4649:                     *ol_state          = INPUT_OVERLAY_ST(input_st->overlay_ptr);
+input/input_driver.c:4725:                        if (     (input_st->overlay_ptr)
+input/input_driver.c:4726:                              && (input_st->overlay_ptr->flags & INPUT_OVERLAY_ALIVE)
+input/input_driver.c:4740:                           input_overlay_state_t *ol_state =
+input/input_driver.c:4741:                              INPUT_OVERLAY_ST(input_st->overlay_ptr);
+input/input_driver.c:4805:         if (     (input_st->overlay_ptr)
+input/input_driver.c:4806:               && (input_st->overlay_ptr->flags & INPUT_OVERLAY_ENABLE)
+input/input_driver.c:4807:               && !(input_st->overlay_ptr->flags & INPUT_OVERLAY_STYLUS_HIDDEN)
+input/input_driver.c:4808:               && (settings->bools.input_overlay_pointer_enable))
+input/input_driver.c:4812:                  input_st->overlay_ptr, port, device, idx, id);
+input/input_driver.c:5135:         && input_st->overlay_ptr
+input/input_driver.c:5136:         && (input_st->overlay_ptr->flags & INPUT_OVERLAY_ALIVE))
+input/input_driver.c:5138:      unsigned held = INPUT_OVERLAY_ST(input_st->overlay_ptr)->buttons.data[0]
+input/input_driver.c:5740:      input_overlay_state_t *ol_state, unsigned port)
+input/input_driver.c:5848:      input_overlay_state_t *ol_state,
+input/input_driver.c:6005:      input_overlay_state_t *out, struct overlay_desc *desc,
+input/input_driver.c:6107: * input_overlay_poll:
+input/input_driver.c:6174:static bool input_overlay_poll(
+input/input_driver.c:6176:      input_overlay_state_t *out,
+input/input_driver.c:6227:         memset(out, 0, offsetof(input_overlay_state_t, touch));
+input/input_driver.c:6297:      memset(out, 0, offsetof(input_overlay_state_t, touch));
+input/input_driver.c:6480: * Called after all the input_overlay_poll() calls to
+input/input_driver.c:6784:   input_overlay_release_textures(input_driver_st.overlay_ptr);
+input/input_driver.c:6847: * input_overlay_poll_clear:
+input/input_driver.c:6853:static void input_overlay_poll_clear(
+input/input_driver.c:7002:      bool input_overlay_enable,
+input/input_driver.c:7011:   if (!ol || !(ol->flags & INPUT_OVERLAY_ALIVE) || !input_overlay_enable)
+input/input_driver.c:7068: * input_overlay_poll_lightgun
+input/input_driver.c:7075:static void input_overlay_poll_lightgun(settings_t *settings,
+input/input_driver.c:7078:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+input/input_driver.c:7189: * input_overlay_poll_mouse
+input/input_driver.c:7198:static void input_overlay_poll_mouse(settings_t *settings,
+input/input_driver.c:7204:   input_overlay_pointer_state_t *ptr_st = &ol->pointer_state;
+input/input_driver.c:7367:      input_overlay_state_t *state, input_overlay_state_t *old_state)
+input/input_driver.c:7415:      input_overlay_pointer_state_t *ptr_st, int touch_idx)
+input/input_driver.c:7485:   input_overlay_state_t *old_ol_state;
+input/input_driver.c:7495:   input_overlay_state_t *ol_state          = INPUT_OVERLAY_ST(ol);
+input/input_driver.c:7496:   input_overlay_pointer_state_t *ptr_state = &ol->pointer_state;
+input/input_driver.c:7503:   bool ol_ptr_enable                       = settings->bools.input_overlay_pointer_enable;
+input/input_driver.c:7520:   memset(ol_state, 0, offsetof(input_overlay_state_t, touch));
+input/input_driver.c:7587:         input_overlay_state_t polled_data;
+input/input_driver.c:7612:         memset(&polled_data, 0, offsetof(input_overlay_state_t, touch));
+input/input_driver.c:7621:            hitbox_pressed = input_overlay_poll(
+input/input_driver.c:7663:         input_overlay_poll_lightgun(settings, ol, old_ptr_count);
+input/input_driver.c:7665:         input_overlay_poll_mouse(settings, &ptr_state->mouse, ol,
+input/input_driver.c:7820:      input_overlay_poll_clear(ol, opacity);
+input/input_driver.c:13655:static void input_overlay_enable_(bool enable)
+input/input_driver.c:13659:   input_overlay_t *ol            = input_st->overlay_ptr;
+input/input_driver.c:13718:      memset(&ol->pointer_state, 0, sizeof(input_overlay_pointer_state_t));
+input/input_driver.c:13725: * whenever overlay_ptr or the overlay it shows changes. */
+input/input_driver.c:13728:   input_overlay_t *ol = input_driver_st.overlay_ptr;
+input/input_driver.c:13734:   input_overlay_free(input_driver_st.overlay_ptr);
+input/input_driver.c:13735:   input_driver_st.overlay_ptr = NULL;
+input/input_driver.c:13747:   input_overlay_t      *ol       = input_st->overlay_ptr;
+input/input_driver.c:13756:   input_overlay_enable_(false);
+input/input_driver.c:13760:   input_st->overlay_ptr       = NULL;
+input/input_driver.c:13770:   input_overlay_enable_(false);
+input/input_driver.c:13774:   input_st->overlay_cache_ptr = input_st->overlay_ptr;
+input/input_driver.c:13775:   input_st->overlay_ptr       = ol;
+input/input_driver.c:13779:   input_overlay_enable_(true);
+input/input_driver.c:13784:   bool input_overlay_enable   = config_get_ptr()->bools.input_overlay_enable;
+input/input_driver.c:13788:   if (     !input_overlay_enable

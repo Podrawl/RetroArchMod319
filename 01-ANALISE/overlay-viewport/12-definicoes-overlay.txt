@@ -1,0 +1,58 @@
+4017:static int16_t input_overlay_device_mouse_state(
+4052:static int16_t input_overlay_lightgun_state(
+4102:static int16_t input_overlay_pointer_state(input_overlay_t *ol,
+4127:static int16_t input_overlay_pointing_device_state(
+5737:static bool input_overlay_add_inputs_inner(overlay_desc_t *desc,
+5847:static bool input_overlay_add_inputs(input_overlay_t *ol,
+5871:static void input_overlay_get_eightway_slope_limits(
+5895:void input_overlay_set_eightway_diagonal_sensitivity(void)
+5920:static INLINE void input_overlay_get_eightway_state(
+6004:static void input_overlay_get_analog_state(
+6070:static bool input_overlay_coords_inside_hitbox(const struct overlay_desc *desc,
+6125:static void input_overlay_get_eightway_contact(const input_overlay_t *ol,
+6174:static bool input_overlay_poll(
+6309:static void input_overlay_update_desc_geom(input_overlay_t *ol,
+6337:static bool input_overlay_update_apng_frame(input_overlay_t *ol,
+6364:static void input_overlay_update_2frame(input_overlay_t *ol)
+6394:static gfx_surface_t *input_overlay_anim_surface(void *user, unsigned dims,
+6405:static void input_overlay_anim_shown(void *user, gfx_surface_t *s)
+6418:void input_overlay_animate(input_overlay_t *ol, retro_time_t now)
+6470:static const unsigned *input_overlay_led_map(void)
+6480: * Called after all the input_overlay_poll() calls to
+6483:static void input_overlay_post_poll(
+6520:static void input_overlay_desc_init_hitbox(struct overlay_desc *desc)
+6550:static void input_overlay_scale(struct overlay *ol,
+6602:static void input_overlay_parse_layout(
+6720:static void input_overlay_set_vertex_geom(input_overlay_t *ol)
+6751:void input_overlay_set_scale_factor(
+6782:void input_overlay_video_teardown(void)
+6788:static void input_overlay_load_active_geom(
+6791:void input_overlay_load_active(input_overlay_t *ol, float opacity)
+6801:static void input_overlay_load_active_geom(
+6819:void input_overlay_next_move_touch_masks(input_overlay_t *ol)
+6853:static void input_overlay_poll_clear(
+6877:void input_overlay_set_alpha_mod(input_overlay_t *ol, float mod)
+6883:static void input_overlay_free_images(input_overlay_t *ol)
+6930:static void input_overlay_free_overlays(input_overlay_t *ol)
+6944:void input_overlay_free_overlay(struct overlay *overlay)
+6972:static void input_overlay_free(input_overlay_t *ol)
+7000:void input_overlay_auto_rotate_(
+7075:static void input_overlay_poll_lightgun(settings_t *settings,
+7144:static void input_overlay_get_mouse_scale(settings_t *settings,
+7198:static void input_overlay_poll_mouse(settings_t *settings,
+7366:static void input_overlay_track_touch_inputs(
+7414:static void input_overlay_update_pointer_coords(
+13655:static void input_overlay_enable_(bool enable)
+13726:static void input_overlay_viewport_publish(void)
+13732:static void input_overlay_deinit(void)
+13744:static void input_overlay_move_to_cache(void)
+13764:static void input_overlay_swap_with_cached(void)
+13782:void input_overlay_unload(void)
+13796:void input_overlay_leds_enable(bool enable)
+13816:void input_overlay_set_led(int led, bool lit)
+13840:static bool input_overlay_want_hidden(void)
+13885:void input_overlay_check_mouse_cursor(void)
+13899:static void input_overlay_loaded_move_images(input_overlay_t *ol,
+14005:static void input_overlay_loaded(retro_task_t *task,
+14158:static const char *input_overlay_path(bool want_osk)
+14246:void input_overlay_init(void)

@@ -1,0 +1,180 @@
+configuration.c:471:   DECLARE_META_BIND(2, overlay_next,          RARCH_OVERLAY_NEXT,           MENU_ENUM_LABEL_VALUE_INPUT_META_OVERLAY_NEXT),
+configuration.c:1985:bool config_overlay_enable_default(void)
+configuration.c:1987:   if (g_defaults.overlay_set)
+configuration.c:1988:      return g_defaults.overlay_enable;
+configuration.c:2262:#ifdef HAVE_OVERLAY
+configuration.c:2263:   SETTING_PATH("input_overlay",                 settings->paths.path_overlay, false, NULL, true);
+configuration.c:2264:   SETTING_PATH("input_osk_overlay",             settings->paths.path_osk_overlay, false, NULL, true);
+configuration.c:2265:   SETTING_PATH("overlay_directory",             settings->paths.directory_overlay, true, NULL, true);
+configuration.c:2266:   SETTING_PATH("osk_overlay_directory",         settings->paths.directory_osk_overlay, true, NULL, true);
+configuration.c:2398:#ifdef HAVE_OVERLAY
+configuration.c:2399:#include "settings/settings_def_overlay_appearance.h"
+configuration.c:2417:#ifdef HAVE_OVERLAY
+configuration.c:2418:#include "settings/settings_def_overlay_mouse.h"
+configuration.c:2420:#ifdef HAVE_OVERLAY
+configuration.c:2421:#include "settings/settings_def_overlay_lightgun.h"
+configuration.c:2534:#ifdef HAVE_OVERLAY
+configuration.c:2535:#include "settings/settings_def_overlay_opacity.h"
+configuration.c:2617:#ifdef HAVE_OVERLAY
+configuration.c:2618:#include "settings/settings_def_overlay_auto_scale.h"
+configuration.c:2669:#include "settings/settings_def_overlay_preset_path.h"
+configuration.c:2751:#include "settings/settings_def_overlay_enable.h"
+configuration.c:2949:#ifdef HAVE_OVERLAY
+configuration.c:2950:   CFG_ROW(bools.input_osk_overlay_auto_scale, INPUT_OSK_OVERLAY_AUTO_SCALE, DEFAULT_INPUT_OVERLAY_AUTO_SCALE),
+configuration.c:2951:   CFG_ROW(bools.input_overlay_auto_rotate, INPUT_OVERLAY_AUTO_ROTATE, DEFAULT_OVERLAY_AUTO_ROTATE),
+configuration.c:3067:   SETTING_BOOL("menu_show_overlays",            &settings->bools.menu_show_overlays, true, DEFAULT_QUICK_MENU_SHOW_OVERLAYS, false);
+configuration.c:3077:#ifdef HAVE_OVERLAY
+configuration.c:3078:   SETTING_BOOL("input_overlay_enable",          &settings->bools.input_overlay_enable, true, config_overlay_enable_default(), false);
+configuration.c:3079:   SETTING_BOOL("input_overlay_enable_autopreferred", &settings->bools.input_overlay_enable_autopreferred, true, DEFAULT_OVERLAY_ENABLE_AUTOPREFERRED, false);
+configuration.c:3080:   SETTING_BOOL("input_overlay_behind_menu",     &settings->bools.input_overlay_behind_menu, true, DEFAULT_OVERLAY_BEHIND_MENU, false);
+configuration.c:3081:   SETTING_BOOL("input_overlay_hide_in_menu",    &settings->bools.input_overlay_hide_in_menu, true, DEFAULT_OVERLAY_HIDE_IN_MENU, false);
+configuration.c:3082:   SETTING_BOOL("input_overlay_hide_when_gamepad_connected", &settings->bools.input_overlay_hide_when_gamepad_connected, true, DEFAULT_OVERLAY_HIDE_WHEN_GAMEPAD_CONNECTED, false);
+configuration.c:3083:   SETTING_BOOL("input_overlay_show_mouse_cursor", &settings->bools.input_overlay_show_mouse_cursor, true, DEFAULT_OVERLAY_SHOW_MOUSE_CURSOR, false);
+configuration.c:3129:   SETTING_BOOL("input_stylus_hide_overlay", &settings->bools.input_stylus_hide_overlay, true, true, false);
+configuration.c:3238:#ifdef HAVE_OVERLAY
+configuration.c:3239:#include "settings/settings_def_overlay_appearance.h"
+configuration.c:3257:#ifdef HAVE_OVERLAY
+configuration.c:3258:#include "settings/settings_def_overlay_mouse.h"
+configuration.c:3260:#ifdef HAVE_OVERLAY
+configuration.c:3261:#include "settings/settings_def_overlay_lightgun.h"
+configuration.c:3374:#ifdef HAVE_OVERLAY
+configuration.c:3375:#include "settings/settings_def_overlay_opacity.h"
+configuration.c:3457:#ifdef HAVE_OVERLAY
+configuration.c:3458:#include "settings/settings_def_overlay_auto_scale.h"
+configuration.c:3509:#include "settings/settings_def_overlay_preset_path.h"
+configuration.c:3591:#include "settings/settings_def_overlay_enable.h"
+configuration.c:3785:#ifdef HAVE_OVERLAY
+configuration.c:3786:   SETTING_FLOAT("input_osk_overlay_opacity",             &settings->floats.input_osk_overlay_opacity, true, DEFAULT_INPUT_OVERLAY_OPACITY, false);
+configuration.c:3883:#ifdef HAVE_OVERLAY
+configuration.c:3884:#include "settings/settings_def_overlay_appearance.h"
+configuration.c:3902:#ifdef HAVE_OVERLAY
+configuration.c:3903:#include "settings/settings_def_overlay_mouse.h"
+configuration.c:3905:#ifdef HAVE_OVERLAY
+configuration.c:3906:#include "settings/settings_def_overlay_lightgun.h"
+configuration.c:4019:#ifdef HAVE_OVERLAY
+configuration.c:4020:#include "settings/settings_def_overlay_opacity.h"
+configuration.c:4102:#ifdef HAVE_OVERLAY
+configuration.c:4103:#include "settings/settings_def_overlay_auto_scale.h"
+configuration.c:4154:#include "settings/settings_def_overlay_preset_path.h"
+configuration.c:4236:#include "settings/settings_def_overlay_enable.h"
+configuration.c:4411:#if defined(HAVE_OVERLAY)
+configuration.c:4412:   CFG_ROW(uints.input_overlay_abxy_diagonal_sensitivity, INPUT_OVERLAY_ABXY_DIAGONAL_SENSITIVITY, DEFAULT_OVERLAY_ABXY_DIAGONAL_SENSITIVITY),
+configuration.c:4413:   CFG_ROW(uints.input_overlay_abxy_method, INPUT_OVERLAY_ABXY_METHOD, DEFAULT_OVERLAY_ABXY_METHOD),
+configuration.c:4414:   CFG_ROW(uints.input_overlay_analog_recenter_zone, INPUT_OVERLAY_ANALOG_RECENTER_ZONE, DEFAULT_INPUT_OVERLAY_ANALOG_RECENTER_ZONE),
+configuration.c:4415:   CFG_ROW(uints.input_overlay_contact_scale, INPUT_OVERLAY_CONTACT_SCALE, DEFAULT_OVERLAY_CONTACT_SCALE),
+configuration.c:4416:   CFG_ROW(uints.input_overlay_dpad_diagonal_sensitivity, INPUT_OVERLAY_DPAD_DIAGONAL_SENSITIVITY, DEFAULT_OVERLAY_DPAD_DIAGONAL_SENSITIVITY),
+configuration.c:4417:   CFG_ROW(uints.input_overlay_dpad_method, INPUT_OVERLAY_DPAD_METHOD, DEFAULT_OVERLAY_DPAD_METHOD),
+configuration.c:4418:   CFG_ROW(uints.input_overlay_show_inputs, INPUT_OVERLAY_SHOW_INPUTS, DEFAULT_OVERLAY_SHOW_INPUTS),
+configuration.c:4419:   CFG_ROW(uints.input_overlay_show_inputs_port, INPUT_OVERLAY_SHOW_INPUTS_PORT, DEFAULT_OVERLAY_SHOW_INPUTS_PORT),
+configuration.c:4683:#ifdef HAVE_OVERLAY
+configuration.c:4684:#include "settings/settings_def_overlay_appearance.h"
+configuration.c:4702:#ifdef HAVE_OVERLAY
+configuration.c:4703:#include "settings/settings_def_overlay_mouse.h"
+configuration.c:4705:#ifdef HAVE_OVERLAY
+configuration.c:4706:#include "settings/settings_def_overlay_lightgun.h"
+configuration.c:4819:#ifdef HAVE_OVERLAY
+configuration.c:4820:#include "settings/settings_def_overlay_opacity.h"
+configuration.c:4902:#ifdef HAVE_OVERLAY
+configuration.c:4903:#include "settings/settings_def_overlay_auto_scale.h"
+configuration.c:4954:#include "settings/settings_def_overlay_preset_path.h"
+configuration.c:5036:#include "settings/settings_def_overlay_enable.h"
+configuration.c:5327:#ifdef HAVE_OVERLAY
+configuration.c:5328:#include "settings/settings_def_overlay_appearance.h"
+configuration.c:5346:#ifdef HAVE_OVERLAY
+configuration.c:5347:#include "settings/settings_def_overlay_mouse.h"
+configuration.c:5349:#ifdef HAVE_OVERLAY
+configuration.c:5350:#include "settings/settings_def_overlay_lightgun.h"
+configuration.c:5463:#ifdef HAVE_OVERLAY
+configuration.c:5464:#include "settings/settings_def_overlay_opacity.h"
+configuration.c:5546:#ifdef HAVE_OVERLAY
+configuration.c:5547:#include "settings/settings_def_overlay_auto_scale.h"
+configuration.c:5598:#include "settings/settings_def_overlay_preset_path.h"
+configuration.c:5680:#include "settings/settings_def_overlay_enable.h"
+configuration.c:6456:   *settings->paths.path_overlay           = '\0';
+configuration.c:6457:   *settings->paths.path_osk_overlay       = '\0';
+configuration.c:6551:#ifdef HAVE_OVERLAY
+configuration.c:6552:   if (*g_defaults.dirs[DEFAULT_DIR_OVERLAY])
+configuration.c:6554:      fill_pathname_expand_special(settings->paths.directory_overlay,
+configuration.c:6555:            g_defaults.dirs[DEFAULT_DIR_OVERLAY],
+configuration.c:6556:            sizeof(settings->paths.directory_overlay));
+configuration.c:6558:      if (!*settings->paths.path_overlay)
+configuration.c:6559:         fill_pathname_join_special(settings->paths.path_overlay,
+configuration.c:6560:               settings->paths.directory_overlay,
+configuration.c:6561:               FILE_PATH_DEFAULT_OVERLAY,
+configuration.c:6562:               sizeof(settings->paths.path_overlay));
+configuration.c:6563:      if (!*settings->paths.path_osk_overlay)
+configuration.c:6564:         fill_pathname_join_special(settings->paths.path_osk_overlay,
+configuration.c:6565:               settings->paths.directory_overlay,
+configuration.c:6566:               FILE_PATH_DEFAULT_OSK_OVERLAY,
+configuration.c:6567:               sizeof(settings->paths.path_osk_overlay));
+configuration.c:6570:   if (*g_defaults.dirs[DEFAULT_DIR_OSK_OVERLAY])
+configuration.c:6571:      fill_pathname_expand_special(settings->paths.directory_osk_overlay,
+configuration.c:6572:            g_defaults.dirs[DEFAULT_DIR_OSK_OVERLAY],
+configuration.c:6573:            sizeof(settings->paths.directory_osk_overlay));
+configuration.c:7340:#ifdef HAVE_OVERLAY
+configuration.c:7341:      char old_overlay_path[PATH_MAX_LENGTH], new_overlay_path[PATH_MAX_LENGTH];
+configuration.c:7342:      config_get_path(conf, "input_overlay", old_overlay_path, sizeof(old_overlay_path));
+configuration.c:7375:#ifdef HAVE_OVERLAY
+configuration.c:7376:      config_get_path(conf, "input_overlay", new_overlay_path, sizeof(new_overlay_path));
+configuration.c:7377:      if (!string_is_equal(old_overlay_path, new_overlay_path))
+configuration.c:7378:         retroarch_override_setting_set(RARCH_OVERRIDE_SETTING_OVERLAY_PRESET, NULL);
+configuration.c:7941:#ifdef HAVE_OVERLAY
+configuration.c:7942:   if (string_is_equal(settings->paths.directory_overlay, "default"))
+configuration.c:7943:      *settings->paths.directory_overlay = '\0';
+configuration.c:7944:   if (string_is_equal(settings->paths.directory_osk_overlay, "default"))
+configuration.c:7945:      *settings->paths.directory_osk_overlay = '\0';
+configuration.h:437:#ifdef HAVE_OVERLAY
+configuration.h:438:      unsigned input_overlay_show_inputs;
+configuration.h:439:      unsigned input_overlay_show_inputs_port;
+configuration.h:440:      unsigned input_overlay_dpad_diagonal_sensitivity;
+configuration.h:441:      unsigned input_overlay_abxy_diagonal_sensitivity;
+configuration.h:442:      unsigned input_overlay_analog_recenter_zone;
+configuration.h:443:      unsigned input_overlay_dpad_method;
+configuration.h:444:      unsigned input_overlay_abxy_method;
+configuration.h:445:      unsigned input_overlay_contact_scale;
+configuration.h:446:      unsigned input_overlay_lightgun_trigger_delay;
+configuration.h:447:      unsigned input_overlay_lightgun_two_touch_input;
+configuration.h:448:      unsigned input_overlay_lightgun_three_touch_input;
+configuration.h:449:      unsigned input_overlay_lightgun_four_touch_input;
+configuration.h:450:      unsigned input_overlay_mouse_hold_msec;
+configuration.h:451:      unsigned input_overlay_mouse_dtap_msec;
+configuration.h:452:      unsigned input_overlay_mouse_alt_two_touch_input;
+configuration.h:582:#ifdef HAVE_OVERLAY
+configuration.h:583:      int input_overlay_lightgun_port;
+configuration.h:664:      float input_overlay_opacity;
+configuration.h:665:      float input_osk_overlay_opacity;
+configuration.h:667:      float input_overlay_scale_landscape;
+configuration.h:668:      float input_overlay_aspect_adjust_landscape;
+configuration.h:669:      float input_overlay_x_separation_landscape;
+configuration.h:670:      float input_overlay_y_separation_landscape;
+configuration.h:671:      float input_overlay_x_offset_landscape;
+configuration.h:672:      float input_overlay_y_offset_landscape;
+configuration.h:674:      float input_overlay_scale_portrait;
+configuration.h:675:      float input_overlay_aspect_adjust_portrait;
+configuration.h:676:      float input_overlay_x_separation_portrait;
+configuration.h:677:      float input_overlay_y_separation_portrait;
+configuration.h:678:      float input_overlay_x_offset_portrait;
+configuration.h:679:      float input_overlay_y_offset_portrait;
+configuration.h:681:      float input_overlay_mouse_speed;
+configuration.h:682:      float input_overlay_mouse_swipe_threshold;
+configuration.h:840:      bool input_overlay_enable;
+configuration.h:841:      bool input_overlay_enable_autopreferred;
+configuration.h:842:      bool input_overlay_behind_menu;
+configuration.h:843:      bool input_overlay_hide_in_menu;
+configuration.h:844:      bool input_overlay_hide_when_gamepad_connected;
+configuration.h:845:      bool input_overlay_show_mouse_cursor;
+configuration.h:846:      bool input_overlay_auto_rotate;
+configuration.h:847:      bool input_overlay_auto_scale;
+configuration.h:848:      bool input_osk_overlay_auto_scale;
+configuration.h:849:      bool input_overlay_pointer_enable;
+configuration.h:850:      bool input_overlay_lightgun_trigger_on_touch;
+configuration.h:851:      bool input_overlay_lightgun_allow_offscreen;
+configuration.h:852:      bool input_overlay_mouse_hold_to_drag;
+configuration.h:853:      bool input_overlay_mouse_dtap_to_drag;
+configuration.h:955:      bool menu_show_overlays;
+configuration.h:1313:      bool input_stylus_hide_overlay;
+configuration.h:1507:      char directory_overlay[DIR_MAX_LENGTH];
+configuration.h:1508:      char directory_osk_overlay[DIR_MAX_LENGTH];
+configuration.h:1543:      char path_overlay[PATH_MAX_LENGTH];
+configuration.h:1544:      char path_osk_overlay[PATH_MAX_LENGTH];
+configuration.h:1780:bool config_overlay_enable_default(void);
