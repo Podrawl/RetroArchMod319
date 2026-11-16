@@ -1,0 +1,39 @@
+name: Ler escolha do overlay e salvamento (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/overlay-viewport-2
+          mkdir -p $S
+          cd ra
+          git log -1 --format='%H %cd' > ../$S/00-commit.txt
+          F=input/input_driver.c
+          sed -n '14140,14420p' $F > ../$S/50-overlay-path-e-init.txt
+          sed -n '14000,14160p' $F > ../$S/51-overlay-loaded.txt
+          sed -n '6540,6780p' $F > ../$S/52-scale-e-layout.txt
+          sed -n '13640,13800p' $F > ../$S/53-enable-deinit.txt
+          grep -n -i "viewport" $F | head -150 > ../$S/54-viewport-no-input_driver.txt
+          grep -rn "overlay.*viewport\|viewport.*overlay\|_viewport\b" --include=*.c --include=*.h input/ tasks/ | grep -v "^input/input_driver.c" | head -80 > ../$S/55-viewport-outros.txt
+          grep -rn "config_save_overrides\|config_load_override\|OVERRIDE_" configuration.c | head -60 > ../$S/60-overrides.txt
+          grep -n "input_overlay\b\|\"input_overlay\"\|input_overlay_path\|overlay_directory" configuration.c configuration.h | head -60 > ../$S/61-config-overlay-path.txt
+          grep -n "overlay" tasks/task_content.c retroarch.c | head -80 > ../$S/62-overlay-no-retroarch.txt
+          grep -rn "overlay" input/drivers/android_input.c gfx/video_driver.c | head -60 > ../$S/63-overlay-android-video.txt
+          grep -rn "input_overlay_load_override\|overlay_preset\|OVERLAY_PRESET\|overlay_gamepad\|menu_input_pointer" menu/menu_driver.h menu/menu_input.h | head -40 > ../$S/64-menu-input.txt
+          grep -n "ENUM_LABEL_OVERLAY\|MENU_ENUM_LABEL_OVERLAY\|OVERLAY_" msg_hash.h | head -100 > ../$S/65-enums-overlay.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 2: escolha do overlay e salvamento" && git pull --rebase -q && git push
