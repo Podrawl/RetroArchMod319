@@ -1,0 +1,120 @@
+176:/* Precomputed reciprocals used in analog input scaling.
+2641:typedef char input_analog_binds_in_a_row[(
+2657:static int16_t input_analog_from_keys(input_driver_t *input, void *data,
+2929:         ret |= input_analog_from_keys(input, data, _port, idx, id);
+3047:      float input_analog_deadzone,
+3048:      float input_analog_sensitivity,
+3051:   if (input_analog_deadzone)
+3054:      if (normal_mag <= input_analog_deadzone)
+3068:         float dz_scale  = (normal_mag - input_analog_deadzone)
+3069:                         / (1.0f - input_analog_deadzone);
+3075:   if (input_analog_sensitivity != 1.0f)
+3079:      int new_val = (int)((float)val * input_analog_sensitivity);
+3102:      float input_analog_deadzone,
+3103:      float input_analog_sensitivity,
+3107:   if (normal_mag <= input_analog_deadzone)
+3114:   k       = ((1.0f - outer) - input_analog_deadzone > 0.001f)
+3115:           ? (normal_mag - input_analog_deadzone)
+3116:             / ((1.0f - outer) - input_analog_deadzone)
+3129:   if (input_analog_sensitivity != 1.0f)
+3131:      int new_val = (int)((float)val * input_analog_sensitivity);
+3142:      float input_analog_deadzone,
+3143:      float input_analog_sensitivity,
+3146:   if (input_analog_deadzone)
+3147:      return input_stick_axis_shaped(input_analog_deadzone,
+3148:            input_analog_sensitivity, val, normal_mag);
+3150:   if (input_analog_sensitivity != 1.0f)
+3152:      int new_val = (int)((float)val * input_analog_sensitivity);
+3164:      float input_analog_deadzone,
+3165:      float input_analog_sensitivity,
+3169:   return input_stick_axis_scaled(input_analog_deadzone,
+3170:         input_analog_sensitivity,
+3182: *   bit 2     forced: it stays on when the core has asked for analog
+3187:static const uint8_t input_analog_dpad_modes[ANALOG_DPAD_LAST] = {
+3200:typedef char input_analog_dpad_modes_in_order[(
+3208: * the core has asked for analog input, a forced one acts as its plain
+3210:static INLINE unsigned input_analog_dpad_mode_in_effect(unsigned mode,
+3211:      bool analog_requested)
+3216:   m = input_analog_dpad_modes[mode];
+3219:   return (analog_requested && (m & 3)) ? (unsigned)ANALOG_DPAD_NONE : mode;
+3225:    && !(input_analog_dpad_modes[mode] & 4) \
+3226:    && ((input_analog_dpad_modes[mode] >> (idx)) & 1))
+3228:/* A pad button for an analog button's read: a bit of the frame's copy
+3230:static INLINE bool input_analog_button_key(
+3242: * input_joypad_analog_button:
+3255: * Gets analog value of analog key identifiers @idx and @ident
+3258: * Returns: analog value on success, otherwise 0.
+3260:/* An analog button - a trigger, a pressure-sensitive face button - as
+3264:static int16_t input_joypad_analog_button(
+3266:      float input_analog_sensitivity,
+3289:    * nor the autoconfig bind has an analog axis, this button has no
+3290:    * analog capability. Skip the input_joypad_axis() call and
+3300:      if (input_analog_button_key(drv, joy_idx, key))
+3326:            input_analog_sensitivity, (int16_t)pull, normal_mag);
+3338:      if (input_analog_button_key(drv, joy_idx, key))
+3474:static int16_t input_joypad_analog_axis(
+3475:      unsigned input_analog_dpad_mode,
+3476:      float input_analog_deadzone,
+3477:      float input_analog_sensitivity,
+3491:   /* See input_joypad_analog_button() - drv is NULL while the
+3497:   if (INPUT_ANALOG_DPAD_TAKES_STICK(input_analog_dpad_mode, idx))
+3525:      if (input_analog_deadzone)
+3534:         /* normalized magnitude for radial scaled analog deadzone */
+3556:            float dz_raw = input_analog_deadzone * 0x7fff;
+3567:               input_analog_deadzone,
+3568:               input_analog_sensitivity,
+3573:               input_analog_deadzone,
+3574:               input_analog_sensitivity,
+3597: * input_joypad_analog_stick:
+3599: * Processes both X and Y axes of a single analog stick together,
+3602: * input_joypad_analog_axis() is called separately for X and Y.
+3604: * @param input_analog_dpad_mode Analog-to-dpad mode for this port
+3605: * @param input_analog_deadzone  Deadzone threshold (0.0 = disabled)
+3606: * @param input_analog_sensitivity Sensitivity multiplier
+3616:INPUT_NOINLINE static bool input_joypad_analog_stick(
+3617:      unsigned input_analog_dpad_mode,
+3618:      float input_analog_deadzone,
+3619:      float input_analog_sensitivity,
+3633:   /* See input_joypad_analog_button() - drv is NULL while the
+3639:   if (INPUT_ANALOG_DPAD_TAKES_STICK(input_analog_dpad_mode, idx))
+3672:      bool    need_x = input_analog_deadzone || !*out_x;
+3673:      bool    need_y = input_analog_deadzone || !*out_y;
+3685:      if (input_analog_deadzone)
+3695:            float dz_raw = input_analog_deadzone * 0x7fff;
+3709:               input_analog_deadzone, input_analog_sensitivity,
+3712:               input_analog_deadzone, input_analog_sensitivity,
+3732:               input_analog_deadzone, input_analog_sensitivity,
+3735:               input_analog_deadzone, input_analog_sensitivity,
+3760:      unsigned input_analog_dpad_mode,
+3775:         && input_st->dpad_cache_mode[port] == input_analog_dpad_mode)
+3781:      if (     (s == RETRO_DEVICE_INDEX_ANALOG_LEFT  && input_analog_dpad_mode == ANALOG_DPAD_RSTICK)
+3782:            || (s == RETRO_DEVICE_INDEX_ANALOG_RIGHT && input_analog_dpad_mode == ANALOG_DPAD_LSTICK))
+3786:       * input_joypad_analog_axis() reads them axis for axis - and as it
+3793:      input_joypad_analog_stick(ANALOG_DPAD_NONE, 0.0f, 1.0f,
+3806:               if (input_analog_dpad_mode == ANALOG_DPAD_TWINSTICK && s == RETRO_DEVICE_INDEX_ANALOG_RIGHT)
+3813:               if (input_analog_dpad_mode == ANALOG_DPAD_TWINSTICK && s == RETRO_DEVICE_INDEX_ANALOG_RIGHT)
+3821:               if (input_analog_dpad_mode == ANALOG_DPAD_TWINSTICK && s == RETRO_DEVICE_INDEX_ANALOG_RIGHT)
+3828:               if (input_analog_dpad_mode == ANALOG_DPAD_TWINSTICK && s == RETRO_DEVICE_INDEX_ANALOG_RIGHT)
+3841:   input_st->dpad_cache_mode[port]  = (uint8_t)input_analog_dpad_mode;
+3848: * What is read is what input_joypad_analog_axis() reads, axis for axis;
+3852:      unsigned input_analog_dpad_mode,
+3853:      float input_analog_deadzone,
+3854:      float input_analog_sensitivity,
+3864:      return input_joypad_analog_axis(input_analog_dpad_mode,
+3865:            input_analog_deadzone, input_analog_sensitivity,
+3871:   /* read under another mode - the core has just asked for analog
+3873:   if (input_st->stick_cache_mode[port] != input_analog_dpad_mode)
+3877:      input_st->stick_cache_mode[port]  = (uint8_t)input_analog_dpad_mode;
+3884:      input_joypad_analog_stick(input_analog_dpad_mode,
+3885:            input_analog_deadzone, input_analog_sensitivity,
+4241:            input_state->analog[msg->index * 2 + msg->id][user] = msg->state;
+4327:            st->analog[0][user]      = 0;
+4328:            st->analog[1][user]      = 0;
+4329:            st->analog[2][user]      = 0;
+4330:            st->analog[3][user]      = 0;
+4556:      unsigned input_analog_dpad_mode,
+4677:                  && input_state && input_state->analog[base][port])
+4678:               res          = input_state->analog[base][port];
+4729:                              && !(    (  input_analog_dpad_mode == ANALOG_DPAD_LSTICK
+4731:                                    || (  input_analog_dpad_mode == ANALOG_DPAD_RSTICK
+4733:                                    || (  (  input_analog_dpad_mode == ANALOG_DPAD_LRSTICK

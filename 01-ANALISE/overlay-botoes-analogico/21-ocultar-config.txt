@@ -1,0 +1,6 @@
+settings/settings_def_overlay_display.h:9:S_BOOL_CH(input_overlay_hide_in_menu, INPUT_OVERLAY_HIDE_IN_MENU,
+settings/settings_def_overlay_display.h:10:      "input_overlay_hide_in_menu",
+settings/settings_def_overlay_display.h:14:S_BOOL_CH(input_overlay_hide_when_gamepad_connected, INPUT_OVERLAY_HIDE_WHEN_GAMEPAD_CONNECTED,
+settings/settings_def_overlay_display.h:15:      "input_overlay_hide_when_gamepad_connected",
+configuration.h:843:      bool input_overlay_hide_in_menu;
+configuration.h:844:      bool input_overlay_hide_when_gamepad_connected;

@@ -1,0 +1,60 @@
+./tasks/task_autodetect.c:378:         "input_analog_deadzone", "input_analog_trigger_deadzone" };
+./tasks/task_overlay.c:831:      desc->type          = OVERLAY_TYPE_ANALOG_LEFT;
+./tasks/task_overlay.c:833:      desc->type          = OVERLAY_TYPE_ANALOG_RIGHT;
+./tasks/task_overlay.c:920:      case OVERLAY_TYPE_ANALOG_LEFT:
+./tasks/task_overlay.c:921:      case OVERLAY_TYPE_ANALOG_RIGHT:
+./tasks/task_overlay.c:932:            desc->analog_saturate_pct = tmp_float;
+./tasks/task_overlay.c:934:            desc->analog_saturate_pct = 1.0f;
+./configuration.c:6365:      settings->uints.input_analog_dpad_mode[i] = ANALOG_DPAD_LSTICK;
+./configuration.c:7577:         strlcpy_lit(prefix + _len, "_analog_dpad_mode", sizeof(prefix) - _len);
+./configuration.c:7578:         CONFIG_GET_INT_BASE(conf, settings, uints.input_analog_dpad_mode[i], prefix);
+./configuration.c:9240:         config_set_float(conf, "input_analog_deadzone", v);
+./configuration.c:10199:      strlcpy_lit(cfg + _len, "_analog_dpad_mode",  sizeof(cfg) - _len);
+./configuration.c:10201:          || settings->uints.input_analog_dpad_mode[i] != defaults->uints.input_analog_dpad_mode[i])
+./configuration.c:10202:         config_set_int(conf, cfg, settings->uints.input_analog_dpad_mode[i]);
+./configuration.c:11295:      strlcpy_lit(s1 + _len, "_analog_dpad_mode", sizeof(s1) - _len);
+./configuration.c:11296:      CONFIG_GET_INT_BASE(conf, settings, uints.input_analog_dpad_mode[i], s1);
+./configuration.c:11502:      strlcpy_lit(s1 + _len, "_analog_dpad_mode", sizeof(s1) - _len);
+./configuration.c:11503:      config_set_int(conf, s1, settings->uints.input_analog_dpad_mode[i]);
+./settings/settings_def_analog_deadzone.h:12:S_FLOAT_EX(input_analog_deadzone, INPUT_ANALOG_DEADZONE,
+./settings/settings_def_analog_deadzone.h:13:      "input_analog_deadzone",
+./settings/settings_def_analog_deadzone.h:37:S_FLOAT_EX(input_analog_sensitivity, INPUT_ANALOG_SENSITIVITY,
+./settings/settings_def_analog_deadzone.h:38:      "input_analog_sensitivity",
+./menu/menu_displaylist.c:13798:                         (BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_ANALOG_LEFT)
+./menu/menu_displaylist.c:13799:                          || BIT16_GET(menu_st->overlay_types, OVERLAY_TYPE_ANALOG_RIGHT));
+./menu/drivers/xmb.c:5209:         else if (string_ends_with_size(enum_label, "_analog_dpad_mode", enum_label_len, STRLEN_CONST("_analog_dpad_mode")))
+./menu/drivers/ozone.c:2745:         else if (string_ends_with_size(enum_label, "_analog_dpad_mode", enum_label_len, STRLEN_CONST("_analog_dpad_mode")))
+./menu/menu_setting.c:7214:static int setting_action_left_analog_dpad_mode(
+./menu/menu_setting.c:7226:   settings->uints.input_analog_dpad_mode[port] =
+./menu/menu_setting.c:7227:      (settings->uints.input_analog_dpad_mode[port] + ANALOG_DPAD_LAST - 1)
+./menu/menu_setting.c:8837:static size_t setting_get_string_representation_uint_analog_dpad_mode(
+./menu/menu_setting.c:10345:static int setting_action_right_analog_dpad_mode(
+./menu/menu_setting.c:10357:   settings->uints.input_analog_dpad_mode[port] =
+./menu/menu_setting.c:10358:      (settings->uints.input_analog_dpad_mode[port] + 1)
+./menu/menu_setting.c:13447:            &settings->uints.input_analog_dpad_mode[user],
+./menu/menu_setting.c:13457:      SETTINGS_ACTION_SET(left, &(*list)[list_info->index - 1], &setting_action_left_analog_dpad_mode)
+./menu/menu_setting.c:13458:      SETTINGS_ACTION_SET(right, &(*list)[list_info->index - 1], &setting_action_right_analog_dpad_mode)
+./menu/menu_setting.c:13459:      SETTINGS_ACTION_SET(sel, &(*list)[list_info->index - 1], &setting_action_right_analog_dpad_mode)
+./menu/menu_setting.c:13461:      SETTINGS_ACTION_SET(repr, &(*list)[list_info->index - 1], &setting_get_string_representation_uint_analog_dpad_mode)
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:1616:            settings->uints.input_analog_dpad_mode[0] = ANALOG_DPAD_LSTICK_FORCED;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:1723:      settings->uints.input_analog_dpad_mode[0] = ANALOG_DPAD_NONE;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:2809:   float saved_sensitivity        = settings->floats.input_analog_sensitivity;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:2867:   settings->floats.input_analog_sensitivity = 0.0f;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:2870:   settings->floats.input_analog_sensitivity = saved_sensitivity;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4648:   float saved_deadzone = settings->floats.input_analog_deadzone;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4649:   unsigned saved_mode  = settings->uints.input_analog_dpad_mode[0];
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4676:   settings->floats.input_analog_deadzone    = 0.2f;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4680:   settings->uints.input_analog_dpad_mode[0] = ANALOG_DPAD_LSTICK_FORCED;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4729:      settings->floats.input_analog_deadzone    = 0.3f;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4744:      settings->floats.input_analog_deadzone      = 0.2f;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4752:   settings->floats.input_analog_deadzone    = saved_deadzone;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4754:   settings->uints.input_analog_dpad_mode[0] = saved_mode;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4792:   float saved_deadzone = settings->floats.input_analog_deadzone;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4794:   unsigned saved_mode  = settings->uints.input_analog_dpad_mode[0];
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4822:   settings->floats.input_analog_deadzone    = 0.2f;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4824:   settings->uints.input_analog_dpad_mode[0] = ANALOG_DPAD_NONE;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4903:         settings->floats.input_analog_deadzone       = shape[c].dz;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4922:         settings->floats.input_analog_deadzone       = curve[c].dz;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4934:      settings->floats.input_analog_deadzone       = 0.2f;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4976:   settings->floats.input_analog_deadzone    = saved_deadzone;
+./samples/runloop/frontend_overhead/frontend_overhead_test.c:4980:   settings->uints.input_analog_dpad_mode[0] = saved_mode;

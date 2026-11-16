@@ -1,0 +1,18 @@
+1964:    * hide the disable from the input driver that is actually
+7616:          * Drivers hide the overlay while views draw the UI per eye. */
+10520:   bool want_hide = input_st->capture_reasons != 0;
+10540:   if (     want_hide != input_st->capture_cursor_hidden
+10541:         || (force && want_hide))
+10543:      video_driver_show_mouse(!want_hide);
+10544:      input_st->capture_cursor_hidden = want_hide;
+13664:   bool hide_mouse_cursor         = !settings->bools.input_overlay_show_mouse_cursor
+13700:      if (hide_mouse_cursor)
+13836:      input_overlay_hide_leds(ol, input_st->overlay_leds_lit,
+13843:   bool hide            = false;
+13846:   if (settings->bools.input_overlay_hide_in_menu)
+13847:      hide = (menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE) != 0;
+13849:   if (settings->bools.input_overlay_hide_when_gamepad_connected
+13851:      hide = hide || (input_config_get_device_name(0) != NULL);
+13853:   return hide;
+14126:   /* Soft-hide when gamepad connected but pointer input enabled */
+14130:            && settings->bools.input_overlay_hide_when_gamepad_connected

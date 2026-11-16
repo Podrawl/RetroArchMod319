@@ -1,0 +1,67 @@
+static void input_overlay_get_analog_state(
+      input_overlay_state_t *out, struct overlay_desc *desc,
+      unsigned base, float x, float y, float *x_dist, float *y_dist,
+      bool first_touch)
+{
+   float x_val, y_val;
+   float x_val_sat, y_val_sat;
+   const int b = base / 2;
+
+   static float x_center[2];
+   static float y_center[2];
+
+   if (first_touch)
+   {
+      unsigned recenter_zone =  /* [0,100] */
+            config_get_ptr()->uints.input_overlay_analog_recenter_zone;
+
+      if (recenter_zone != 0)
+      {
+         float touch_dist, w;
+
+         x_val      = (x - desc->x_shift) / desc->range_x;
+         y_val      = (y - desc->y_shift) / desc->range_y;
+         touch_dist = sqrt((x_val * x_val + y_val * y_val) * 1e4);
+
+         /* Inside zone, recenter to first touch.
+          * Outside zone, recenter to zone perimeter. */
+         if (touch_dist <= recenter_zone || recenter_zone >= 100)
+            w = 0.0f;
+         else
+            w = (touch_dist - recenter_zone) / touch_dist;
+
+         x_center[b] = x * (1.0f - w) + desc->x_shift * w;
+         y_center[b] = y * (1.0f - w) + desc->y_shift * w;
+      }
+      else
+      {
+         x_center[b] = desc->x_shift;
+         y_center[b] = desc->y_shift;
+      }
+   }
+
+   *x_dist   = x - x_center[b];
+   *y_dist   = y - y_center[b];
+   x_val     = *x_dist / desc->range_x;
+   y_val     = *y_dist / desc->range_y;
+   x_val_sat = x_val   / desc->analog_saturate_pct;
+   y_val_sat = y_val   / desc->analog_saturate_pct;
+
+   out->analog[base + 0] = clamp_float(x_val_sat, -1.0f, 1.0f) * 32767.0f;
+   out->analog[base + 1] = clamp_float(y_val_sat, -1.0f, 1.0f) * 32767.0f;
+}
+
+/**
+ * input_overlay_coords_inside_hitbox:
+ * @desc                  : Overlay descriptor handle.
+ * @x                     : X coordinate value.
+ * @y                     : Y coordinate value.
+ * @use_range_mod         : Set true to use range_mod hitbox
+ *
+ * Check whether the given @x and @y coordinates of the overlay
+ * descriptor @desc is inside the overlay descriptor's hitbox.
+ *
+ * Returns: true (1) if X, Y coordinates are inside a hitbox,
+ * otherwise false (0).
+ **/
+static bool input_overlay_coords_inside_hitbox(const struct overlay_desc *desc,

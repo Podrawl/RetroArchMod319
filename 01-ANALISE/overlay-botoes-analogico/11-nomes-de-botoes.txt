@@ -1,0 +1,3 @@
+tasks/task_overlay.c:830:   if (memcmp(elems[0], "analog_left", 11) == 0)
+tasks/task_overlay.c:834:   else if (memcmp(elems[0], "dpad_area", 9) == 0)
+tasks/task_overlay.c:836:   else if (memcmp(elems[0], "abxy_area", 9) == 0)

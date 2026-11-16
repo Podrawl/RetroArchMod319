@@ -1,0 +1,28 @@
+input/input_driver.c:6243:            if (BIT256_GET(desc->button_mask, RARCH_OVERLAY_NEXT))
+input/input_driver.c:6244:               ol->next_index = desc->next_index;
+input/input_driver.c:6813: * input_overlay_next_move_touch_masks
+input/input_driver.c:6819:void input_overlay_next_move_touch_masks(input_overlay_t *ol)
+input/input_driver.c:6822:   const struct overlay *next   = ol->overlays + ol->next_index;
+input/input_driver.c:7045:      if (*desc->next_index_name)
+input/input_driver.c:7049:            next_overlay_found = (strstr(desc->next_index_name, "portrait") != 0);
+input/input_driver.c:7051:            next_overlay_found = (strstr(desc->next_index_name, "landscape") != 0);
+input/input_driver.c:7057:             * Note: tmp == false. This prevents CMD_EVENT_OVERLAY_NEXT
+input/input_driver.c:7059:            ol->next_index     = desc->next_index;
+input/input_driver.c:7060:            command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
+input/input_driver.c:7600:            /* Skip blocked touch pointer and freeze any overlay_next
+input/input_driver.c:7605:               if (BIT256_GET(old_ol_state->buttons, RARCH_OVERLAY_NEXT))
+input/input_driver.c:7606:                  BIT256_SET(ol_state->buttons, RARCH_OVERLAY_NEXT);
+input/input_driver.c:7630:            /* Block touch pointer if overlay_next was pressed */
+input/input_driver.c:7631:            if (BIT256_GET(polled_data.buttons, RARCH_OVERLAY_NEXT))
+input/input_driver.c:14068:   ol->next_index  = (unsigned)((ol->index + 1) % ol->size);
+tasks/task_overlay.c:879:      if (BIT256_GET(desc->button_mask, RARCH_OVERLAY_NEXT))
+tasks/task_overlay.c:881:         strlcpy_lit(overlay_key + _len, "_next_target",
+tasks/task_overlay.c:884:               desc->next_index_name, sizeof(desc->next_index_name));
+tasks/task_overlay.c:1064:      const char *next          = desc->next_index_name;
+tasks/task_overlay.c:1079:      desc->next_index = (unsigned)next_idx;
+input/input_overlay.h:242:   unsigned next_index;
+input/input_overlay.h:288:   char next_index_name[64];
+input/input_overlay.h:488:   unsigned next_index;
+input/input_overlay.h:679: * input_overlay_next_move_touch_masks
+input/input_overlay.h:685:void input_overlay_next_move_touch_masks(input_overlay_t *ol);
+input/input_defines.h:205:   RARCH_OVERLAY_NEXT,
