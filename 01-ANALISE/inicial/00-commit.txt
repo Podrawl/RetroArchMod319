@@ -1,0 +1,1 @@
+abd275b 2026-11-16 ci: validate extended shaders with current Vulkan feature rules

@@ -1,0 +1,5 @@
+wc: input/input_overlay.c: No such file or directory
+    719 input/input_overlay.h
+  20197 menu/menu_displaylist.c
+  11844 gfx/video_driver.c
+  32760 total

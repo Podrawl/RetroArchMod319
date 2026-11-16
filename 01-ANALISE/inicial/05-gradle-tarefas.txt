@@ -1,0 +1,41 @@
+ - Error and warning improvements
+ - Build authoring improvements
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Build tasks
+assemble - Assemble main outputs for all the variants.
+assembleAarch64 - Assembles main outputs for all Aarch64 variants.
+assembleAndroidTest - Assembles all the Test applications.
+assembleDebug - Assembles main outputs for all Debug variants.
+assembleNormal - Assembles main outputs for all Normal variants.
+assemblePlayStoreNormal - Assembles main outputs for all PlayStoreNormal variants.
+assemblePlayStorePlus - Assembles main outputs for all PlayStorePlus variants.
+assembleQuest - Assembles main outputs for all Quest variants.
+assembleRa32 - Assembles main outputs for all Ra32 variants.
+assembleRelease - Assembles main outputs for all Release variants.
+assembleUnitTest - Assembles all the unit test applications.
+build - Assembles and tests this project.
+buildDependents - Assembles and tests this project and all projects that depend on it.
+buildNeeded - Assembles and tests this project and all projects it depends on.
+bundle - Assemble bundles for all the variants.
+bundleAarch64 - Assembles bundles for all Aarch64 variants.
+bundleDebug - Assembles bundles for all Debug variants.
+bundleNormal - Assembles bundles for all Normal variants.
+bundlePlayStoreNormal - Assembles bundles for all PlayStoreNormal variants.
+bundlePlayStorePlus - Assembles bundles for all PlayStorePlus variants.
+bundleQuest - Assembles bundles for all Quest variants.
+bundleRa32 - Assembles bundles for all Ra32 variants.
+bundleRelease - Assembles bundles for all Release variants.
+clean - Deletes the build directory.
+Build Setup tasks
+init - Initializes a new Gradle build.
+buildEnvironment - Displays all buildscript dependencies declared in root project 'phoenix'.
+installAarch64Debug - Installs the Debug build for flavor Aarch64.
+installAarch64DebugAndroidTest - Installs the android (on device) tests for the Aarch64Debug build.
+installAarch64Release - Installs the Release build for flavor Aarch64.
+installNormalDebug - Installs the Debug build for flavor Normal.
+installNormalDebugAndroidTest - Installs the android (on device) tests for the NormalDebug build.
+installNormalRelease - Installs the Release build for flavor Normal.
+installPlayStoreNormalDebug - Installs the Debug build for flavor PlayStoreNormal.
+installPlayStoreNormalDebugAndroidTest - Installs the android (on device) tests for the PlayStoreNormalDebug build.
+grep: write error: Broken pipe

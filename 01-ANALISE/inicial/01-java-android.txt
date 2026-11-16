@@ -1,0 +1,17 @@
+pkg/android/play-core-stub/com/retroarch/playcore/PlayCoreManager.java
+pkg/android/play-core-stub/com/retroarch/playcore/RetroArchApplication.java
+pkg/android/phoenix/src/com/retroarch/browser/retroactivity/RetroActivityFuture.java
+pkg/android/phoenix/src/com/retroarch/browser/debug/CoreSideloadActivity.java
+pkg/android/phoenix/src/com/retroarch/browser/provider/RetroDocumentsProvider.java
+pkg/android/phoenix-common/src/com/retroarch/browser/preferences/util/UserPreferences.java
+pkg/android/phoenix-common/src/com/retroarch/browser/retroactivity/SecondDisplayController.java
+pkg/android/phoenix-common/src/com/retroarch/browser/retroactivity/RetroActivityCommon.java
+pkg/android/phoenix-common/src/com/retroarch/browser/retroactivity/RetroActivityCamera.java
+pkg/android/phoenix-common/src/com/retroarch/browser/receiver/InstalledCoresReceiver.java
+pkg/android/phoenix-legacy/src/com/retroarch/browser/retroactivity/RetroActivityPast.java
+pkg/android/phoenix-legacy/src/com/retroarch/browser/debug/CoreSideloadActivity.java
+pkg/android/phoenix-jelly-bean/src/com/retroarch/browser/retroactivity/RetroActivityFuture.java
+pkg/android/phoenix-jelly-bean/src/com/retroarch/browser/debug/CoreSideloadActivity.java
+pkg/android/phoenix-jelly-bean/src/com/retroarch/browser/provider/RetroDocumentsProvider.java
+pkg/android/play-core-impl/com/retroarch/playcore/PlayCoreManager.java
+pkg/android/play-core-impl/com/retroarch/playcore/RetroArchApplication.java

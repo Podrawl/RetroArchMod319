@@ -1,0 +1,13 @@
+AndroidManifest.xml
+Readme.md
+build.gradle
+gradle
+gradle.properties
+gradlew
+gradlew.bat
+module_template
+res
+res64
+retroarch.properties
+sideload
+src
