@@ -33,3 +33,10 @@ Base: RetroArch master (commit lido em 01-ANALISE/overlay-viewport*/00-commit.tx
 - Várias páginas por .cfg (ex.: horizontal e vertical): o editor edita a página ativa e deixa trocar de página; viewport é por página.
 - Opção de renomear a cópia ao salvar (ex.: psx-meu.cfg -> nome escolhido).
 - RISCO a verificar: se a imagem do overlay for UMA imagem de tela cheia com os botões desenhados, mover o hitbox não move o desenho. Só funciona bem com imagem por botão (overlayN_descM_overlay). Checar nos .cfg da pasta flat.
+
+## Extras pedidos (16/11) - FORA do editor, depois dele
+- overlay_next (RARCH_OVERLAY_NEXT) é a ÚNICA função de troca de página encontrada (input_defines.h, task_overlay.c). Existe também troca automática retrato/paisagem pelo nome da página.
+- Ocultar já existente: só "ocultar no menu" e "ocultar com controle físico conectado". Não achei ocultar por inatividade/toque (busca não exaustiva).
+- Ideias: (A) opção "ocultar botões após X s sem toque" (volta ao tocar); (B) nova função de botão "ocultar/mostrar overlay" sem trocar de página.
+- Analógico: input_overlay_get_analog_state (input_driver.c ~6004): mapeamento linear distância/(range*saturate), sem zona morta nem curva; opção existente input_overlay_analog_recenter_zone; saturação por botão (analog_saturate_pct). Causa real do "ruim" NÃO confirmada: precisa sintoma + núcleo.
+- Hipótese a checar: nomes de hotkey (save_state/load_state) direto em botões de overlay.
