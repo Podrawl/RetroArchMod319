@@ -1,0 +1,35 @@
+         break;
+      case CMD_EVENT_STATISTICS_TOGGLE:
+         settings->bools.video_statistics_show = !(settings->bools.video_statistics_show);
+         break;
+      case CMD_EVENT_OVERLAY_NEXT:
+         /* Switch to the next available overlay screen. */
+#ifdef HAVE_OVERLAY
+         {
+            bool *check_rotation           = (bool*)data;
+            unsigned output_size;
+            video_driver_state_t
+               *video_st                   = video_state_get_ptr();
+            input_driver_state_t *input_st = input_state_get_ptr();
+            bool inp_overlay_auto_rotate   = settings->bools.input_overlay_auto_rotate;
+            input_overlay_t *ol            = input_st->overlay_ptr;
+            float input_overlay_opacity;
+            if (!ol)
+               return false;
+
+            input_overlay_next_move_touch_masks(ol);
+
+            ol->index                      = ol->next_index;
+            ol->active                     = &ol->overlays[ol->index];
+            video_driver_set_overlay_viewport(ol->active);
+
+            input_overlay_opacity          = (ol->flags & INPUT_OVERLAY_IS_OSK)
+                  ? settings->floats.input_osk_overlay_opacity
+                  : settings->floats.input_overlay_opacity;
+
+            input_overlay_load_active(ol, input_overlay_opacity);
+
+            ol->next_index                 =
+                  (unsigned)((ol->index + 1) % ol->size);
+
+            /* Trigger viewport recalculation - overlay may have viewport override */

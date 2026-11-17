@@ -1,0 +1,4 @@
+ra/retroarch.c:5049:            ol->index                      = ol->next_index;
+ra/retroarch.c:5050:            ol->active                     = &ol->overlays[ol->index];
+ra/retroarch.c:5060:                  (unsigned)((ol->index + 1) % ol->size);
+ra/input/input_driver.c:14234:   ol->next_index  = (unsigned)((ol->index + 1) % ol->size);
