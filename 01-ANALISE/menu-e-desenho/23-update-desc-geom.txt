@@ -1,0 +1,32 @@
+static void input_overlay_update_desc_geom(input_overlay_t *ol,
+      struct overlay_desc *desc)
+{
+   if (!OVERLAY_HAS_IMAGE(&desc->image) || !(desc->flags & OVERLAY_DESC_MOVABLE))
+      return;
+
+   /* unchanged: a D3D driver would map and rewrite its vertex buffer,
+    * threaded video would queue a packet, for the same rectangle */
+   if (     ol->iface->vertex_geom
+         && (desc->delta_x != desc->sent_dx || desc->delta_y != desc->sent_dy))
+   {
+      ol->iface->vertex_geom(ol->iface_data, desc->image_index,
+            desc->mod_x + desc->delta_x, desc->mod_y + desc->delta_y,
+            desc->mod_w, desc->mod_h);
+      desc->sent_dx = desc->delta_x;
+      desc->sent_dy = desc->delta_y;
+   }
+
+   desc->delta_x = 0.0f;
+   desc->delta_y = 0.0f;
+}
+
+
+#ifdef HAVE_RPNG
+/* Show one frame of a two-frame APNG, from the pair composed at load.
+ * False when the surface is still the video thread's, the submit
+ * failed or was dropped: the caller keeps its current state, so the
+ * next poll tries again instead of the press or release being lost. */
+static bool input_overlay_update_apng_frame(input_overlay_t *ol,
+      size_t i, int target_frame)
+{
+   gfx_surface_t *s    = (gfx_surface_t*)ol->surfaces[i];

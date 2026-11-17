@@ -1,0 +1,44 @@
+menu/menu_displaylist.c:5262:                     msg_hash_to_str(MENU_ENUM_LABEL_VALUE_ONSCREEN_OVERLAY_SETTINGS),
+menu/menu_displaylist.c:5263:                     MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS_STR,
+menu/menu_displaylist.c:5264:                     MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS,
+menu/menu_displaylist.c:12584:               {MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS,                             PARSE_ACTION,      true},
+menu/menu_displaylist.c:12654:                  case MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS:
+menu/menu_displaylist.c:13688:      case DISPLAYLIST_ONSCREEN_OVERLAY_SETTINGS_LIST:
+menu/menu_displaylist.c:13699:               {MENU_ENUM_LABEL_OVERLAY_AUTOLOAD_PREFERRED,                PARSE_ONLY_BOOL,  false },
+menu/menu_displaylist.c:13700:               {MENU_ENUM_LABEL_OVERLAY_PRESET,                            PARSE_ONLY_PATH,  false },
+menu/menu_displaylist.c:13701:               {MENU_ENUM_LABEL_OVERLAY_OPACITY,                           PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13716:               {MENU_ENUM_LABEL_OVERLAY_SCALE_LANDSCAPE,                   PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13717:               {MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_LANDSCAPE,           PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13718:               {MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_LANDSCAPE,            PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13719:               {MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_LANDSCAPE,            PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13720:               {MENU_ENUM_LABEL_OVERLAY_X_OFFSET_LANDSCAPE,                PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13721:               {MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_LANDSCAPE,                PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13722:               {MENU_ENUM_LABEL_OVERLAY_SCALE_PORTRAIT,                    PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13723:               {MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_PORTRAIT,            PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13724:               {MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_PORTRAIT,             PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13725:               {MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_PORTRAIT,             PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13726:               {MENU_ENUM_LABEL_OVERLAY_X_OFFSET_PORTRAIT,                 PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13727:               {MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_PORTRAIT,                 PARSE_ONLY_FLOAT, false },
+menu/menu_displaylist.c:13729:               {MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS,                 PARSE_ACTION,     false },
+menu/menu_displaylist.c:13730:               {MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS,                    PARSE_ACTION,     false },
+menu/menu_displaylist.c:13745:                  case MENU_ENUM_LABEL_OVERLAY_AUTOLOAD_PREFERRED:
+menu/menu_displaylist.c:13746:                  case MENU_ENUM_LABEL_OVERLAY_PRESET:
+menu/menu_displaylist.c:13747:                  case MENU_ENUM_LABEL_OVERLAY_OPACITY:
+menu/menu_displaylist.c:13755:                  case MENU_ENUM_LABEL_OVERLAY_SCALE_LANDSCAPE:
+menu/menu_displaylist.c:13756:                  case MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_LANDSCAPE:
+menu/menu_displaylist.c:13757:                  case MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_LANDSCAPE:
+menu/menu_displaylist.c:13758:                  case MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_LANDSCAPE:
+menu/menu_displaylist.c:13759:                  case MENU_ENUM_LABEL_OVERLAY_X_OFFSET_LANDSCAPE:
+menu/menu_displaylist.c:13760:                  case MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_LANDSCAPE:
+menu/menu_displaylist.c:13761:                  case MENU_ENUM_LABEL_OVERLAY_SCALE_PORTRAIT:
+menu/menu_displaylist.c:13762:                  case MENU_ENUM_LABEL_OVERLAY_ASPECT_ADJUST_PORTRAIT:
+menu/menu_displaylist.c:13763:                  case MENU_ENUM_LABEL_OVERLAY_X_SEPARATION_PORTRAIT:
+menu/menu_displaylist.c:13764:                  case MENU_ENUM_LABEL_OVERLAY_Y_SEPARATION_PORTRAIT:
+menu/menu_displaylist.c:13765:                  case MENU_ENUM_LABEL_OVERLAY_X_OFFSET_PORTRAIT:
+menu/menu_displaylist.c:13766:                  case MENU_ENUM_LABEL_OVERLAY_Y_OFFSET_PORTRAIT:
+menu/menu_displaylist.c:13801:                  case MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS:
+menu/menu_displaylist.c:13802:                  case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+menu/menu_displaylist.c:14665:               {MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS,       PARSE_ACTION},
+menu/menu_displaylist.c:14968:               {MENU_ENUM_LABEL_OVERLAY_DIRECTORY,               PARSE_ONLY_DIR},
+menu/menu_displaylist.c:18017:         case DISPLAYLIST_ONSCREEN_OVERLAY_SETTINGS_LIST:
+msg_hash.h:19747:   MENU_ENUM_LABEL_DEFERRED_ONSCREEN_OVERLAY_SETTINGS_LIST,

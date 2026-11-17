@@ -1,0 +1,24 @@
+./retroarch.c:5057:            input_overlay_load_active(ol, input_overlay_opacity);
+./retroarch.c:5419:            input_overlay_set_scale_factor(ol, &layout_desc, output_size);
+./retroarch.c:5437:               input_overlay_set_alpha_mod(ol, input_overlay_opacity);
+./input/input_driver.c:6303: * input_overlay_update_desc_geom:
+./input/input_driver.c:6309:static void input_overlay_update_desc_geom(input_overlay_t *ol,
+./input/input_driver.c:6509:      input_overlay_update_desc_geom(ol, desc);
+./input/input_driver.c:6744: * input_overlay_set_scale_factor:
+./input/input_driver.c:6751:void input_overlay_set_scale_factor(
+./input/input_driver.c:6788:static void input_overlay_load_active_geom(
+./input/input_driver.c:6791:void input_overlay_load_active(input_overlay_t *ol, float opacity)
+./input/input_driver.c:6796:      input_overlay_load_active_geom(ol, opacity);
+./input/input_driver.c:6801:static void input_overlay_load_active_geom(
+./input/input_driver.c:6804:   input_overlay_set_alpha_mod(ol, opacity);
+./input/input_driver.c:6860:   input_overlay_set_alpha_mod(ol, opacity);
+./input/input_driver.c:6869:      input_overlay_update_desc_geom(ol, desc);
+./input/input_driver.c:6877:void input_overlay_set_alpha_mod(input_overlay_t *ol, float mod)
+./input/input_driver.c:13683:      input_overlay_load_active(ol, opacity);
+./input/input_driver.c:13809:      input_overlay_set_alpha_mod(input_st->overlay_ptr,
+./input/input_driver.c:18600:         input_overlay_load_active_geom(
+./input/input_overlay.h:676:void input_overlay_load_active(input_overlay_t *ol, float opacity);
+./input/input_overlay.h:688: * input_overlay_set_scale_factor:
+./input/input_overlay.h:696:void input_overlay_set_scale_factor(
+./input/input_overlay.h:701: * input_overlay_set_alpha_mod:
+./input/input_overlay.h:708:void input_overlay_set_alpha_mod(input_overlay_t *ol, float mod);

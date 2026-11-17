@@ -1,0 +1,10 @@
+gfx/gfx_display.h:250:    * It is bottom-up: gfx_display_draw_quad and every caller that
+gfx/gfx_display.h:408:void gfx_display_draw_text(
+gfx/gfx_display.h:415:/* As gfx_display_draw_text, but drives glyph colour at full float precision
+gfx/gfx_display.h:419:void gfx_display_draw_text_hp(
+gfx/gfx_display.h:467:/* Sends any quads gathered by gfx_display_draw_quad() that have not
+gfx/gfx_display.h:613:void gfx_display_draw_quad(
+gfx/gfx_display.h:625:void gfx_display_draw_texture_slice(
+gfx/gfx_widgets.h:397:void gfx_widgets_draw_icon(
+gfx/gfx_widgets.h:411:void gfx_widgets_draw_text(
+gfx/gfx_widgets.h:536:void gfx_widgets_draw_idle_logo(void *data, uintptr_t texture);

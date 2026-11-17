@@ -1,0 +1,221 @@
+   if (     !ptr_st->count
+         && (ptr_st->device_mask & (1 << RETRO_DEVICE_MOUSE)))
+   {
+      ptr_st->mouse.prev_screen_pos = ptr_st->screen_pos;
+      ptr_st->screen_pos            = VIDEO_POS_PACK(
+            input_frame_or_driver(input, input_data, NULL, NULL, NULL, true, 0,
+               RARCH_DEVICE_POINTER_SCREEN, touch_idx,
+               RETRO_DEVICE_ID_POINTER_X),
+            input_frame_or_driver(input, input_data, NULL, NULL, NULL, true, 0,
+               RARCH_DEVICE_POINTER_SCREEN, touch_idx,
+               RETRO_DEVICE_ID_POINTER_Y));
+   }
+
+   ptr_st->count++;
+}
+
+/* A stick's two axes as four buttons: past the threshold one way or
+ * the other on x, and on y. @below and @above are the stick values the
+ * threshold comes to (input_stick_limits(), inclusive). */
+#define INPUT_OVERLAY_STICK_TO_BUTTONS(state, below, above, x, y, left, right, up, down) \
+   do \
+   { \
+      if ((x) <= (below)) \
+         BIT256_SET((state)->buttons, left); \
+      if ((x) >= (above)) \
+         BIT256_SET((state)->buttons, right); \
+      if ((y) <= (below)) \
+         BIT256_SET((state)->buttons, up); \
+      if ((y) >= (above)) \
+         BIT256_SET((state)->buttons, down); \
+   } while (0)
+
+/*
+ * input_poll_overlay:
+ *
+ * Poll pressed buttons/keys on currently active overlay.
+ **/
+INPUT_NOINLINE static void input_poll_overlay(
+      bool keyboard_mapping_blocked,
+      settings_t *settings,
+      void *ol_data,
+      float opacity,
+      unsigned analog_dpad_mode,
+      float axis_threshold)
+{
+   input_overlay_state_t *old_ol_state;
+   int i, j;
+   input_overlay_t *ol                      = (input_overlay_t*)ol_data;
+   int blocked_touch_idx                    = -1;
+   uint16_t key_mod                         = 0;
+   uint16_t ptrdev_touch_mask               = 0;
+   uint16_t hitbox_touch_mask               = 0;
+   bool button_pressed                      = false;
+   input_driver_state_t *input_st           = &input_driver_st;
+   void *input_data                         = input_st->current_data;
+   input_overlay_state_t *ol_state          = INPUT_OVERLAY_ST(ol);
+   input_overlay_pointer_state_t *ptr_state = &ol->pointer_state;
+   input_driver_t *input                    = (input_driver_t*)input_st->current_driver;
+   enum overlay_show_input_type
+         input_overlay_show_inputs          = (enum overlay_show_input_type)
+               settings->uints.input_overlay_show_inputs;
+   unsigned input_overlay_show_inputs_port  = settings->uints.input_overlay_show_inputs_port;
+   float touch_scale                        = (float)settings->uints.input_touch_scale;
+   bool ol_ptr_enable                       = settings->bools.input_overlay_pointer_enable;
+   bool osk_state_changed                   = false;
+   const video_views_layout_t *views        = video_driver_get_views_layout();
+
+   static int old_ptr_count;
+   static int old_blocked_touch_idx;
+   static int16_t old_ptrdev_touch_mask;
+   static int16_t old_hitbox_touch_mask;
+
+   if (!ol_state)
+      return;
+
+   /* the last poll's state stays where it is: this poll writes the
+    * other, its keys, sticks and buttons cleared, its touches as read */
+   old_ol_state          = ol_state;
+   ol->state_cur        ^= 1;
+   ol_state              = INPUT_OVERLAY_ST(ol);
+   memset(ol_state, 0, offsetof(input_overlay_state_t, touch));
+   ol_state->touch_count = 0;
+
+   if (ol_ptr_enable)
+   {
+      old_ptr_count    = ptr_state->count;
+      ptr_state->count = 0;
+   }
+
+   /* input_data is dereferenced by the driver's pointer paths, so a
+    * NULL current_data (mid driver teardown/reinit, e.g. Android
+    * surface recreation) must skip driver input for this frame
+    * instead of faulting inside the input driver.
+    *
+    * A stylus-hidden overlay reads no touches either: with none, the
+    * rest of this poll releases whatever a finger was holding (button,
+    * key, pointing device) the same way lifting it would. */
+   if (     input->input_state
+         && input_data
+         && !(ol->flags & INPUT_OVERLAY_STYLUS_HIDDEN))
+   {
+      rarch_joypad_info_t joypad_info;
+      /* Views draw a non-fullscreen overlay over the whole window, and
+       * the pointer device reports packed-frame coordinates. */
+      unsigned device                 =
+            ((ol->active->flags & OVERLAY_FULL_SCREEN) || views)
+         ? RARCH_DEVICE_POINTER_SCREEN
+         : RETRO_DEVICE_POINTER;
+      const input_device_driver_t
+         *joypad                      = input_st->primary_joypad;
+
+      joypad_info.joy_idx             = 0;
+      joypad_info.auto_binds          = NULL;
+      joypad_info.axis_threshold      = 0.0f;
+
+      /* Get driver input: each finger from what the driver published,
+       * at one look, or asked of the driver.
+       * Bound check first: the PRESSED query must never be issued
+       * with idx == OVERLAY_MAX_TOUCH, since drivers index their
+       * touch arrays by idx and are not required to range-check it. */
+      for (i = 0; i < OVERLAY_MAX_TOUCH; i++)
+      {
+         uint32_t pos;
+         int down = input_pointer_frame_finger(0, device, (unsigned)i, &pos);
+         if (down < 0)
+         {
+            if (!input->input_state(input_data, joypad, &joypad_info,
+                     NULL, 0, device, i, RETRO_DEVICE_ID_POINTER_PRESSED))
+               break;
+            pos = VIDEO_POS_PACK(
+                  input->input_state(input_data, joypad, &joypad_info,
+                     NULL, 0, device, i, RETRO_DEVICE_ID_POINTER_X),
+                  input->input_state(input_data, joypad, &joypad_info,
+                     NULL, 0, device, i, RETRO_DEVICE_ID_POINTER_Y));
+         }
+         else if (!down)
+            break;
+         ol_state->touch[i] = pos;
+      }
+      ol_state->touch_count = i;
+
+      /* Update lookup table of new to old touch indexes */
+      input_overlay_track_touch_inputs(ol_state, old_ol_state);
+
+      /* Poll overlay */
+      for (i = 0; i < ol_state->touch_count; i++)
+      {
+         input_overlay_state_t polled_data;
+         int old_i           = input_st->old_touch_index_lut[i];
+         bool hitbox_pressed = false;
+
+         if (old_i != -1)
+         {
+            /* Keep each touch pointer dedicated to the same input type
+             * (hitbox or pointing device) from the previous poll */
+            if (BIT16_GET(old_hitbox_touch_mask, old_i))
+               BIT16_SET(hitbox_touch_mask, i);
+            else if (BIT16_GET(old_ptrdev_touch_mask, old_i))
+               BIT16_SET(ptrdev_touch_mask, i);
+
+            /* Skip blocked touch pointer and freeze any overlay_next
+             * input until the blocked touch is removed */
+            if (old_i == old_blocked_touch_idx)
+            {
+               blocked_touch_idx = i;
+               if (BIT256_GET(old_ol_state->buttons, RARCH_OVERLAY_NEXT))
+                  BIT256_SET(ol_state->buttons, RARCH_OVERLAY_NEXT);
+               continue;
+            }
+         }
+
+         /* its keys, sticks and buttons: its touches are not used */
+         memset(&polled_data, 0, offsetof(input_overlay_state_t, touch));
+
+         /* Check hitboxes only if this touch pointer
+          * is not controlling a pointing device.
+          * Drivers hide the overlay while views draw the UI per eye. */
+         if (   ol->flags & INPUT_OVERLAY_ENABLE
+             && !(ol->flags & INPUT_OVERLAY_GAMEPAD_HIDDEN)
+             && !(views && views->ui_per_eye)
+             && !BIT16_GET(ptrdev_touch_mask, i))
+            hitbox_pressed = input_overlay_poll(
+                  ol, &polled_data, i, old_i,
+                  VIDEO_POS_X(ol_state->touch[i]),
+                  VIDEO_POS_Y(ol_state->touch[i]), touch_scale);
+         else
+            ol->flags &= ~INPUT_OVERLAY_BLOCKED;
+
+         if (hitbox_pressed)
+         {
+            /* Block touch pointer if overlay_next was pressed */
+            if (BIT256_GET(polled_data.buttons, RARCH_OVERLAY_NEXT))
+               blocked_touch_idx = i;
+
+            bits_or_bits(ol_state->buttons.data,
+                  polled_data.buttons.data,
+                  ARRAY_SIZE(polled_data.buttons.data));
+
+            for (j = 0; j < (int)ARRAY_SIZE(ol_state->keys); j++)
+               ol_state->keys[j] |= polled_data.keys[j];
+
+            /* Fingers pressed later take priority and matched up
+             * with overlay poll priorities. */
+            for (j = 0; j < 4; j++)
+               if (polled_data.analog[j])
+                  ol_state->analog[j] = polled_data.analog[j];
+
+            hitbox_touch_mask |= (1 << i);
+         }
+         else if (   ol_ptr_enable
+                  && ptr_state->device_mask
+                  && !BIT16_GET(hitbox_touch_mask, i)
+                  && !(ol->flags & INPUT_OVERLAY_BLOCKED))
+         {
+            input_overlay_update_pointer_coords(ptr_state, i);
+            ptrdev_touch_mask |= (1 << i);
+         }
+      }
+   }
+
+   if (ol_ptr_enable)

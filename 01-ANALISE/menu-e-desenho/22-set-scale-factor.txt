@@ -1,0 +1,80 @@
+void input_overlay_set_scale_factor(
+      input_overlay_t *ol, const overlay_layout_desc_t *layout_desc,
+      unsigned output_dims)
+{
+   size_t i;
+   float display_aspect_ratio = 0.0f;
+
+   if (!ol || !layout_desc)
+      return;
+
+   if (VIDEO_SCALE_H(output_dims) > 0)
+      display_aspect_ratio = (float)VIDEO_SCALE_W(output_dims) /
+         (float)VIDEO_SCALE_H(output_dims);
+
+   for (i = 0; i < ol->size; i++)
+   {
+      struct overlay *current_overlay = &ol->overlays[i];
+      overlay_layout_t overlay_layout;
+
+      input_overlay_parse_layout(current_overlay,
+            layout_desc, display_aspect_ratio, &overlay_layout);
+      input_overlay_scale(current_overlay, &overlay_layout);
+   }
+
+   input_overlay_set_vertex_geom(ol);
+}
+
+/* The video driver is about to go: every pack's textures, active or
+ * cached, are unloaded while it can still do so. A pack whose pixels
+ * went to the driver it is losing has nothing to upload again and is
+ * reloaded from its path (input_overlay_has_source). */
+void input_overlay_video_teardown(void)
+{
+   input_overlay_release_textures(input_driver_st.overlay_ptr);
+   input_overlay_release_textures(input_driver_st.overlay_cache_ptr);
+}
+
+static void input_overlay_load_active_geom(
+      input_overlay_t *ol, float opacity);
+
+void input_overlay_load_active(input_overlay_t *ol, float opacity)
+{
+   /* No page in the driver, no per-image state to set on it: the
+    * setters would index whatever the driver held before. */
+   if (input_overlay_load_page(ol) != INPUT_OVERLAY_PAGE_NONE)
+      input_overlay_load_active_geom(ol, opacity);
+}
+
+/* The per-page state that follows either load: alpha, geometry,
+ * full-screen. */
+static void input_overlay_load_active_geom(
+      input_overlay_t *ol, float opacity)
+{
+   input_overlay_set_alpha_mod(ol, opacity);
+   input_overlay_set_vertex_geom(ol);
+
+   if (ol->iface->full_screen)
+      ol->iface->full_screen(ol->iface_data,
+            (ol->active->flags & OVERLAY_FULL_SCREEN));
+}
+
+/**
+ * input_overlay_next_move_touch_masks
+ * @ol : Overlay handle.
+ *
+ * Finds similar descs in the next overlay (i.e. same location and type)
+ * and moves touch masks from active overlay to next.
+ */
+void input_overlay_next_move_touch_masks(input_overlay_t *ol)
+{
+   const struct overlay *active = ol->active;
+   const struct overlay *next   = ol->overlays + ol->next_index;
+   size_t i, j;
+
+   for (i = 0; i < active->size; i++)
+   {
+      struct overlay_desc *desc = active->descs + i;
+
+      if (desc->old_touch_mask)
+      {
