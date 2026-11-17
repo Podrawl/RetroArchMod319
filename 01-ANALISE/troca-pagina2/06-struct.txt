@@ -1,0 +1,41 @@
+ra/input/input_overlay.h:300:struct overlay
+ra/input/input_overlay.h-301-{
+ra/input/input_overlay.h-302-   struct overlay_desc *descs;
+ra/input/input_overlay.h-303-   struct texture_image *load_images;
+ra/input/input_overlay.h-304-   /* The pack's texture handle of each load_images entry, valid while
+ra/input/input_overlay.h-305-    * the overlay is enabled on a driver with load_textures; views
+ra/input/input_overlay.h-306-    * into input_overlay_t::page_textures. */
+ra/input/input_overlay.h-307-   uintptr_t *textures;
+ra/input/input_overlay.h-308-   /* The pack's unique image behind each of those handles, alongside
+ra/input/input_overlay.h-309-    * them in the same block. */
+ra/input/input_overlay.h-310-   uint32_t *texture_images;
+ra/input/input_overlay.h-311-
+ra/input/input_overlay.h-312-   struct texture_image image;
+ra/input/input_overlay.h-313-
+ra/input/input_overlay.h-314-   unsigned load_images_size;
+ra/input/input_overlay.h-315-   unsigned id;
+ra/input/input_overlay.h-316-
+ra/input/input_overlay.h-317-   size_t size;
+ra/input/input_overlay.h-318-   size_t pos;
+ra/input/input_overlay.h-319-
+ra/input/input_overlay.h-320-   float mod_x, mod_y, mod_w, mod_h;
+ra/input/input_overlay.h-321-   float x, y, w, h;
+ra/input/input_overlay.h-322-   float center_x, center_y;
+ra/input/input_overlay.h-323-   float aspect_ratio;
+ra/input/input_overlay.h-324-
+ra/input/input_overlay.h-325-   /* Viewport override - normalized coordinates (0.0-1.0) */
+ra/input/input_overlay.h-326-   struct
+ra/input/input_overlay.h-327-   {
+ra/input/input_overlay.h-328-      float x;
+ra/input/input_overlay.h-329-      float y;
+ra/input/input_overlay.h-330-      float w;
+ra/input/input_overlay.h-331-      float h;
+ra/input/input_overlay.h-332-   } viewport;
+ra/input/input_overlay.h-333-
+ra/input/input_overlay.h-334-   struct
+ra/input/input_overlay.h-335-   {
+ra/input/input_overlay.h-336-      float alpha_mod;
+ra/input/input_overlay.h-337-      float range_mod;
+ra/input/input_overlay.h-338-
+ra/input/input_overlay.h-339-      struct
+ra/input/input_overlay.h-340-      {
