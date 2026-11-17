@@ -1,0 +1,31 @@
+ra/gfx/video_defines.h:323:typedef struct video_viewport
+ra/gfx/video_defines.h-324-{
+ra/gfx/video_defines.h-325-   /* The origin, one signed pair in VIDEO_POS_PACK's layout. */
+ra/gfx/video_defines.h-326-   unsigned pos;
+ra/gfx/video_defines.h-327-   /* The drawn area and the window that holds it, each a size pair
+ra/gfx/video_defines.h-328-    * in one word, VIDEO_SCALE_PACK's layout. */
+ra/gfx/video_defines.h-329-   unsigned dims;
+ra/gfx/video_defines.h-330-   unsigned full_dims;
+ra/gfx/video_defines.h-331-} video_viewport_t;
+ra/gfx/video_defines.h-332-
+ra/gfx/video_defines.h-333-/* The custom viewport as the settings hold it: an origin in
+ra/gfx/video_defines.h-334- * VIDEO_POS_PACK's layout and a size in VIDEO_SCALE_PACK's, the same
+ra/gfx/video_defines.h-335- * two words video_viewport_t carries.
+ra/gfx/video_defines.h-336- *
+ra/gfx/video_defines.h-337- * The config file still keeps custom_viewport_x/_y/_width/_height as
+--
+ra/gfx/video_defines.h:342:typedef struct video_viewport_settings
+ra/gfx/video_defines.h-343-{
+ra/gfx/video_defines.h-344-   unsigned pos;
+ra/gfx/video_defines.h-345-   unsigned dims;
+ra/gfx/video_defines.h-346-} video_viewport_settings_t;
+ra/gfx/video_defines.h-347-
+ra/gfx/video_defines.h-348-typedef struct gfx_ctx_flags
+ra/gfx/video_defines.h-349-{
+ra/gfx/video_defines.h-350-   uint32_t flags;
+ra/gfx/video_defines.h-351-} gfx_ctx_flags_t;
+ra/gfx/video_defines.h-352-
+ra/gfx/video_defines.h-353-enum gfx_ctx_api
+ra/gfx/video_defines.h-354-{
+ra/gfx/video_defines.h-355-   GFX_CTX_NONE = 0,
+ra/gfx/video_defines.h-356-   GFX_CTX_OPENGL_API,

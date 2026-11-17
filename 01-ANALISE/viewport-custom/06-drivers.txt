@@ -1,0 +1,4 @@
+ra/gfx/drivers/vulkan.c:3344:static void vulkan_viewport_info(void *data, struct video_viewport *vp);
+ra/gfx/drivers/vulkan.c:9468:   vulkan_viewport_info(vk, &vp);
+ra/gfx/drivers/vulkan.c:17605:static void vulkan_viewport_info(void *data, struct video_viewport *vp)
+ra/gfx/drivers/vulkan.c:18746:   vulkan_viewport_info,

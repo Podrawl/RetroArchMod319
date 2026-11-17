@@ -1,0 +1,114 @@
+4676-
+4677-   /* The core's geometry covers the whole packed frame, so "core
+4678-    * provided" and square pixels mean each view's own aspect. */
+4679:   if (     aspect_idx != ASPECT_RATIO_CUSTOM
+4680-         && aspect_idx != ASPECT_RATIO_CORE
+4681-         && aspect_idx != ASPECT_RATIO_SQUARE)
+4682-      params->single_aspect = video_driver_get_aspect_ratio();
+4683-}
+4684-
+4685-/* @custom_vp: the custom viewport, in the window's pixels, applies to
+4686- * a one-screen map laid out in the window. */
+4687-static void video_driver_views_layout(settings_t *settings,
+4688-      const video_views_map_t *map, unsigned dims, unsigned stereo_mode,
+4689-      bool custom_vp, unsigned exclude, video_views_layout_t *out)
+4690-{
+4691-   video_views_layout_params_t params;
+4692-   video_views_rect_t custom;
+4693-
+--
+4696-   params.dims            = dims;
+4697-   params.stereo_mode     = stereo_mode;
+4698-   params.exclude_screens = exclude;
+4699:   if (settings->uints.video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+4700-   {
+4701-      custom.pos  = settings->video_vp_custom.pos;
+4702-      custom.dims = settings->video_vp_custom.dims;
+4703-      if (custom_vp && VIDEO_SCALE_W(custom.dims) && VIDEO_SCALE_H(custom.dims))
+4704-         params.custom_vp = &custom;
+4705-   }
+4706-
+4707-   video_views_layout(&params, out);
+4708-}
+4709-
+4710-void video_driver_views_layout_flat(const video_views_map_t *map,
+4711-      unsigned dims, bool window, video_views_layout_t *out)
+4712-{
+4713-   video_driver_views_layout(config_get_ptr(), map, dims,
+--
+5736-   if (!y_down)
+5737-      vp_bias_y         = 1.0 - vp_bias_y;
+5738-
+5739:   if (video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+5740-   {
+5741-      {
+5742-         int padding_x     = 0;
+5743-         int padding_y     = 0;
+5744-
+5745-         x                 = VIDEO_POS_X(ps->custom_pos);
+5746-         y                 = VIDEO_POS_Y(ps->custom_pos);
+5747-
+5748-         if (!y_down)
+5749-            y = -y;
+5750-
+5751-         padding_x         = vp_width - (int)VIDEO_SCALE_W(ps->custom_dims);
+5752-         padding_y         = vp_height - (int)VIDEO_SCALE_H(ps->custom_dims);
+5753-
+--
+5897-   content_width  = (content_width  > width)  ? width  : content_width;
+5898-   content_height = (content_height > height) ? height : content_height;
+5899-
+5900:   if (video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+5901-   {
+5902-      {
+5903-         x         = VIDEO_POS_X(ps->custom_pos);
+5904-         y         = VIDEO_POS_Y(ps->custom_pos);
+5905-
+5906-         if (!y_down)
+5907-            y = -y;
+5908-
+5909-         padding_x = width - (int)VIDEO_SCALE_W(ps->custom_dims);
+5910-         padding_y = height - (int)VIDEO_SCALE_H(ps->custom_dims);
+5911-
+5912-         if (padding_x < 0)
+5913-         {
+5914-            x -= padding_x * vp_bias_x;
+--
+9115-   strlcpy(aspectratio_lut[ASPECT_RATIO_CORE].name,
+9116-         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_CORE_PROVIDED),
+9117-         sizeof(aspectratio_lut[ASPECT_RATIO_CORE].name));
+9118:   strlcpy(aspectratio_lut[ASPECT_RATIO_CUSTOM].name,
+9119:         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_CUSTOM),
+9120:         sizeof(aspectratio_lut[ASPECT_RATIO_CUSTOM].name));
+9121-   strlcpy(aspectratio_lut[ASPECT_RATIO_FULL].name,
+9122-         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_FULL),
+9123-         sizeof(aspectratio_lut[ASPECT_RATIO_FULL].name));
+9124-
+9125-   /* Update core-dependent aspect ratio values. */
+9126-   video_driver_set_viewport_square_pixel(geom, rotation);
+9127-   video_driver_set_viewport_core();
+9128-   video_driver_set_viewport_config(geom,
+9129-         settings->floats.video_aspect_ratio,
+9130-         settings->bools.video_aspect_ratio_auto);
+9131-
+9132-   /* Update CUSTOM viewport. */
+9133-   custom_vp = &settings->video_vp_custom;
+9134-
+9135:   if (settings->uints.video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+9136-   {
+9137-      float default_aspect = aspectratio_lut[ASPECT_RATIO_CORE].value;
+9138:      aspectratio_lut[ASPECT_RATIO_CUSTOM].value =
+9139-         (custom_vp->dims
+9140-          && VIDEO_SCALE_W(custom_vp->dims)
+9141-          && VIDEO_SCALE_H(custom_vp->dims))
+9142-         ? (float)VIDEO_SCALE_W(custom_vp->dims)
+9143-               / VIDEO_SCALE_H(custom_vp->dims) : default_aspect;
+9144-   }
+9145-
+9146-   {
+9147-      /* Guard against aspect ratio index possibly being out of bounds */
+9148-      unsigned new_aspect_idx = settings->uints.video_aspect_ratio_idx;
+9149-      if (new_aspect_idx > ASPECT_RATIO_END)
+9150-         new_aspect_idx       = settings->uints.video_aspect_ratio_idx = 0;
+9151-      video_driver_aspect_ratio_put(&video_st->aspect_ratio_bits,
+9152-            aspectratio_lut[new_aspect_idx].value);

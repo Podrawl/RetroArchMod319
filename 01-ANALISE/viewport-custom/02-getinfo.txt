@@ -1,0 +1,81 @@
+ra/tasks/task_translation.c:1069:         video_driver_get_viewport_info(&vp);
+ra/tasks/task_screenshot.c:991:   video_driver_get_viewport_info(&vp);
+ra/tasks/task_screenshot.c:1033:      video_driver_get_viewport_info(&vp);
+ra/gfx/drivers/gdi_gfx.c:4042: * Many subsystems call into video_driver_get_viewport_info() to
+ra/gfx/drivers/gdi_gfx.c:4047: * Without this hookup video_driver_get_viewport_info silently
+ra/gfx/gfx_widgets.c:2208:      if (video_driver_get_viewport_info(&content_vp) && VIDEO_SCALE_W(content_vp.dims) && VIDEO_SCALE_H(content_vp.dims))
+ra/gfx/video_driver.h:2490:bool video_driver_get_viewport_info(struct video_viewport *viewport);
+ra/gfx/video_driver.h:2820:   (video_driver_get_viewport_info(vp) ? video_driver_translate_coord_viewport(vp, mouse_x, mouse_y, res_pos, res_screen_pos, true) : false)
+ra/gfx/video_driver.h:2823:   (video_driver_get_viewport_info(vp) ? video_driver_translate_coord_viewport(vp, mouse_x, mouse_y, res_pos, res_screen_pos, false) : false)
+ra/gfx/video_driver.c:1312:      return video_driver_get_viewport_info(&vp)
+ra/gfx/video_driver.c:4104:    * down runs video_driver_get_viewport_info(), which calls
+ra/gfx/video_driver.c:6665:bool video_driver_get_viewport_info(struct video_viewport *viewport)
+ra/gfx/gfx_thumbnail.c:1709:   if (     video_driver_get_viewport_info(&vp)
+ra/record/drivers/record_mediacodec.c:637:      else if (video_driver_get_viewport_info(&vp))
+ra/record/drivers/record_mediacodec.c:668:            || !video_driver_get_viewport_info(&vp)
+ra/record/drivers/record_vulkan.c:631:      else if (video_driver_get_viewport_info(&vp) && VIDEO_SCALE_W(vp.dims) && VIDEO_SCALE_H(vp.dims))
+ra/record/drivers/record_nvenc.c:422:      else if (video_driver_get_viewport_info(&vp) && VIDEO_SCALE_W(vp.dims)
+ra/record/drivers/record_metal.c:307:      else if (video_driver_get_viewport_info(&vp) && VIDEO_SCALE_W(vp.dims) && VIDEO_SCALE_H(vp.dims))
+ra/record/record_driver.c:613:      if (!video_driver_get_viewport_info(&vp))
+ra/record/record_driver.c:661:      video_driver_get_viewport_info(&vp);
+ra/menu/drivers/rgui.c:7363:   video_driver_get_viewport_info(&vp);
+ra/menu/drivers/rgui.c:7527:   video_driver_get_viewport_info(&vp);
+ra/menu/drivers/rgui.c:7530:   video_driver_get_viewport_info(&vp);
+ra/menu/drivers/rgui.c:7536:   video_driver_get_viewport_info(&vp);
+ra/menu/drivers/rgui.c:7946:   video_driver_get_viewport_info(&vp);
+ra/menu/drivers/rgui.c:8131:      video_driver_get_viewport_info(&vp);
+ra/menu/drivers/rgui.c:9285:   if (!video_driver_get_viewport_info(&vp)
+ra/menu/menu_setting.c:10318:   video_driver_get_viewport_info(&vp);
+ra/menu/menu_setting.c:10356:   video_driver_get_viewport_info(&vp);
+ra/menu/menu_driver.c:2316:      video_driver_get_viewport_info(&vp);
+ra/menu/menu_driver.c:2596:         video_driver_get_viewport_info(&vp);
+ra/samples/runloop/frontend_overhead/frontend_overhead_test.c:5723:   placed = video_driver_get_viewport_info(&vp)
+ra/samples/tasks/translation_reply/stubs.c:38:int  video_driver_get_viewport_info(void) { return 0; }
+ra/samples/gfx/gfx_widgets_sanitize/stubs_retroarch.c:290:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/gfx/hdr_metadata/brightness_test.c:36: memset(&vp,0,sizeof(vp)); CHECK(video_driver_get_viewport_info(&vp));
+ra/samples/gfx/gfx_thumbnail_preview/stubs_retroarch.c:59:bool video_driver_get_viewport_info(void *vp) { (void)vp; return false; }
+ra/samples/gfx/gfx_widgets_task_bar_stack/stubs_retroarch.c:291:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/gfx/gfx_thumbnail_anim/stubs_retroarch.c:198:bool video_driver_get_viewport_info(void *vp) { (void)vp; return false; }
+ra/samples/gfx/video_filter_menu/video_filter_menu_test.c:221:   video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:216:      video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:1753:      video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:1844:      video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:8878:   video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:11891:   video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:11978:   video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:12067:   video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:12893:   video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/threaded_video_test.c:14123:   video_driver_get_viewport_info(&vp);
+ra/samples/gfx/threaded_video/still_surface.h:81:         video_driver_get_viewport_info(&vp);
+ra/samples/record/vulkan_frontend/frontend_test.c:86:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/record/mediacodec_encode/frontend_test.c:127:bool video_driver_get_viewport_info(struct video_viewport *out)
+ra/samples/network/command_options/command_hardcore_test.c:43:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/settings/video_screens/video_screens_test.c:2777:   CHECK(video_driver_get_viewport_info(&vp));
+ra/samples/settings/video_screens/video_screens_test.c:3842:   CHECK(video_driver_get_viewport_info(&vp));
+ra/samples/menu/texture_media/native_media_capture.h:20:   memset(&vp,0,sizeof(vp));video_driver_get_viewport_info(&vp);
+ra/samples/menu/texture_media/native_media_capture.h:140:   video_driver_get_viewport_info(&vp);
+ra/samples/input/udev_touch/udev_touch_test.c:146:bool video_driver_get_viewport_info(struct video_viewport *vp) { (void)vp; return false; }
+ra/samples/input/openxr_input/openxr_input_test.c:651:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/openxr_haptics/openxr_haptics_test.c:62:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/bind_capture/bind_capture_test.c:120:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/udev_devices/udev_devices_test.c:80:bool video_driver_get_viewport_info(struct video_viewport *vp) { (void)vp; return false; }
+ra/samples/input/winraw_mouse_hotplug/winraw_mouse_hotplug_test.c:143:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/mapped_port/mapped_port_test.c:127:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/x11_input_poll/x11_input_poll_test.c:79:bool video_driver_get_viewport_info(struct video_viewport *viewport)
+ra/samples/input/joypad_bridge_checked/gekko_checked_test.c:26:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/joypad_bridge_checked/wiiu_checked_test.c:81:bool video_driver_get_viewport_info(struct video_viewport *viewport)
+ra/samples/input/pointer_frame/pointer_frame_test.c:62:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/pointer_frame/pointer_frame_test.c:380:   if (video_driver_get_viewport_info(&vp))
+ra/samples/input/winraw_keyboards/winraw_keyboards_test.c:275:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/winraw_poll/winraw_poll_test.c:132:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/input/winraw_abs_pos/winraw_abs_pos_test.c:127:bool video_driver_get_viewport_info(struct video_viewport *vp)
+ra/samples/cores/movie_recovery/movie_recovery_test.c:79:   CHECK(video_driver_get_viewport_info(&vp));
+ra/input/drivers/gx_input.c:299:            /* Pre-patch had a video_driver_get_viewport_info(&vp)
+ra/input/drivers/winraw_input.c:1315:   if (!video_driver_get_viewport_info(&viewport))
+ra/input/drivers/psp_input.c:533:               video_driver_get_viewport_info(&vp);
+ra/input/drivers/udev_input.c:1850: *   with the video_driver_get_viewport_info function (the poll's).
+ra/input/drivers/udev_input.c:3725:   udev_vp_ok = video_driver_get_viewport_info(&udev_vp);
+ra/input/input_pointer_frame.h:178:      input_pointers.vp_ok        = video_driver_get_viewport_info(&input_pointers.vp);
+ra/input/common/input_openxr.c:1642:      if (     !video_driver_get_viewport_info(&vp)
+ra/input/drivers_joypad/wiiu/wpad_driver.c:170:   video_driver_get_viewport_info(&viewport);
+ra/input/drivers_joypad/gekko_joypad.c:351:   video_driver_get_viewport_info(&vp);

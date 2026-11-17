@@ -1,0 +1,48 @@
+ra/gfx/drivers/d3d8.c:661:   video_viewport_settings_t *custom_vp            = &settings->video_vp_custom;
+ra/gfx/video_driver.c:4701:      custom.pos  = settings->video_vp_custom.pos;
+ra/gfx/video_driver.c:4702:      custom.dims = settings->video_vp_custom.dims;
+ra/gfx/video_driver.c:6217:   v[6]  = (int)settings->video_vp_custom.pos;
+ra/gfx/video_driver.c:6218:   v[7]  = (int)settings->video_vp_custom.dims;
+ra/gfx/video_driver.c:6683:       * straight into settings->video_vp_custom and got
+ra/gfx/video_driver.c:7821:   custom_vp                               = &settings->video_vp_custom;
+ra/gfx/video_driver.c:9133:   custom_vp = &settings->video_vp_custom;
+ra/configuration.c:4473:   SETTING_UINT_HALF("custom_viewport_width",    &settings->video_vp_custom.dims, CFG_HALF_HI, false, 0 /* TODO */, false);
+ra/configuration.c:4474:   SETTING_UINT_HALF("custom_viewport_height",   &settings->video_vp_custom.dims, CFG_HALF_LO, false, 0 /* TODO */, false);
+ra/configuration.c:5217:   SETTING_INT_HALF("custom_viewport_x", (int*)&settings->video_vp_custom.pos,
+ra/configuration.c:5219:   SETTING_INT_HALF("custom_viewport_y", (int*)&settings->video_vp_custom.pos,
+ra/configuration.c:6066:   video_viewport_settings_t *custom_vp = &settings->video_vp_custom;
+ra/settings/settings_def_viewport_size.h:7:S_UINT_AT_EX(offsetof(settings_t, video_vp_custom.dims)
+ra/settings/settings_def_viewport_size.h:13:S_UINT_AT_EX(offsetof(settings_t, video_vp_custom.dims)
+ra/settings/settings_def_aspect_ratio.h:17:S_INT_AT(offsetof(settings_t, video_vp_custom.pos)
+ra/settings/settings_def_aspect_ratio.h:23:S_INT_AT(offsetof(settings_t, video_vp_custom.pos)
+ra/menu/drivers/rgui.c:7286:   /* Could use settings->video_vp_custom directly,
+ra/menu/drivers/rgui.c:7288:   video_viewport_settings_t *custom_vp      = &settings->video_vp_custom;
+ra/menu/drivers/rgui.c:7300:   /* Could use settings->video_vp_custom directly,
+ra/menu/drivers/rgui.c:7302:   video_viewport_settings_t *custom_vp            = &settings->video_vp_custom;
+ra/menu/menu_setting.c:7652:   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+ra/menu/menu_setting.c:7699:   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+ra/menu/menu_setting.c:8001:   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+ra/menu/menu_setting.c:8036:   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+ra/menu/menu_setting.c:10312:   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+ra/menu/menu_setting.c:10349:   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+ra/menu/menu_setting.c:11391:            video_viewport_settings_t *custom_vp     = &settings->video_vp_custom;
+ra/menu/menu_setting.c:11813:            video_viewport_settings_t *custom_vp          = &settings->video_vp_custom;
+ra/menu/menu_setting.c:12284:            video_viewport_settings_t *custom_vp = &settings->video_vp_custom;
+ra/menu/menu_setting.c:13035: * bools/ints/uints/floats structs (e.g. video_vp_custom members). */
+ra/samples/settings/packed_rows/packed_rows_test.c:183:   CHECK(VIDEO_SCALE_W(settings->video_vp_custom.dims) == 960
+ra/samples/settings/packed_rows/packed_rows_test.c:184:         && VIDEO_SCALE_H(settings->video_vp_custom.dims) == 720,
+ra/samples/settings/packed_rows/packed_rows_test.c:199:   CHECK(VIDEO_SCALE_H(settings->video_vp_custom.dims) == 720,
+ra/samples/settings/packed_rows/packed_rows_test.c:201:         VIDEO_SCALE_H(settings->video_vp_custom.dims));
+ra/samples/settings/packed_rows/packed_rows_test.c:204:   CHECK(VIDEO_POS_Y(settings->video_vp_custom.pos) == 34,
+ra/samples/settings/packed_rows/packed_rows_test.c:206:         VIDEO_POS_Y(settings->video_vp_custom.pos));
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:172:   CHECK(VIDEO_SCALE_W(settings->video_vp_custom.dims)  > 0
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:173:      && VIDEO_SCALE_H(settings->video_vp_custom.dims) > 0,
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:175:         VIDEO_SCALE_W(settings->video_vp_custom.dims),
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:176:         VIDEO_SCALE_H(settings->video_vp_custom.dims));
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:181:      unsigned w = VIDEO_SCALE_W(settings->video_vp_custom.dims);
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:182:      unsigned h = VIDEO_SCALE_H(settings->video_vp_custom.dims);
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:188:         && VIDEO_SCALE_W(settings->video_vp_custom.dims)  == w
+ra/samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:189:         && VIDEO_SCALE_H(settings->video_vp_custom.dims) == h,
+ra/configuration.h:147:   /* sizes, video_vp_custom and the ints group live below, after
+ra/configuration.h:148:    * uints: video_vp_custom and the crt_switch adjust ints are read
+ra/configuration.h:533:   video_viewport_settings_t video_vp_custom; /* int alignment */

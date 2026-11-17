@@ -1,0 +1,26 @@
+6665:bool video_driver_get_viewport_info(struct video_viewport *viewport)
+6666-{
+6667-   video_driver_state_t *video_st  = &video_driver_st;
+6668-   const video_driver_t *vid       = video_st->current_video;
+6669-   if (!viewport)
+6670-      return false;
+6671-   if (!vid || !vid->viewport_info || !video_st->data)
+6672-   {
+6673-      /* Some video drivers don't implement viewport_info (gdi,
+6674-       * caca, sixel, network, fpga, vg, ps2, xenon360, xshm at
+6675-       * the time of writing).  The contract was previously: we
+6676-       * silently returned false and left the caller's struct
+6677-       * untouched.  Several callers in menu_setting.c and
+6678-       * elsewhere ignored the return value and proceeded to
+6679-       * read fields off the struct anyway — and since callers
+6680-       * declare it as a stack local, the reads landed on
+6681-       * uninitialised memory.  In the menu's "Custom Aspect
+6682-       * Ratio" handlers that uninitialised value flowed
+6683-       * straight into settings->video_vp_custom and got
+6684-       * persisted to retroarch.cfg, producing stuff like
+6685-       * custom_viewport_width=57874 / custom_viewport_x=
+6686-       * 972119847 on shutdown.  Zero the struct here so the
+6687-       * worst a misbehaving caller can do is read all zeros. */
+6688-      memset(viewport, 0, sizeof(*viewport));
+6689-      return false;
+6690-   }
