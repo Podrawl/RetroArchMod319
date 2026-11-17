@@ -29,10 +29,12 @@ def trocar(arq, antigo, novo):
 INPUT = "input/input_driver.c"
 
 UI = r'''/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
-static int mod_ui_held   = -1;
+static int  mod_ui_held   = -1;
+static char mod_ui_title[96];
 static int mod_ui_hold_n = 0;
 
-/* 5 retangulos (x, y, largura, altura) em pixels da janela */
+/* 8 retangulos (x, y, largura, altura) em pixels da janela:
+ * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (nao clicavel) */
 static int mod_ui_rects(int *r)
 {
    int bw, bh, gap, x0, y0, k;
@@ -42,44 +44,90 @@ static int mod_ui_rects(int *r)
    bw  = mod_win_h * 30 / 100;
    gap = bh / 5;
    x0  = mod_win_w / 2 - bw - gap / 2;
-   y0  = mod_win_h / 2 - (3 * bh + 2 * gap) / 2;
+   y0  = mod_win_h / 2 - (5 * bh + 4 * gap) / 2;
    for (k = 0; k < 4; k++)
    {
       r[k * 4 + 0] = x0 + (k % 2) * (bw + gap);
-      r[k * 4 + 1] = y0 + (k / 2) * (bh + gap);
+      r[k * 4 + 1] = y0 + (2 + k / 2) * (bh + gap);
       r[k * 4 + 2] = bw;
       r[k * 4 + 3] = bh;
    }
    r[16] = x0;
-   r[17] = y0 + 2 * (bh + gap);
+   r[17] = y0 + 4 * (bh + gap);
    r[18] = 2 * bw + gap;
    r[19] = bh;
-   return 5;
+   for (k = 0; k < 2; k++)
+   {
+      r[20 + k * 4 + 0] = x0 + k * (bw + gap);
+      r[20 + k * 4 + 1] = y0 + (bh + gap);
+      r[20 + k * 4 + 2] = bw;
+      r[20 + k * 4 + 3] = bh;
+   }
+   r[28] = x0;
+   r[29] = y0;
+   r[30] = 2 * bw + gap;
+   r[31] = bh;
+   return 8;
 }
 
 /* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
 int input_overlay_editor_ui(int *r, const char **lab, int max)
 {
-   static const char *nomes[5] =
-      { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar" };
+   static const char *nomes[8] =
+      { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar",
+        "Pag <", "Pag >", NULL };
    int k, n;
-   if (!mod_editor_active || mod_editor_wait_close || max < 5)
+   if (!mod_editor_active || mod_editor_wait_close || max < 8)
       return 0;
    n = mod_ui_rects(r);
    for (k = 0; k < n; k++)
       lab[k] = nomes[k];
+   {
+      input_overlay_t *ol = input_driver_st.overlay_ptr;
+      if (ol && ol->active)
+         snprintf(mod_ui_title, sizeof(mod_ui_title), "%s (%u de %u)",
+               ol->active->name, (unsigned)ol->index + 1, (unsigned)ol->size);
+      else
+         snprintf(mod_ui_title, sizeof(mod_ui_title), "?");
+      lab[7] = mod_ui_title;
+   }
    return n;
 }
 
 static int mod_ui_hit(float px, float py)
 {
-   int r[20];
+   int r[32];
    int k, n = mod_ui_rects(r);
-   for (k = 0; k < n; k++)
+   for (k = 0; k < n - 1; k++)
       if (   px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
           && py >= (float)r[k * 4 + 1] && py < (float)(r[k * 4 + 1] + r[k * 4 + 3]))
          return k;
    return -1;
+}
+
+/* Vai para a pagina anterior/proxima (pula as de nome "hidden..."). */
+static void mod_page_goto(int dir)
+{
+   input_overlay_t *ol = input_driver_st.overlay_ptr;
+   size_t   tries;
+   unsigned idx;
+   bool     tmp = false;
+   if (!ol || ol->size < 2)
+      return;
+   idx = (unsigned)ol->index;
+   for (tries = 0; tries < ol->size; tries++)
+   {
+      idx = (unsigned)((idx + (dir > 0 ? 1 : ol->size - 1)) % ol->size);
+      if (strncmp(ol->overlays[idx].name, "hidden", 6) != 0)
+         break;
+   }
+   if (idx == (unsigned)ol->index
+         || strncmp(ol->overlays[idx].name, "hidden", 6) == 0)
+      return;
+   ol->next_index   = idx;
+   command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
+   mod_editor_sel   = -1;
+   mod_grp_n        = 0;
 }
 
 static void mod_ui_press(int b)
@@ -93,6 +141,11 @@ static void mod_ui_press(int b)
       mod_editor_pinch  = false;
       runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,
             MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
+      return;
+   }
+   if (b == 5 || b == 6)
+   {
+      mod_page_goto(b == 6 ? 1 : -1);
       return;
    }
    mod_vp_get(&x, &y, &w, &h);
@@ -148,7 +201,7 @@ trocar(
     "            else\n"
     "            {\n"
     "               mod_ui_hold_n++;\n"
-    "               if (mod_ui_hold_n > 24 && (mod_ui_hold_n % 4) == 0)\n"
+    "               if (ub < 4 && mod_ui_hold_n > 24 && (mod_ui_hold_n % 4) == 0)\n"
     "                  mod_ui_press(ub);\n"
     "            }\n"
     "            return;\n"
@@ -177,9 +230,9 @@ WID = "gfx/gfx_widgets.c"
 DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
    {
       extern int input_overlay_editor_ui(int *r, const char **lab, int max);
-      int         ur[5 * 4];
-      const char *ulab[5];
-      int         un = input_overlay_editor_ui(ur, ulab, 5);
+      int         ur[8 * 4];
+      const char *ulab[8];
+      int         un = input_overlay_editor_ui(ur, ulab, 8);
       if (un > 0)
       {
          int      ui;
