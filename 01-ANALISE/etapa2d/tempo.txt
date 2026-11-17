@@ -1,1 +1,1 @@
-codigo=0 tempo=347
+codigo=0 tempo=231

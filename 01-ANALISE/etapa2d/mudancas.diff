@@ -1,5 +1,5 @@
 diff --git a/gfx/gfx_widgets.c b/gfx/gfx_widgets.c
-index 9cb26e2..5c37244 100644
+index 9cb26e2..95409f5 100644
 --- a/gfx/gfx_widgets.c
 +++ b/gfx/gfx_widgets.c
 @@ -2189,6 +2189,61 @@ static void gfx_widgets_frame_state(void *data)
@@ -9,9 +9,9 @@ index 9cb26e2..5c37244 100644
 +   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
 +   {
 +      extern int input_overlay_editor_ui(int *r, const char **lab, int max);
-+      int         ur[5 * 4];
-+      const char *ulab[5];
-+      int         un = input_overlay_editor_ui(ur, ulab, 5);
++      int         ur[7 * 4];
++      const char *ulab[7];
++      int         un = input_overlay_editor_ui(ur, ulab, 7);
 +      if (un > 0)
 +      {
 +         int      ui;
@@ -101,10 +101,10 @@ index 63f9828..d993710 100644
      * ANDROID_KEYBOARD_PORT */
     if (port < 0 || port > ANDROID_KEYBOARD_PORT)
 diff --git a/input/input_driver.c b/input/input_driver.c
-index 27993ad..3ea104f 100644
+index 27993ad..4727020 100644
 --- a/input/input_driver.c
 +++ b/input/input_driver.c
-@@ -6206,6 +6206,567 @@ static void input_overlay_get_eightway_contact(const input_overlay_t *ol,
+@@ -6206,6 +6206,571 @@ static void input_overlay_get_eightway_contact(const input_overlay_t *ol,
        bits_or_bits(out->data, eightway->right.data, ARRAY_SIZE(out->data));
  }
  
@@ -201,7 +201,9 @@ index 27993ad..3ea104f 100644
 +          || !VIDEO_SCALE_W(st->video_vp_custom.dims)
 +          || !VIDEO_SCALE_H(st->video_vp_custom.dims))
 +      {
-+         st->video_vp_custom.pos  = vp.pos;
++         /* x,y personalizados sao DESLOCAMENTO a partir da ancora (centro por padrao);
++          * 0,0 mantem a imagem exatamente onde esta. */
++         st->video_vp_custom.pos  = VIDEO_POS_PACK(0, 0);
 +         st->video_vp_custom.dims = vp.dims;
 +      }
 +   }
@@ -272,7 +274,7 @@ index 27993ad..3ea104f 100644
 +static int mod_ui_held   = -1;
 +static int mod_ui_hold_n = 0;
 +
-+/* 5 retangulos (x, y, largura, altura) em pixels da janela */
++/* 7 retangulos (x, y, largura, altura) em pixels da janela */
 +static int mod_ui_rects(int *r)
 +{
 +   int bw, bh, gap, x0, y0, k;
@@ -282,28 +284,28 @@ index 27993ad..3ea104f 100644
 +   bw  = mod_win_h * 30 / 100;
 +   gap = bh / 5;
 +   x0  = mod_win_w / 2 - bw - gap / 2;
-+   y0  = mod_win_h / 2 - (3 * bh + 2 * gap) / 2;
-+   for (k = 0; k < 4; k++)
++   y0  = mod_win_h / 2 - (4 * bh + 3 * gap) / 2;
++   for (k = 0; k < 6; k++)
 +   {
 +      r[k * 4 + 0] = x0 + (k % 2) * (bw + gap);
 +      r[k * 4 + 1] = y0 + (k / 2) * (bh + gap);
 +      r[k * 4 + 2] = bw;
 +      r[k * 4 + 3] = bh;
 +   }
-+   r[16] = x0;
-+   r[17] = y0 + 2 * (bh + gap);
-+   r[18] = 2 * bw + gap;
-+   r[19] = bh;
-+   return 5;
++   r[24] = x0;
++   r[25] = y0 + 3 * (bh + gap);
++   r[26] = 2 * bw + gap;
++   r[27] = bh;
++   return 7;
 +}
 +
 +/* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
 +int input_overlay_editor_ui(int *r, const char **lab, int max)
 +{
-+   static const char *nomes[5] =
-+      { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar" };
++   static const char *nomes[7] =
++      { "Tudo -", "Tudo +", "Altura -", "Altura +", "Largura -", "Largura +", "Fechar" };
 +   int k, n;
-+   if (!mod_editor_active || mod_editor_wait_close || max < 5)
++   if (!mod_editor_active || mod_editor_wait_close || max < 7)
 +      return 0;
 +   n = mod_ui_rects(r);
 +   for (k = 0; k < n; k++)
@@ -313,7 +315,7 @@ index 27993ad..3ea104f 100644
 +
 +static int mod_ui_hit(float px, float py)
 +{
-+   int r[20];
++   int r[28];
 +   int k, n = mod_ui_rects(r);
 +   for (k = 0; k < n; k++)
 +      if (   px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
@@ -325,7 +327,7 @@ index 27993ad..3ea104f 100644
 +static void mod_ui_press(int b)
 +{
 +   int x, y, w, h;
-+   if (b == 4)
++   if (b == 6)
 +   {
 +      static const char msg[] = "Editor de overlay encerrado.";
 +      mod_editor_active = false;
@@ -338,10 +340,12 @@ index 27993ad..3ea104f 100644
 +   mod_vp_get(&x, &y, &w, &h);
 +   switch (b)
 +   {
-+      case 0: h -= 4; y += 2; break;
-+      case 1: h += 4; y -= 2; break;
-+      case 2: w -= 4; x += 2; break;
-+      case 3: w += 4; x -= 2; break;
++      case 0: w -= 4; x += 2; h -= 4; y += 2; break;
++      case 1: w += 4; x -= 2; h += 4; y -= 2; break;
++      case 2: h -= 4; y += 2; break;
++      case 3: h += 4; y -= 2; break;
++      case 4: w -= 4; x += 2; break;
++      case 5: w += 4; x -= 2; break;
 +      default: return;
 +   }
 +   mod_vp_set(x, y, w, h);
@@ -672,7 +676,7 @@ index 27993ad..3ea104f 100644
  static bool input_overlay_poll(
        input_overlay_t *ol,
        input_overlay_state_t *out,
-@@ -6231,6 +6792,13 @@ static bool input_overlay_poll(
+@@ -6231,6 +6796,13 @@ static bool input_overlay_poll(
     x *= touch_scale;
     y *= touch_scale;
  
@@ -686,7 +690,7 @@ index 27993ad..3ea104f 100644
     for (i = 0; i < ol->active->size; i++)
     {
        float x_dist, y_dist;
-@@ -6804,6 +7372,11 @@ void input_overlay_set_scale_factor(
+@@ -6804,6 +7376,11 @@ void input_overlay_set_scale_factor(
  
        input_overlay_parse_layout(current_overlay,
              layout_desc, display_aspect_ratio, &overlay_layout);
@@ -698,7 +702,7 @@ index 27993ad..3ea104f 100644
        input_overlay_scale(current_overlay, &overlay_layout);
     }
  
-@@ -7612,6 +8185,8 @@ INPUT_NOINLINE static void input_poll_overlay(
+@@ -7612,6 +8189,8 @@ INPUT_NOINLINE static void input_poll_overlay(
           ol_state->touch[i] = pos;
        }
        ol_state->touch_count = i;
@@ -707,7 +711,7 @@ index 27993ad..3ea104f 100644
  
        /* Update lookup table of new to old touch indexes */
        input_overlay_track_touch_inputs(ol_state, old_ol_state);
-@@ -21617,3 +22192,32 @@ static void input_keyboard_event_now_act(bool down, unsigned code,
+@@ -21617,3 +22196,32 @@ static void input_keyboard_event_now_act(bool down, unsigned code,
        }
     }
  }
