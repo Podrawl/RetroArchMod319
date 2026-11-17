@@ -1,0 +1,56 @@
+   video_driver_frame_format(video_st, settings, &frame_rgb32, &scale);
+#else
+   max_dim   = MAX(geom->max_width, geom->max_height);
+   scale     = next_pow2(max_dim) / RARCH_SCALE_BASE;
+   scale     = MAX(scale, 1);
+#endif
+
+   strlcpy(aspectratio_lut[ASPECT_RATIO_CONFIG].name,
+         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_CONFIG),
+         sizeof(aspectratio_lut[ASPECT_RATIO_CONFIG].name));
+   strlcpy(aspectratio_lut[ASPECT_RATIO_CORE].name,
+         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_CORE_PROVIDED),
+         sizeof(aspectratio_lut[ASPECT_RATIO_CORE].name));
+   strlcpy(aspectratio_lut[ASPECT_RATIO_CUSTOM].name,
+         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_CUSTOM),
+         sizeof(aspectratio_lut[ASPECT_RATIO_CUSTOM].name));
+   strlcpy(aspectratio_lut[ASPECT_RATIO_FULL].name,
+         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_FULL),
+         sizeof(aspectratio_lut[ASPECT_RATIO_FULL].name));
+
+   /* Update core-dependent aspect ratio values. */
+   video_driver_set_viewport_square_pixel(geom, rotation);
+   video_driver_set_viewport_core();
+   video_driver_set_viewport_config(geom,
+         settings->floats.video_aspect_ratio,
+         settings->bools.video_aspect_ratio_auto);
+
+   /* Update CUSTOM viewport. */
+   custom_vp = &settings->video_vp_custom;
+
+   if (settings->uints.video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+   {
+      float default_aspect = aspectratio_lut[ASPECT_RATIO_CORE].value;
+      aspectratio_lut[ASPECT_RATIO_CUSTOM].value =
+         (custom_vp->dims
+          && VIDEO_SCALE_W(custom_vp->dims)
+          && VIDEO_SCALE_H(custom_vp->dims))
+         ? (float)VIDEO_SCALE_W(custom_vp->dims)
+               / VIDEO_SCALE_H(custom_vp->dims) : default_aspect;
+   }
+
+   {
+      /* Guard against aspect ratio index possibly being out of bounds */
+      unsigned new_aspect_idx = settings->uints.video_aspect_ratio_idx;
+      if (new_aspect_idx > ASPECT_RATIO_END)
+         new_aspect_idx       = settings->uints.video_aspect_ratio_idx = 0;
+      video_driver_aspect_ratio_put(&video_st->aspect_ratio_bits,
+            aspectratio_lut[new_aspect_idx].value);
+   }
+
+   /* Seed the viewport-parameter snapshot before the driver's init
+    * runs: drivers call video_driver_update_viewport() from inside
+    * init. This must come after the aspect ratio above is stored -
+    * published any earlier, the snapshot carries the previous (on a
+    * cold start, zero) aspect, and init-time viewports come out
+    * 0 pixels wide until the first frame republishes. */

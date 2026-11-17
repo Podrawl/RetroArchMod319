@@ -1,0 +1,8 @@
+./tasks/task_translation.c:1069:         video_driver_get_viewport_info(&vp);
+./tasks/task_screenshot.c:991:   video_driver_get_viewport_info(&vp);
+./tasks/task_screenshot.c:1033:      video_driver_get_viewport_info(&vp);
+./gfx/drivers/gdi_gfx.c:4042: * Many subsystems call into video_driver_get_viewport_info() to
+./gfx/drivers/gdi_gfx.c:4047: * Without this hookup video_driver_get_viewport_info silently
+./gfx/gfx_widgets.c:2208:      if (video_driver_get_viewport_info(&content_vp) && VIDEO_SCALE_W(content_vp.dims) && VIDEO_SCALE_H(content_vp.dims))
+./gfx/video_driver.h:2490:bool video_driver_get_viewport_info(struct video_viewport *viewport);
+./gfx/video_driver.h:2820:   (video_driver_get_viewport_info(vp) ? video_driver_translate_coord_viewport(vp, mouse_x, mouse_y, res_pos, res_screen_pos, true) : false)

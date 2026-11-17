@@ -1,0 +1,40 @@
+1607-
+1608-   void (*set_rotation)(void *data, unsigned rotation);
+1609:   void (*viewport_info)(void *data, struct video_viewport *vp);
+1610-
+1611-   /* Reads out in BGR byte order (24bpp). */
+1612-   bool (*read_viewport)(void *data, uint8_t *buffer, bool is_idle);
+1613-
+1614-#ifdef HAVE_OVERLAY
+1615-   void (*overlay_interface)(void *data,
+1616-         const video_overlay_interface_t **iface);
+1617-#endif
+1618-   void (*poke_interface)(void *data, const video_poke_interface_t **iface);
+1619-   unsigned (*wrap_type_to_enum)(enum gfx_wrap_type type);
+1620-
+1621-   /* Optional: Begin deferred (per-frame) shader compilation.
+1622-    * Prepares pass 0 for compilation. Returns true on success.
+1623-    * If NULL, falls through to synchronous set_shader(). */
+--
+2353-unsigned video_driver_get_rotation_snapshot(void);
+2354-
+2355:void video_driver_update_viewport(struct video_viewport* vp,
+2356-      bool force_full, bool keep_aspect, bool y_down);
+2357-
+2358-void video_driver_apply_state_changes(void);
+2359-
+2360-void video_driver_cached_frame(void);
+2361-
+2362-/**
+2363- * video_driver_cached_frame_info:
+2364- *
+2365- * Reads the metadata of the last cached frame without touching the
+2366- * pixel data.  Returns true if a frame has been cached and the
+2367- * out-parameters are populated; false if no frame is cached yet
+2368- * (post-init / post-content-unload / after a driver reinit
+2369- * invalidation).  has_cpu_pixels is set to false for HW-render
+--
+2488-struct retro_hw_render_callback *video_driver_get_hw_context(void);
+2489-
+2490:bool video_driver_get_viewport_info(struct video_viewport *viewport);
+2491-

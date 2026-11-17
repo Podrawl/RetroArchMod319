@@ -1,0 +1,61 @@
+/* What the settings give every window's layout: all but the map, the
+ * size, the stereo mode, the screens left out and the custom viewport,
+ * which is the main window's. */
+static void video_driver_views_params(settings_t *settings,
+      video_views_layout_params_t *params)
+{
+   unsigned aspect_idx     = settings->uints.video_aspect_ratio_idx;
+
+   params->custom_vp       = NULL;
+   params->single_aspect   = 0.0f;
+   params->stretch         = !settings->bools.video_force_aspect;
+   params->stereo_mode     = settings->uints.video_stereo_mode;
+   params->screen_layout   = settings->uints.video_screen_layout;
+   params->rotation        = retroarch_get_rotation() % 4;
+   params->swap_eyes       = settings->bools.video_stereo_swap_eyes;
+   params->scale_integer   = settings->bools.video_scale_integer;
+
+   /* The core's geometry covers the whole packed frame, so "core
+    * provided" and square pixels mean each view's own aspect. */
+   if (     aspect_idx != ASPECT_RATIO_CUSTOM
+         && aspect_idx != ASPECT_RATIO_CORE
+         && aspect_idx != ASPECT_RATIO_SQUARE)
+      params->single_aspect = video_driver_get_aspect_ratio();
+}
+
+/* @custom_vp: the custom viewport, in the window's pixels, applies to
+ * a one-screen map laid out in the window. */
+static void video_driver_views_layout(settings_t *settings,
+      const video_views_map_t *map, unsigned dims, unsigned stereo_mode,
+      bool custom_vp, unsigned exclude, video_views_layout_t *out)
+{
+   video_views_layout_params_t params;
+   video_views_rect_t custom;
+
+   video_driver_views_params(settings, &params);
+   params.map             = map;
+   params.dims            = dims;
+   params.stereo_mode     = stereo_mode;
+   params.exclude_screens = exclude;
+   if (settings->uints.video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+   {
+      custom.pos  = settings->video_vp_custom.pos;
+      custom.dims = settings->video_vp_custom.dims;
+      if (custom_vp && VIDEO_SCALE_W(custom.dims) && VIDEO_SCALE_H(custom.dims))
+         params.custom_vp = &custom;
+   }
+
+   video_views_layout(&params, out);
+}
+
+void video_driver_views_layout_flat(const video_views_map_t *map,
+      unsigned dims, bool window, video_views_layout_t *out)
+{
+   video_driver_views_layout(config_get_ptr(), map, dims,
+         VIDEO_STEREO_MODE_2D, window, 0, out);
+}
+
+#ifdef HAVE_VIDEO_WINDOWS
+void video_driver_window_layout(const video_windows_frame_t *frame,
+      unsigned screen, unsigned dims, video_views_layout_t *out)
+{
