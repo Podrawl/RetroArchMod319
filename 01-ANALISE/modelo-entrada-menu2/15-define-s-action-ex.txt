@@ -1,0 +1,60 @@
+settings/settings_def_menu_main_actions_7.h:14:#define S_ACTION_EX_H S_ACTION_EX
+settings/settings_def_menu_main_actions_7.h-15-#endif
+settings/settings_def_menu_main_actions_7.h-16-#endif
+settings/settings_def_menu_main_actions_7.h-17-/* Descriptor and configuration rows are #if !TARGET_OS_IPHONE #if !defined(HAVE_LAKKA); the string
+settings/settings_def_menu_main_actions_7.h-18- * tables always carry this row via the strings pass. */
+settings/settings_def_menu_main_actions_7.h-19-#if !TARGET_OS_IPHONE && !defined(HAVE_LAKKA) || defined(SETTINGS_DEF_STRINGS_PASS)
+settings/settings_def_menu_main_actions_7.h-20-S_ACTION_EX_H(QUIT_RETROARCH,
+settings/settings_def_menu_main_actions_7.h-21-      "quit_retroarch",
+settings/settings_def_menu_main_actions_7.h-22-      SD_FLAG_NONE, NULL, NULL, CMD_EVENT_QUIT,
+settings/settings_def_menu_main_actions_7.h-23-      "Quit",
+settings/settings_def_menu_main_actions_7.h-24-      "Quit RetroArch application. Configuration save on exit is enabled.")
+settings/settings_def_menu_main_actions_7.h-25-#endif
+--
+settings/settings_def_menu_rows_begin.h:7:#define S_ACTION_EX(T, n, sd, ok, rp, c, us, sub) \
+settings/settings_def_menu_rows_begin.h-8-                  SDESC_ACTION_ROW_EX(T, sd, SDX_OK_##ok, rp, c),
+settings/settings_def_menu_rows_begin.h:9:#define S_ACTION_EX_NS(T, n, sd, ok, rp, c, us) \
+settings/settings_def_menu_rows_begin.h-10-                  SDESC_ACTION_ROW_EX(T, sd, SDX_OK_##ok, rp, c),
+settings/settings_def_menu_rows_begin.h-11-#define S_ACTION_LV(T, TV, n, sd, ok, rp, c, us, sub) \
+settings/settings_def_menu_rows_begin.h-12-                  SDESC_ACTION_ROW_LV(T, TV, sd, SDX_OK_##ok, rp, c),
+settings/settings_def_menu_rows_begin.h-13-#define S_ACTION_LV_NS(T, TV, n, sd, ok, rp, c, us) \
+settings/settings_def_menu_rows_begin.h-14-                  SDESC_ACTION_ROW_LV(T, TV, sd, SDX_OK_##ok, rp, c),
+settings/settings_def_menu_rows_begin.h-15-#define S_ACTION_NS(T, n, us) \
+settings/settings_def_menu_rows_begin.h-16-                  SDESC_ACTION_ROW(T),
+settings/settings_def_menu_rows_begin.h-17-#define S_BOOL(f, T, n, d, sd, df, c, us, sub) \
+settings/settings_def_menu_rows_begin.h-18-                  SDESC_BOOL_ROW(f, T, d, sd, df, c),
+settings/settings_def_menu_rows_begin.h-19-#define S_BOOL_DF(f, T, n, resolver, sd, df, c, ok, rp, sta, sel, lf, rt, ui, us, sub) \
+settings/settings_def_menu_rows_begin.h-20-                  SDESC_BOOL_ROW_DF(f, T, SDX_RESOLVER_##resolver, sd, df, c, SDX_OK_##ok, rp, SDX_START_##sta, SDX_SELECT_##sel, SDX_LEFT_##lf, SDX_RIGHT_##rt, ui),
+settings/settings_def_menu_rows_begin.h-21-#define S_BOOL_CH(f, T, n, d, sd, df, c, ok, rp, sta, sel, lf, rt, ui, chg, us, sub) \
+--
+msg_hash.h:869:#define S_ACTION_EX(T, n, sd, ok, rp, c, us, sub) MENU_LABEL(T),
+msg_hash.h:870:#define S_ACTION_EX_NS(T, n, sd, ok, rp, c, us) MENU_LABEL(T),
+msg_hash.h-871-#define S_BOOL_H(f, T, n, d, sd, df, c, us, sub) MENU_LBL_H(T),
+msg_hash.h-872-#define S_UINT_H(f, T, n, d, sd, df, c, mn, mx, st, ob, ok, rp, us, sub) MENU_LBL_H(T),
+msg_hash.h-873-#define S_BOOL_NS_H(f, T, n, d, sd, df, c, us) MENU_LBL_H(T),
+msg_hash.h-874-#define S_INT_H(f, T, n, d, sd, df, c, mn, mx, st, ob, ok, rp, us, sub) MENU_LBL_H(T),
+msg_hash.h-875-#define S_FLOAT_H(f, T, n, d, rnd, sd, df, c, mn, mx, st, ok, rp, us, sub) MENU_LBL_H(T),
+msg_hash.h-876-#define S_UINT_NS_H(f, T, n, d, sd, df, c, mn, mx, st, ob, ok, rp, us) MENU_LBL_H(T),
+msg_hash.h-877-#define S_INT_NS_H(f, T, n, d, sd, df, c, mn, mx, st, ob, ok, rp, us) MENU_LBL_H(T),
+msg_hash.h-878-#define S_FLOAT_NS_H(f, T, n, d, rnd, sd, df, c, mn, mx, st, ok, rp, us) MENU_LBL_H(T),
+msg_hash.h-879-#define S_STRING_H(f, T, n, d, sd, c, ok, rp, sta, sel, lf, rt, ui, us, sub) MENU_LBL_H(T),
+msg_hash.h-880-#define S_STRING_NS_H(f, T, n, d, sd, c, ok, rp, sta, sel, lf, rt, ui, us) MENU_LBL_H(T),
+msg_hash.h-881-#define S_DIR_H(f, T, n, d, el, sd, c, sta, us, sub) MENU_LBL_H(T),
+msg_hash.h-882-#define S_DIR_NS_H(f, T, n, d, el, sd, c, sta, us) MENU_LBL_H(T),
+--
+msg_hash.h:899:#define S_ACTION_EX_H(T, n, sd, ok, rp, c, us, sub) MENU_LBL_H(T),
+msg_hash.h:900:#define S_ACTION_EX_NS_H(T, n, sd, ok, rp, c, us) MENU_LBL_H(T),
+msg_hash.h-901-#include "settings/settings_def_record_quality.h"
+msg_hash.h-902-#undef S_BOOL
+msg_hash.h-903-#undef S_BOOL_NS
+msg_hash.h-904-#undef S_UINT
+msg_hash.h-905-#undef S_UINT_NS
+msg_hash.h-906-#undef S_INT
+msg_hash.h-907-#undef S_INT_NS
+msg_hash.h-908-#undef S_FLOAT
+msg_hash.h-909-#undef S_FLOAT_NS
+msg_hash.h-910-#undef S_STRING
+msg_hash.h-911-#undef S_STRING_NS
+msg_hash.h-912-#undef S_STRING_H
+--
+msg_hash.h:1004:#define S_ACTION_EX(T, n, sd, ok, rp, c, us, sub) MENU_LABEL(T),

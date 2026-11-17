@@ -1,0 +1,13 @@
+menu/cbs/menu_cbs_ok.c:6715:STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_resume_content,           CMD_EVENT_RESUME)
+menu/cbs/menu_cbs_ok.c:10239:         {MENU_ENUM_LABEL_RESUME_CONTENT,                      action_ok_resume_content},
+menu/menu_driver.c:7524:void menu_driver_toggle(
+menu/menu_driver.c:7536:   /* TODO/FIXME - retroarch_main_quit calls menu_driver_toggle -
+menu/menu_driver.c:7733:       * CMD_EVENT_MENU_TOGGLE. Only when the runloop will in fact stop the
+menu/menu_driver.c:7745:      menu_driver_toggle(
+menu/menu_driver.c:7823:      menu_driver_toggle(
+menu/menu_driver.c:9362:         command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+command.c:245:            command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+command.c:1200:            command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+command.c:1725:         command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+command.c:1741:         command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+command.c:7794:    * menu_driver_toggle() applies when the menu comes up - and only

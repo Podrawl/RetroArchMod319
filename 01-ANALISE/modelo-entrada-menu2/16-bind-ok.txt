@@ -1,0 +1,8 @@
+10095:static int menu_cbs_init_bind_ok_compare_label(menu_file_list_cbs_t *cbs,
+10246:         {MENU_ENUM_LABEL_RESET_CORE_ASSOCIATION,              action_ok_reset_core_association},
+10518:static int menu_cbs_init_bind_ok_compare_type(menu_file_list_cbs_t *cbs,
+11202:static int menu_cbs_init_bind_ok_manual_content_scan_dir_list(
+11226:int menu_cbs_init_bind_ok(menu_file_list_cbs_t *cbs,
+11239:         && menu_cbs_init_bind_ok_manual_content_scan_dir_list(cbs) == 0)
+11242:   if (menu_cbs_init_bind_ok_compare_label(cbs, label) == 0)
+11245:   if (menu_cbs_init_bind_ok_compare_type(cbs, label,

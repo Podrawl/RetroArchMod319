@@ -1,0 +1,45 @@
+/* Single-source definitions: fourth main menu list actions.
+ * Grammar identical to settings_def_video_sync.h plus S_FLOAT and
+ * the _NS no-sublabel variants; the descriptor argument span
+ * matches SDESC_<kind>_ROW; row order is menu display order;
+ * h2json.py parses these rows for the Crowdin source upload. */
+
+S_ACTION_EX(ONSCREEN_DISPLAY_SETTINGS,
+      "onscreen_display_settings", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
+      "On-Screen Display",
+      "Change display overlay and keyboard overlay, and on-screen notification settings.")
+/* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+ * tables always carry this row via the strings pass. */
+#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
+S_ACTION_EX(ONSCREEN_OVERLAY_SETTINGS,
+      "onscreen_overlay_settings", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
+      "On-Screen Overlay",
+      "Adjust bezels and on-screen controls.")
+#endif
+/* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+ * tables always carry this row via the strings pass. */
+#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
+S_ACTION_EX(OVERLAY_LIGHTGUN_SETTINGS,
+      "overlay_lightgun_settings", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
+      "Overlay Lightgun",
+      "Configure lightgun input sent from the overlay.")
+#endif
+/* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+ * tables always carry this row via the strings pass. */
+#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
+S_ACTION_EX(OVERLAY_MOUSE_SETTINGS,
+      "overlay_mouse_settings", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
+      "Overlay Mouse",
+      "Configure mouse input sent from the overlay. Note: 1-, 2-, and 3-finger taps send left, right, and middle button clicks.")
+#endif
+/* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+ * tables always carry this row via the strings pass. */
+#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
+S_ACTION_EX(OSK_OVERLAY_SETTINGS,
+      "osk_overlay_settings", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
+      "Keyboard Overlay",
+      "Select and adjust a keyboard overlay.")
+#endif
+S_ACTION_EX(ONSCREEN_NOTIFICATIONS_SETTINGS,
+      "onscreen_notifications_settings", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
+      "On-Screen Notifications",
