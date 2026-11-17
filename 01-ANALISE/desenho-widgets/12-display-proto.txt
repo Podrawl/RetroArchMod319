@@ -1,0 +1,7 @@
+250:    * It is bottom-up: gfx_display_draw_quad and every caller that
+408:void gfx_display_draw_text(
+415:/* As gfx_display_draw_text, but drives glyph colour at full float precision
+419:void gfx_display_draw_text_hp(
+467:/* Sends any quads gathered by gfx_display_draw_quad() that have not
+613:void gfx_display_draw_quad(
+625:void gfx_display_draw_texture_slice(

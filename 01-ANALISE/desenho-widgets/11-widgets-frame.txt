@@ -1,0 +1,3 @@
+1674:static void gfx_widgets_draw_task_msg(
+1910:static void gfx_widgets_draw_regular_msg(
+2468:void gfx_widgets_frame(void *data)

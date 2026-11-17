@@ -1,0 +1,8 @@
+7823:   video_info->widgets_active              = p_dispwidget->active;
+7825:   video_info->widgets_active              = false;
+8173:         (     video_info->widgets_active
+10268:   bool widgets_active            = p_dispwidget->active;
+10918:      if (widgets_active)
+11003:      else if (widgets_active
+11010:      if (widgets_active
+11087:      if (widgets_active)

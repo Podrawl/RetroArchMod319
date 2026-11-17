@@ -1,0 +1,91 @@
+   /* Laid out at layout_dims, stretched across the output */
+   if (layout_dims != output_dims)
+   {
+      video_info->dims = layout_dims;
+      gfx_display_set_output_dims(p_disp, output_dims);
+   }
+
+   /* Font setup */
+   font_driver_bind_block(p_dispwidget->gfx_widget_fonts.regular.font,
+         &p_dispwidget->gfx_widget_fonts.regular.raster_block);
+   font_driver_bind_block(p_dispwidget->gfx_widget_fonts.bold.font,
+         &p_dispwidget->gfx_widget_fonts.bold.raster_block);
+   font_driver_bind_block(p_dispwidget->gfx_widget_fonts.msg_queue.font,
+         &p_dispwidget->gfx_widget_fonts.msg_queue.raster_block);
+
+   p_dispwidget->gfx_widget_fonts.regular.raster_block.carr.coords.vertices   = 0;
+   p_dispwidget->gfx_widget_fonts.regular.usage_count                         = 0;
+   p_dispwidget->gfx_widget_fonts.bold.raster_block.carr.coords.vertices      = 0;
+   p_dispwidget->gfx_widget_fonts.bold.usage_count                            = 0;
+   p_dispwidget->gfx_widget_fonts.msg_queue.raster_block.carr.coords.vertices = 0;
+   p_dispwidget->gfx_widget_fonts.msg_queue.usage_count                       = 0;
+
+#ifdef HAVE_TRANSLATE
+   /* AI Service overlay */
+   if (gfx_widgets_ai_service_overlay_get_state() > 0)
+   {
+      video_viewport_t content_vp;
+      int overlay_x             = 0;
+      int overlay_y             = 0;
+      unsigned overlay_width    = video_width;
+      unsigned overlay_height   = VIDEO_SCALE_H(video_info->dims);
+      float outline_color[16] = {
+      0.00, 1.00, 0.00, 1.00,
+      0.00, 1.00, 0.00, 1.00,
+      0.00, 1.00, 0.00, 1.00,
+      0.00, 1.00, 0.00, 1.00,
+      };
+
+      if (video_driver_get_viewport_info(&content_vp) && VIDEO_SCALE_W(content_vp.dims) && VIDEO_SCALE_H(content_vp.dims))
+      {
+         overlay_x      = VIDEO_POS_X(content_vp.pos) * (int)video_width
+            / (int)VIDEO_SCALE_W(output_dims);
+         overlay_y      = VIDEO_POS_Y(content_vp.pos);
+         overlay_width  = VIDEO_SCALE_W(content_vp.dims) * video_width
+            / VIDEO_SCALE_W(output_dims);
+         overlay_height = VIDEO_SCALE_H(content_vp.dims);
+      }
+      gfx_display_set_alpha(p_dispwidget->pure_white, 1.0f);
+
+      if (GFX_SURFACE_HANDLE(p_dispwidget->ai_service_overlay_texture))
+      {
+         gfx_display_blend_begin(dispctx, userdata);
+         gfx_widgets_draw_icon(
+               userdata,
+               p_disp,
+               video_info->dims,
+               VIDEO_SCALE_PACK(overlay_width, overlay_height),
+               GFX_SURFACE_HANDLE(p_dispwidget->ai_service_overlay_texture),
+               overlay_x,
+               overlay_y,
+               0.0f, /* rad                         */
+               1.0f, /* cos(rad)   = cos(0)  = 1.0f */
+               0.0f, /* sine(rad)  = sine(0) = 0.0f */
+               p_dispwidget->pure_white
+               );
+         gfx_display_blend_end(dispctx, userdata);
+      }
+
+      /* top line */
+      gfx_display_draw_quad(
+            p_disp,
+            userdata,
+            video_info->dims,
+            overlay_x, overlay_y,
+            VIDEO_SCALE_PACK(overlay_width, p_dispwidget->divider_width_1px),
+            video_info->dims,
+            outline_color,
+            NULL
+            );
+      /* bottom line */
+      gfx_display_draw_quad(
+            p_disp,
+            userdata,
+            video_info->dims,
+            overlay_x,
+            overlay_y + overlay_height - p_dispwidget->divider_width_1px,
+            VIDEO_SCALE_PACK(overlay_width, p_dispwidget->divider_width_1px),
+            video_info->dims,
+            outline_color,
+            NULL
+            );

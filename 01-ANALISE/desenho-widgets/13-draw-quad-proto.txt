@@ -1,0 +1,15 @@
+void gfx_display_draw_quad(
+      gfx_display_t *p_disp,
+      void *data,
+      unsigned video_dims,
+      int x, int y, unsigned dims,
+      unsigned ref_dims,
+      float *color,
+      uintptr_t *texture);
+
+/* @video_dims, @src_dims, @dst_dims and @dims: the output size, the
+ * texture's size, the size to draw it at and the area it is placed in,
+ * each with both axes in one word, VIDEO_SCALE_PACK's layout. */
+void gfx_display_draw_texture_slice(
+      gfx_display_t *p_disp,
+      void *userdata,

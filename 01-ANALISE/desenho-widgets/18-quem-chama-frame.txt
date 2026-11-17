@@ -1,0 +1,8 @@
+./gfx/drivers/ctr_gfx.c:2599:      gfx_widgets_frame(video_info);
+./gfx/drivers/sdl2_gfx.c:1387:      gfx_widgets_frame(video_info);
+./gfx/drivers/vulkan.c:11716:         gfx_widgets_frame(video_info);
+./gfx/drivers/vulkan.c:14554:         gfx_widgets_frame(video_info);
+./gfx/drivers/gx2_gfx.c:2784:      gfx_widgets_frame(video_info);
+./gfx/drivers/gl1.c:3264:      gfx_widgets_frame(video_info);
+./gfx/drivers/d3d9cg.c:5004:      gfx_widgets_frame(video_info);
+./gfx/drivers/gl2.c:7041:         gfx_widgets_frame(video_info);
