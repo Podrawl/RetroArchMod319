@@ -1,0 +1,138 @@
+diff --git a/input/drivers/android_input.c b/input/drivers/android_input.c
+index 6246767..2fd8b1e 100644
+--- a/input/drivers/android_input.c
++++ b/input/drivers/android_input.c
+@@ -1995,6 +1995,27 @@ static INLINE void android_input_poll_event_type_key(int port,
+    int action  = key->action;
+    int keycode = key->keycode;
+ 
++   /* MOD: Voltar do sistema (botao ou gesto) abre o menu rapido do jogo.
++    * Cada tecla chega duas vezes (e uma vez por funcao que le o evento);
++    * event_time evita abrir e fechar na mesma tecla. */
++   if (     keycode == AKEYCODE_BACK
++         && action  == AKEY_EVENT_ACTION_DOWN
++         && !(key->source & (AINPUT_SOURCE_GAMEPAD | AINPUT_SOURCE_JOYSTICK)))
++   {
++      static int64_t mod_ultimo_voltar = -1;
++      if ((int64_t)key->event_time != mod_ultimo_voltar)
++      {
++         mod_ultimo_voltar = (int64_t)key->event_time;
++         if (   (runloop_get_flags() & RUNLOOP_FLAG_CORE_RUNNING)
++             && !(menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE))
++         {
++            command_event(CMD_EVENT_MENU_TOGGLE, NULL);
++            *handled = 1;
++            return;
++         }
++      }
++   }
++
+    /* android_key_state[] has one row per pad slot plus the
+     * dedicated keyboard row at ANDROID_KEYBOARD_PORT. */
+    if (port < 0 || port > ANDROID_KEYBOARD_PORT)
+diff --git a/input/input_driver.c b/input/input_driver.c
+index 485b529..4c29e36 100644
+--- a/input/input_driver.c
++++ b/input/input_driver.c
+@@ -21484,3 +21484,17 @@ static void input_keyboard_event_now_act(bool down, unsigned code,
+       }
+    }
+ }
++
++#ifdef HAVE_OVERLAY
++/* MOD: editor de overlay (etapa 1). So entra no modo: fecha o menu,
++ * pausa o jogo e avisa. Mover/salvar vem nas proximas etapas. */
++void input_overlay_editor_enter(void)
++{
++   static const char msg[] =
++         "Editor de overlay (teste): jogo pausado. Abra o menu para sair.";
++   command_event(CMD_EVENT_RESUME, NULL);
++   command_event(CMD_EVENT_PAUSE, NULL);
++   runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 180, true, NULL,
++         MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++}
++#endif
+diff --git a/menu/cbs/menu_cbs_ok.c b/menu/cbs/menu_cbs_ok.c
+index 39822e1..ab91b0d 100644
+--- a/menu/cbs/menu_cbs_ok.c
++++ b/menu/cbs/menu_cbs_ok.c
+@@ -6713,6 +6713,16 @@ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_cheat_apply_changes,      CMD_EVENT_
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_save_new_config,          CMD_EVENT_MENU_SAVE_CONFIG)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_save_main_config,         CMD_EVENT_MENU_SAVE_MAIN_CONFIG)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_resume_content,           CMD_EVENT_RESUME)
++#ifdef HAVE_OVERLAY
++/* MOD: editor de overlay (etapa 1); definido em input/input_driver.c */
++void input_overlay_editor_enter(void);
++static int action_ok_overlay_editor(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   input_overlay_editor_enter();
++   return 0;
++}
++#endif
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_screenshot,               CMD_EVENT_TAKE_SCREENSHOT)
+ #if defined(HAVE_CG) || defined(HAVE_GLSL) || defined(HAVE_SLANG) || defined(HAVE_HLSL)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_shader_apply_changes,     CMD_EVENT_SHADERS_APPLY_CHANGES)
+@@ -10237,6 +10247,9 @@ static int menu_cbs_init_bind_ok_compare_label(menu_file_list_cbs_t *cbs,
+          {MENU_ENUM_LABEL_PLAY_REPLAY,                         action_ok_play_replay},
+          {MENU_ENUM_LABEL_HALT_REPLAY,                         action_ok_halt_replay},
+          {MENU_ENUM_LABEL_RESUME_CONTENT,                      action_ok_resume_content},
++#ifdef HAVE_OVERLAY
++         {MENU_ENUM_LABEL_OVERLAY_EDITOR,                      action_ok_overlay_editor},
++#endif
+          {MENU_ENUM_LABEL_ADD_TO_FAVORITES_PLAYLIST,           action_ok_add_to_favorites_playlist},
+          {MENU_ENUM_LABEL_ADD_ENTRY_TO_PLAYLIST,               action_ok_add_entry_to_playlist},
+          {MENU_ENUM_LABEL_ADD_ENTRY_TO_PLAYLIST_QUICKMENU,     action_ok_add_entry_to_playlist_quickmenu},
+diff --git a/menu/menu_displaylist.c b/menu/menu_displaylist.c
+index 4e96030..1cbc3c2 100644
+--- a/menu/menu_displaylist.c
++++ b/menu/menu_displaylist.c
+@@ -13720,6 +13720,7 @@ unsigned menu_displaylist_build_list(
+                {MENU_ENUM_LABEL_INPUT_OVERLAY_POINTER_ENABLE,              PARSE_ONLY_BOOL,  false },
+                {MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS,                 PARSE_ACTION,     false },
+                {MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS,                    PARSE_ACTION,     false },
++               {MENU_ENUM_LABEL_OVERLAY_EDITOR,                            PARSE_ACTION,     false },
+                {MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS,                      PARSE_ACTION,     false },
+             };
+ 
+@@ -13794,6 +13795,7 @@ unsigned menu_displaylist_build_list(
+                   case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+                      build_list[i].checked = input_overlay_enable && input_overlay_ptr_enable;
+                      break;
++                  case MENU_ENUM_LABEL_OVERLAY_EDITOR:
+                   case MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS:
+                      build_list[i].checked = input_overlay_enable;
+                      break;
+diff --git a/pkg/android/phoenix/build.gradle b/pkg/android/phoenix/build.gradle
+index 02ab0bf..374cd1e 100644
+--- a/pkg/android/phoenix/build.gradle
++++ b/pkg/android/phoenix/build.gradle
+@@ -68,8 +68,8 @@ android {
+       dimension "variant"
+     }
+     aarch64 {
+-      applicationIdSuffix '.aarch64'
+-      resValue "string", "app_name", "RetroArch (AArch64)"
++      applicationIdSuffix '.aarch64.mod'
++      resValue "string", "app_name", "RetroArch Mod"
+       buildConfigField "boolean", "PLAY_STORE_BUILD", "false"
+ 
+       dimension "variant"
+diff --git a/settings/settings_def_menu_main_lists_4.h b/settings/settings_def_menu_main_lists_4.h
+index 3077648..47e1988 100644
+--- a/settings/settings_def_menu_main_lists_4.h
++++ b/settings/settings_def_menu_main_lists_4.h
+@@ -32,6 +32,13 @@ S_ACTION_EX(OVERLAY_MOUSE_SETTINGS,
+       "Overlay Mouse",
+       "Configure mouse input sent from the overlay. Note: 1-, 2-, and 3-finger taps send left, right, and middle button clicks.")
+ #endif
++/* MOD: editor de overlay (etapa 1) */
++#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
++S_ACTION_EX(OVERLAY_EDITOR,
++      "overlay_editor", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
++      "Edit Overlay Layout",
++      "Move and resize the on-screen buttons and the game screen. Work in progress.")
++#endif
+ /* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+  * tables always carry this row via the strings pass. */
+ #if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
