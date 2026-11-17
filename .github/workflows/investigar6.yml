@@ -1,4 +1,4 @@
-name: Ler ligação de ações do menu (somente leitura)
+name: Ler exemplos de ação simples do menu (somente leitura)
 
 on:
   workflow_dispatch:
@@ -15,18 +15,18 @@ jobs:
         run: |
           set +e
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
-          S=01-ANALISE/modelo-entrada-menu2
+          S=01-ANALISE/modelo-entrada-menu3
           mkdir -p $S
           cd ra
-          sed -n '425,470p' menu/cbs/menu_cbs_ok.c > ../$S/10-cbs-ok-425.txt
-          sed -n '1890,1930p' menu/cbs/menu_cbs_ok.c > ../$S/11-cbs-ok-1890.txt
-          sed -n '2095,2145p' menu/cbs/menu_cbs_ok.c > ../$S/12-cbs-ok-tabela.txt
-          sed -n '1,45p' settings/settings_def_menu_main_lists_4.h > ../$S/13-def-lists4-topo.txt
-          grep -rn "define S_ACTION_EX" -A12 settings/ menu/ *.h 2>/dev/null | head -60 > ../$S/15-define-s-action-ex.txt
-          grep -n "menu_cbs_init_bind_ok\|MENU_ENUM_LABEL_RESET_CORE" menu/cbs/menu_cbs_ok.c | head -20 > ../$S/16-bind-ok.txt
-          grep -n "action_ok_resume_content\|CMD_EVENT_MENU_TOGGLE\|menu_driver_toggle" menu/cbs/menu_cbs_ok.c menu/menu_driver.c command.c | head -30 > ../$S/18-resume-menu.txt
+          grep -n "define STATIC_DEFAULT_ACTION_OK_CMD_FUNC" -A12 menu/cbs/menu_cbs_ok.c > ../$S/10-macro-cmd-func.txt
+          sed -n '10225,10262p' menu/cbs/menu_cbs_ok.c > ../$S/11-tabela-labels.txt
+          grep -n "runloop_msg_queue_push" menu/cbs/menu_cbs_ok.c | head -5 > ../$S/12-msg-push-uso.txt
+          grep -n -A8 "runloop_msg_queue_push(" menu/cbs/menu_cbs_ok.c | sed -n '1,30p' > ../$S/13-msg-push-contexto.txt
+          grep -n "CMD_EVENT_PAUSE\b\|CMD_EVENT_UNPAUSE\|CMD_EVENT_RESUME\b\|CMD_EVENT_MENU_PAUSE_LIBRETRO" command.h command.c | head -20 > ../$S/14-cmd-pause.txt
+          grep -n "runloop_msg_queue_push" runloop.h retroarch.h | head -5 > ../$S/15-msg-push-decl.txt
+          grep -n "action_ok_set_path\|static int action_ok_overlay\|action_ok_.*overlay" menu/cbs/menu_cbs_ok.c | head -10 > ../$S/16-ok-overlay.txt
           cd ..
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
-          git commit -m "Leitura 6b" && git pull --rebase -q && git push
+          git commit -m "Leitura 6c" && git pull --rebase -q && git push
