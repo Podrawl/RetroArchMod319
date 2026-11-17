@@ -25,18 +25,7 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;29.0.14206865" "build-tools;36.0.0" "platforms;android-36" > /dev/null || true
       - name: Trocar nome do pacote e do app (só isso)
         run: |
-          python3 - <<'PY'
-          p='ra/pkg/android/phoenix/build.gradle'
-          s=open(p).read()
-          old="""    aarch64 {
-      applicationIdSuffix '.aarch64'
-      resValue "string", "app_name", "RetroArch (AArch64)\""""
-          new="""    aarch64 {
-      applicationIdSuffix '.aarch64.mod'
-      resValue "string", "app_name", "RetroArch Mod\""""
-          assert s.count(old)==1, "trecho nao encontrado exatamente uma vez"
-          open(p,'w').write(s.replace(old,new))
-          PY
+          python3 -I scripts/patch_pacote.py ra/pkg/android/phoenix/build.gradle
           cd ra && git diff --stat && git diff | head -30
       - name: Compilar
         run: |
