@@ -1,0 +1,5 @@
+Signer #1 certificate DN: CN=RetroArchMod teste
+Signer #1 certificate SHA-256 digest: 2ce86761d06c5d1634b0aa72a699351c0084675c795450e7edaa839130c6ec59
+Signer #1 certificate SHA-1 digest: a7b6cb389b6e1e9670a6d8587fb3ab147418b12c
+Signer #1 certificate MD5 digest: 5187f0660af1ba84a2b44e8bf03a16dc
+WARNING: META-INF/com/android/build/gradle/app-metadata.properties not protected by signature. Unauthorized modifications to this JAR entry will not be detected. Delete or move the entry outside of META-INF/.
