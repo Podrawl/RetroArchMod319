@@ -1,0 +1,1 @@
+889:static void android_app_entry(void *data)

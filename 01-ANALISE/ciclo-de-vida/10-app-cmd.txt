@@ -1,0 +1,40 @@
+frontend/drivers/platform_unix.h:406:   APP_CMD_INIT_WINDOW,
+frontend/drivers/platform_unix.h:414:   APP_CMD_TERM_WINDOW,
+frontend/drivers/platform_unix.h:440:   APP_CMD_GAINED_FOCUS,
+frontend/drivers/platform_unix.h:446:   APP_CMD_LOST_FOCUS,
+frontend/drivers/platform_unix.h:462:   APP_CMD_START,
+frontend/drivers/platform_unix.h:467:   APP_CMD_RESUME,
+frontend/drivers/platform_unix.h:480:   APP_CMD_PAUSE,
+frontend/drivers/platform_unix.h:485:   APP_CMD_STOP,
+frontend/drivers/platform_unix.h:515: * by APP_CMD_PAUSE/APP_CMD_STOP, if one is outstanding, then acknowledges
+frontend/drivers/platform_unix.h:533: * that APP_CMD_INIT_WINDOW and APP_CMD_INPUT_CHANGED hand over, NULL
+frontend/drivers/platform_unix.c:282:         && android_app_write_cmd(android_app, APP_CMD_TERM_WINDOW))
+frontend/drivers/platform_unix.c:289:         && android_app_write_cmd_arg(android_app, APP_CMD_INIT_WINDOW,
+frontend/drivers/platform_unix.c:783:         activity->instance, APP_CMD_START);
+frontend/drivers/platform_unix.c:789:         activity->instance, APP_CMD_RESUME);
+frontend/drivers/platform_unix.c:817:         activity->instance, APP_CMD_PAUSE);
+frontend/drivers/platform_unix.c:823:         activity->instance, APP_CMD_STOP);
+frontend/drivers/platform_unix.c:841:         focused ? APP_CMD_GAINED_FOCUS : APP_CMD_LOST_FOCUS);
+input/drivers/android_input.c:740: * twice, but a duplicate APP_CMD_PAUSE, or the APP_CMD_STOP that follows
+input/drivers/android_input.c:744:/* Set by the APP_CMD_PAUSE and APP_CMD_STOP handlers, consumed by
+input/drivers/android_input.c:749:/* APP_CMD_PAUSE or APP_CMD_STOP whose acknowledgement is held back until
+input/drivers/android_input.c:766:/* Hands a held-back APP_CMD_PAUSE/APP_CMD_STOP acknowledgement to the
+input/drivers/android_input.c:787: * APP_CMD_PAUSE and APP_CMD_STOP are therefore acknowledged only after
+input/drivers/android_input.c:995:      case APP_CMD_INIT_WINDOW:
+input/drivers/android_input.c:1016:      case APP_CMD_RESUME:
+input/drivers/android_input.c:1017:      case APP_CMD_START:
+input/drivers/android_input.c:1018:      case APP_CMD_PAUSE:
+input/drivers/android_input.c:1022:         bool hold_ack               = (cmd == APP_CMD_PAUSE)
+input/drivers/android_input.c:1031:            if (cmd == APP_CMD_PAUSE)
+input/drivers/android_input.c:1036:                  android_state_ack_cmd = APP_CMD_PAUSE;
+input/drivers/android_input.c:1050:         if (  (cmd == APP_CMD_RESUME || cmd == APP_CMD_START)
+input/drivers/android_input.c:1056:         if (cmd == APP_CMD_PAUSE)
+input/drivers/android_input.c:1061:               android_state_ack_cmd    = APP_CMD_PAUSE;
+input/drivers/android_input.c:1075:         if (cmd == APP_CMD_START)
+input/drivers/android_input.c:1081:      case APP_CMD_STOP:
+input/drivers/android_input.c:1085:         /* Normally flushed on the preceding APP_CMD_PAUSE already. When
+input/drivers/android_input.c:1093:            android_state_ack_cmd       = APP_CMD_STOP;
+input/drivers/android_input.c:1100:          * cannot wedge before APP_CMD_TERM_WINDOW is delivered. */
+input/drivers/android_input.c:1110:      case APP_CMD_TERM_WINDOW:
+input/drivers/android_input.c:1123:      case APP_CMD_GAINED_FOCUS:
+input/drivers/android_input.c:1124:      case APP_CMD_LOST_FOCUS:
