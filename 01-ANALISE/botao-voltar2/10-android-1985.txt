@@ -1,0 +1,36 @@
+   input_keyboard_event(keydown, keyboardcode,
+         character, mod, RETRO_DEVICE_KEYBOARD);
+
+   if ((keycode == AKEYCODE_VOLUME_UP || keycode == AKEYCODE_VOLUME_DOWN))
+      *handled = 0;
+}
+
+/* The keycodes and sources android_key_state.h spells out are the
+ * NDK's. */
+typedef char android_key_state_codes_check[
+   (     ANDROID_KEY_BACK            == AKEYCODE_BACK
+      && ANDROID_KEY_DPAD_CENTER     == AKEYCODE_DPAD_CENTER
+      && ANDROID_KEY_X               == AKEYCODE_X
+      && ANDROID_KEY_ENTER           == AKEYCODE_ENTER
+      && ANDROID_KEY_SOURCE_GAMEPAD  == AINPUT_SOURCE_GAMEPAD
+      && ANDROID_KEY_SOURCE_JOYSTICK == AINPUT_SOURCE_JOYSTICK) ? 1 : -1];
+
+static INLINE void android_input_poll_event_type_key(int port,
+      const android_input_fields_t *key, int *handled)
+{
+   int action  = key->action;
+   int keycode = key->keycode;
+
+   /* android_key_state[] has one row per pad slot plus the
+    * dedicated keyboard row at ANDROID_KEYBOARD_PORT. */
+   if (port < 0 || port > ANDROID_KEYBOARD_PORT)
+      return;
+
+   /* What a press sets and a release clears is decided in
+    * android_key_state.h, in one place, so the two cannot drift
+    * apart again. */
+   /* a pad's button, kept back by the input block timeout; BACK is
+    * left alone, for what it puts on the keyboard row */
+   if (     android_press_window_ns
+         && port < DEFAULT_MAX_PADS
+         && keycode > 0 && keycode < LAST_KEYCODE

@@ -1,0 +1,71 @@
+         }
+         else if (touchstate[pointer_id].x >= 606)
+         {
+            android->analog_state[port][2] = 0.0f;
+            android->analog_state[port][3] = 0.0f;
+         }
+      }
+   }
+}
+
+/* True for a key event that belongs to the system keyboard's text
+ * field (see android_kbd_route.h): the caller finishes it unhandled
+ * and keeps it out of the key state and the line editor. An event
+ * from the soft keyboard carries AKEY_EVENT_FLAG_SOFT_KEYBOARD, the
+ * virtual keyboard's device id (-1), or both, depending on how the
+ * IME built it. */
+static bool android_kbd_takes_key(const android_input_fields_t *key)
+{
+   return android_kbd_key_goes_to_ime(
+         retro_atomic_load_relaxed_int(&android_kbd_open) != 0,
+            (key->flags & AKEY_EVENT_FLAG_SOFT_KEYBOARD)
+         || key->device_id == -1,
+         key->keycode == AKEYCODE_BACK);
+}
+
+static void android_input_key_read(AInputEvent *event, int source,
+      android_input_fields_t *key)
+{
+   key->event_time = AKeyEvent_getEventTime(event);
+   key->type       = AINPUT_EVENT_TYPE_KEY;
+   key->device_id  = AInputEvent_getDeviceId(event);
+   key->source     = source;
+   key->action     = AKeyEvent_getAction(event);
+   key->keycode    = AKeyEvent_getKeyCode(event);
+   key->flags      = AKeyEvent_getFlags(event);
+   key->meta_state = AKeyEvent_getMetaState(event);
+}
+
+/* A key from the input queue; *handled is the queue's answer */
+static void android_input_key_fields(int port, bool is_keyboard,
+      const android_input_fields_t *key, int *handled)
+{
+   if (!key->keycode)
+      return;
+
+   if (android_kbd_takes_key(key))
+   {
+      *handled = 0;
+      return;
+   }
+
+   if (is_keyboard)
+   {
+      android_input_poll_event_type_keyboard(key, handled);
+      android_input_poll_event_type_key(ANDROID_KEYBOARD_PORT, key,
+            handled);
+   }
+   else
+      android_input_poll_event_type_key(port, key, handled);
+}
+
+/* ---- the input reader ----
+ *
+ * Android sends a window its next key only once it has finished the
+ * last, and a NativeActivity gets each key twice, before the IME
+ * (marked AKEY_EVENT_FLAG_PREDISPATCH) and after it. Read once a
+ * frame, a mashed pad falls behind. So the queue is read on a thread
+ * of its own, which copies each event and finishes it at once; the
+ * poll applies the copies (android_input_poll_events). */
+
+/* frameworks/native Input.h; not in the NDK */

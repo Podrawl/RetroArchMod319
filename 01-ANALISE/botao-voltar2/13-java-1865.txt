@@ -1,0 +1,46 @@
+  private EditText keyboardEditText;
+  private boolean  keyboardActive;
+  private boolean  keyboardSuppressWatcher;
+
+  /**
+   * Raises the native system keyboard for menu text entry.
+   *
+   * Called from native code (the menu on-screen keyboard path). Runs the
+   * UI work on the UI thread.
+   *
+   * @param label       Hint shown in the keyboard field, or null.
+   * @param initialText Text to pre-fill the field with, or null.
+   */
+  public void showKeyboard(final String label, final String initialText) {
+    runOnUiThread(new Runnable() {
+      @Override public void run() {
+        if (keyboardEditText == null) {
+          keyboardEditText = new EditText(RetroActivityCommon.this) {
+            @Override public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+              /* BACK while the keyboard is up = dismiss without confirming. */
+              if (keyCode == KeyEvent.KEYCODE_BACK
+                    && event.getAction() == KeyEvent.ACTION_UP
+                    && keyboardActive) {
+                hideKeyboard();
+                onSystemKeyboardInput(null, true);
+                return true;
+              }
+              return super.onKeyPreIme(keyCode, event);
+            }
+          };
+          keyboardEditText.setSingleLine(true);
+          keyboardEditText.setImeOptions(EditorInfo.IME_ACTION_DONE
+                | EditorInfo.IME_FLAG_NO_EXTRACT_UI
+                | EditorInfo.IME_FLAG_NO_FULLSCREEN);
+          keyboardEditText.setAlpha(0.0f);
+
+          keyboardEditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void onTextChanged(CharSequence s, int a, int b, int c) {}
+            @Override public void afterTextChanged(Editable s) {
+              if (keyboardActive && !keyboardSuppressWatcher)
+                onSystemKeyboardInput(s.toString(), false);
+            }
+          });
+
+          keyboardEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {

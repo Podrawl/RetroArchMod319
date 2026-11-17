@@ -1,0 +1,27 @@
+./gfx/drivers/ctr_gfx.c:1148:   input_driver_set_platform_menu_button(false);
+./gfx/drivers/ctr_gfx.c:1174:      input_driver_set_platform_menu_button(true);
+./gfx/drivers/ctr_gfx.c:1180:         input_driver_set_platform_menu_button(true);
+./gfx/drivers/ctr_gfx.c:1196:         input_driver_set_platform_menu_button(true);
+./gfx/drivers/ctr_gfx.c:1206:            input_driver_set_platform_menu_button(true);
+./gfx/drivers/ctr_gfx.c:1214:               input_driver_set_platform_menu_button(true);
+./gfx/drivers/ctr_gfx.c:1275:               input_driver_set_platform_menu_button(true);
+./gfx/drivers/ctr_gfx.c:1286:               input_driver_set_platform_menu_button(true);
+./gfx/drivers/ctr_gfx.c:2244:      input_driver_set_platform_menu_button(false);
+./samples/input/gx_pad_sticks/gx_pad_sticks_test.c:78:void input_driver_set_platform_menu_button(bool held) { (void)held; }
+./samples/input/dingux_rumble/dingux_rumble_test.c:184:void input_driver_set_platform_menu_button(bool v) { (void)v; }
+./samples/input/dingux_rumble/dingux_rumble_test.c:186:bool input_driver_platform_menu_button(void) { return false; }
+./input/input_driver.c:16673:               || (i == RARCH_MENU_TOGGLE && input_st->platform_menu_button)
+./input/input_driver.c:16800:               || (i == RARCH_MENU_TOGGLE && input_st->platform_menu_button))
+./input/input_driver.c:18038:void input_driver_set_platform_menu_button(bool held)
+./input/input_driver.c:18040:   input_driver_st.platform_menu_button = held;
+./input/drivers_joypad/gx_joypad_libogc.c:607:   input_driver_set_platform_menu_button(false);
+./input/drivers_joypad/gx_joypad_libogc.c:620:      input_driver_set_platform_menu_button(true);
+./input/drivers_joypad/gekko_joypad.c:434:   input_driver_set_platform_menu_button(false);
+./input/drivers_joypad/gekko_joypad.c:436:      input_driver_set_platform_menu_button(true);
+./input/drivers_joypad/sdl_dingux_joypad.c:362:   input_driver_set_platform_menu_button(false);
+./input/drivers_joypad/sdl_dingux_joypad.c:376:   input_driver_set_platform_menu_button(false);
+./input/drivers_joypad/sdl_dingux_joypad.c:535:      input_driver_set_platform_menu_button(false);
+./input/drivers_joypad/sdl_dingux_joypad.c:598:                  input_driver_set_platform_menu_button(true);
+./input/input_driver.h:1042:    * (input_driver_set_platform_menu_button()) */
+./input/input_driver.h:1043:   bool platform_menu_button;
+./input/input_driver.h:1420:void input_driver_set_platform_menu_button(bool held);

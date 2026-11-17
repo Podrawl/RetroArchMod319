@@ -1,0 +1,1 @@
+3673:               input_autoconf_bind(0, RARCH_MENU_TOGGLE);
