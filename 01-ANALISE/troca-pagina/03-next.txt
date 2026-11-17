@@ -1,0 +1,13 @@
+6278:            if (BIT256_GET(desc->button_mask, RARCH_OVERLAY_NEXT))
+6823:static void input_overlay_load_active_geom(
+6826:void input_overlay_load_active(input_overlay_t *ol, float opacity)
+6836:static void input_overlay_load_active_geom(
+6848: * input_overlay_next_move_touch_masks
+6854:void input_overlay_next_move_touch_masks(input_overlay_t *ol)
+7092:             * Note: tmp == false. This prevents CMD_EVENT_OVERLAY_NEXT
+7095:            command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
+7635:            /* Skip blocked touch pointer and freeze any overlay_next
+7640:               if (BIT256_GET(old_ol_state->buttons, RARCH_OVERLAY_NEXT))
+7641:                  BIT256_SET(ol_state->buttons, RARCH_OVERLAY_NEXT);
+7665:            /* Block touch pointer if overlay_next was pressed */
+7666:            if (BIT256_GET(polled_data.buttons, RARCH_OVERLAY_NEXT))

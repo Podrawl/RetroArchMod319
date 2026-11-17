@@ -1,0 +1,2 @@
+14231:   ol->active      = data->active;
+14234:   ol->next_index  = (unsigned)((ol->index + 1) % ol->size);
