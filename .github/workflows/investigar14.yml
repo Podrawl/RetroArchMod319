@@ -1,4 +1,4 @@
-name: Ler troca de pagina do overlay (somente leitura)
+name: Ler troca de pagina do overlay 2 (somente leitura)
 
 on:
   workflow_dispatch:
@@ -17,15 +17,20 @@ jobs:
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
           git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
           git -C ra checkout -q FETCH_HEAD
-          S=01-ANALISE/troca-pagina
+          S=01-ANALISE/troca-pagina2
           mkdir -p $S
           F=ra/input/input_driver.c
-          grep -n 'ol->index\|->active *=\|ol->active\b.*=' $F | head -60 > $S/01-linhas.txt
-          grep -n '^struct overlay$' -A 70 $F > $S/02-struct-overlay.txt
-          grep -n 'void input_overlay_load_active\|void input_overlay_next\|input_overlay_set_next\|OVERLAY_NEXT\|overlay_next' $F > $S/03-next.txt
-          L=$(grep -n 'input_overlay_load_active' $F | head -1 | cut -d: -f1)
-          sed -n "$((L-5)),$((L+60))p" $F > $S/04-load-active.txt
+          for n in input_overlay_load_page 'input_overlay_next(' 'struct overlay$' 'struct overlay *{'; do
+            grep -n "$n" ra/input/*.c ra/input/*.h ra/*.c ra/*.h 2>/dev/null | head -8
+          done > $S/01-onde.txt
+          L=$(grep -n '^static.*input_overlay_load_page\|^enum input_overlay_page.*input_overlay_load_page\|input_overlay_load_page(input_overlay_t' $F | head -1 | cut -d: -f1)
+          sed -n "$((L-3)),$((L+70))p" $F > $S/02-load-page.txt
+          L=$(grep -n 'input_overlay_next(input_overlay_t' $F | tail -1 | cut -d: -f1)
+          sed -n "$((L-3)),$((L+40))p" $F > $S/03-next.txt
+          grep -rn 'CMD_EVENT_OVERLAY_NEXT:' -A 25 ra/command.c > $S/04-cmd.txt
+          grep -n 'char name\[' ra/input/input_overlay.h ra/input/*.h > $S/05-name.txt
+          grep -rn 'struct overlay$' -A 40 ra/input/input_overlay.h ra/input/input_types.h > $S/06-struct.txt
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
-          git commit -m "Leitura 14: troca de pagina" && git pull --rebase -q && git push
+          git commit -m "Leitura 14b" && git pull --rebase -q && git push
