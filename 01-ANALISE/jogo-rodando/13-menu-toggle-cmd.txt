@@ -1,0 +1,90 @@
+242-          * timing issues with runahead (single-instance) where the
+243-          * 1-frame pulse from network commands can be lost. */
+244-         if (map[index].id == RARCH_MENU_TOGGLE)
+245:            command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+246-         else
+247-            handle->state[map[index].id] = true;
+248-      }
+249-   }
+250-   else
+251-      RARCH_WARN(msg_hash_to_str(MSG_UNRECOGNIZED_COMMAND), tok);
+252-}
+253-
+254-static void command_parse_msg(command_t *handle, char *buf)
+255-{
+256-   char     *save  = NULL;
+257-   char     *tok   = strtok_r(buf, "\n", &save);
+258-   unsigned gen    = input_driver_command_generation();
+259-
+260-   while (tok)
+261-   {
+262-      /* a client ending its lines in CRLF leaves no \r on the last word;
+263-       * a \r anywhere else is the command's own */
+264-      size_t len = strlen(tok);
+265-      if (len && tok[len - 1] == '\r')
+266-         tok[len - 1] = '\0';
+267-      command_parse_sub_msg(handle, tok);
+--
+1197-      if (string_is_equal(name, map[i].str))
+1198-      {
+1199-         if (map[i].id == RARCH_MENU_TOGGLE)
+1200:            command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+1201-#ifdef HAVE_SCREENSHOTS
+1202-         else if (map[i].id == RARCH_SCREENSHOT)
+1203-            return command_screenshot(handle);
+1204-#endif
+1205-#ifdef HAVE_BSV_MOVIE
+1206-         else if (map[i].id == RARCH_RECORD_REPLAY_KEY)
+1207-            return command_reply_event(handle,
+1208-                  CMD_EVENT_RECORD_REPLAY, map[i].str);
+1209-         else if (map[i].id == RARCH_SAVE_REPLAY_CHECKPOINT_KEY)
+1210-            return command_reply_event(handle,
+1211-                  CMD_EVENT_SAVE_REPLAY_CHECKPOINT, map[i].str);
+1212-         else if (map[i].id == RARCH_PREV_REPLAY_CHECKPOINT_KEY)
+1213-            return command_reply_event(handle,
+1214-                  CMD_EVENT_PREV_REPLAY_CHECKPOINT, map[i].str);
+1215-         else if (map[i].id == RARCH_NEXT_REPLAY_CHECKPOINT_KEY)
+1216-            return command_reply_event(handle,
+1217-                  CMD_EVENT_NEXT_REPLAY_CHECKPOINT, map[i].str);
+1218-#endif
+1219-#ifdef HAVE_TRANSLATE
+1220-         else if (map[i].id == RARCH_AI_SERVICE)
+1221-         {
+1222-            struct command_reply *r = command_reply_new(map[i].str);
+--
+1722-      char  *out;
+1723-      size_t _len = 0;
+1724-      if (menu_st->flags & MENU_ST_FLAG_ALIVE)
+1725:         command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+1726-      if (menu_st->flags & MENU_ST_FLAG_ALIVE)
+1727-      {
+1728-         command_reply_error(cmd, "MENU", "the menu stays open with no "
+1729-               "content running");
+1730-         return false;
+1731-      }
+1732-      if (!(out = command_menu_answer(false, 0, &_len)))
+1733-         return false;
+1734-      cmd->replier(cmd, out, _len);
+1735-      free(out);
+1736-      return true;
+1737-   }
+1738-   if (string_is_equal(actions[i].word, "open"))
+1739-   {
+1740-      if (!(menu_st->flags & MENU_ST_FLAG_ALIVE))
+1741:         command_event(CMD_EVENT_MENU_TOGGLE, NULL);
+1742-      if (!(menu_st->flags & MENU_ST_FLAG_ALIVE))
+1743-      {
+1744-         command_reply_error(cmd, "MENU", "the menu cannot open now");
+1745-         return false;
+1746-      }
+1747-   }
+1748-   else if (!alive && !string_is_equal(actions[i].word, "show"))
+1749-   {
+1750-      command_reply_error(cmd, "MENU", "the menu is closed: MENU open "
+1751-            "opens it");
+1752-      return false;
+1753-   }
+1754-   else if (has_index && index >= buf->size)
+1755-   {
+1756-      command_reply_error(cmd, "MENU", "no entry %lu: the list has %u",
+1757-            index, (unsigned)buf->size);

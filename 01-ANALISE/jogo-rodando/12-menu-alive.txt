@@ -1,0 +1,5 @@
+ra/input/input_driver.c:4606:                        MENU_ST_FLAG_ALIVE) ? true : false;
+ra/input/input_driver.c:5141:      bool menu_alive = (menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE)
+ra/input/input_driver.c:13976:      hide = (menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE) != 0;
+ra/input/input_driver.c:18770:         (menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE) != 0;
+ra/input/input_driver.c:20616:         MENU_ST_FLAG_ALIVE) ? true : false;

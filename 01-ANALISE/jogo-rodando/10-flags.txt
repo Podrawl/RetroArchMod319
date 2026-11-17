@@ -1,0 +1,8 @@
+ra/runloop.h:120:   RUNLOOP_FLAG_CORE_RUNNING                      = (1 << 17),
+ra/runloop.h:130:   RUNLOOP_FLAG_PAUSED                            = (1 << 27),
+ra/runloop.h:131:   RUNLOOP_FLAG_IDLE                              = (1 << 28),
+ra/runloop.h:768:   PACE_FACT_PAUSED          = (1 << 4),  /* RUNLOOP_FLAG_PAUSED */
+ra/input/input_driver.c:17869:               && !(runloop_get_flags() & RUNLOOP_FLAG_PAUSED)
+ra/input/drivers/android_input.c:3234:   if (runloop_flags & RUNLOOP_FLAG_PAUSED)
+ra/input/drivers/android_input.c:3394:   /* Backgrounded (APP_CMD_PAUSE/STOP set RUNLOOP_FLAG_IDLE): there is
+ra/input/drivers/android_input.c:3406:   android_poll_waits((runloop_get_flags() & RUNLOOP_FLAG_IDLE) != 0,
