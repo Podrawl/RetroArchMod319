@@ -1,0 +1,29 @@
+./gfx/drivers/switch_nx_gfx.c:658:       case ASPECT_RATIO_CUSTOM:
+./gfx/video_driver.c:4679:   if (     aspect_idx != ASPECT_RATIO_CUSTOM
+./gfx/video_driver.c:4699:   if (settings->uints.video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+./gfx/video_driver.c:5739:   if (video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+./gfx/video_driver.c:5900:   if (video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+./gfx/video_driver.c:9118:   strlcpy(aspectratio_lut[ASPECT_RATIO_CUSTOM].name,
+./gfx/video_driver.c:9119:         msg_hash_to_str(MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_CUSTOM),
+./gfx/video_driver.c:9120:         sizeof(aspectratio_lut[ASPECT_RATIO_CUSTOM].name));
+./gfx/video_driver.c:9135:   if (settings->uints.video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+./gfx/video_driver.c:9138:      aspectratio_lut[ASPECT_RATIO_CUSTOM].value =
+./gfx/video_defines.h:71:   ASPECT_RATIO_CUSTOM,
+./menu/menu_displaylist.c:13413:                  case ASPECT_RATIO_CUSTOM:
+./menu/drivers/rgui.c:7307:   aspectratio_lut[ASPECT_RATIO_CUSTOM].value =
+./menu/drivers/rgui.c:7367:   rgui->menu_video_settings.aspect_ratio_idx = ASPECT_RATIO_CUSTOM;
+./menu/drivers/rgui.c:7464:    * ASPECT_RATIO_CUSTOM path add padding * bias on top of vp.x,
+./menu/menu_setting.c:7685:   /* aspectratio_lut[ASPECT_RATIO_CUSTOM].value
+./menu/menu_setting.c:7732:   /* aspectratio_lut[ASPECT_RATIO_CUSTOM].value
+./menu/menu_setting.c:8022:   /* aspectratio_lut[ASPECT_RATIO_CUSTOM].value
+./menu/menu_setting.c:8057:   /* aspectratio_lut[ASPECT_RATIO_CUSTOM].value
+./menu/menu_setting.c:10335:   /* aspectratio_lut[ASPECT_RATIO_CUSTOM].value
+./menu/menu_setting.c:10373:   /* aspectratio_lut[ASPECT_RATIO_CUSTOM].value
+./menu/menu_setting.c:11437:               aspectratio_lut[ASPECT_RATIO_CUSTOM].value =
+./menu/menu_setting.c:11864:               aspectratio_lut[ASPECT_RATIO_CUSTOM].value =
+./menu/menu_setting.c:12282:             * changed, ASPECT_RATIO_CUSTOM must be
+./menu/menu_setting.c:12287:            aspectratio_lut[ASPECT_RATIO_CUSTOM].value =
+./msg_hash.h:30938:   MENU_ENUM_LABEL_VALUE_VIDEO_ASPECT_RATIO_CUSTOM,
+./samples/gfx/threaded_video/threaded_video_test.c:3638:      {ASPECT_RATIO_CUSTOM, -1.0f, true, false},
+./samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:167:   CHECK(settings->uints.video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM,
+./samples/menu/rgui_aspect_defer/rgui_aspect_defer_test.c:171:         (unsigned)ASPECT_RATIO_CUSTOM);

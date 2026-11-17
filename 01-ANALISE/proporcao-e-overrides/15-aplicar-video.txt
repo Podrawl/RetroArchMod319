@@ -1,0 +1,30 @@
+./tasks/task_content.c:2603:   command_event(CMD_EVENT_VIDEO_SET_ASPECT_RATIO, NULL);
+./gfx/drivers/switch_nx_gfx.c:664:             video_driver_set_viewport_core();
+./gfx/video_driver.h:2333:void video_driver_set_viewport_core(void);
+./gfx/video_driver.h:2358:void video_driver_apply_state_changes(void);
+./gfx/video_crt_switch.c:117:   command_event(CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, NULL);
+./gfx/video_crt_switch.c:628:      command_event(CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, NULL);
+./gfx/video_crt_switch.c:793:         command_event(CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, NULL);
+./gfx/video_driver.c:426:   { 1.0f         , ""              }, /* square pixel -  initialized in video_driver_set_viewport_square_pixel */
+./gfx/video_driver.c:4161:static void video_driver_set_viewport_config(
+./gfx/video_driver.c:4188:static void video_driver_set_viewport_square_pixel(
+./gfx/video_driver.c:5452:void video_driver_set_viewport_core(void)
+./gfx/video_driver.c:5671:         video_driver_set_viewport_square_pixel(&video_st->av_info.geometry,
+./gfx/video_driver.c:5676:         video_driver_set_viewport_core();
+./gfx/video_driver.c:5680:         video_driver_set_viewport_config(
+./gfx/video_driver.c:6591:void video_driver_apply_state_changes(void)
+./gfx/video_driver.c:9126:   video_driver_set_viewport_square_pixel(geom, rotation);
+./gfx/video_driver.c:9127:   video_driver_set_viewport_core();
+./gfx/video_driver.c:9128:   video_driver_set_viewport_config(geom,
+./command.h:154:   CMD_EVENT_VIDEO_APPLY_STATE_CHANGES,
+./command.h:158:   CMD_EVENT_VIDEO_SET_ASPECT_RATIO,
+./settings/settings_def_video_output_misc.h:9:      DEFAULT_SCALE_INTEGER, SD_FLAG_NONE, 0, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, setting_bool_action_left_with_r
+./settings/settings_def_video_output_misc.h:14:      DEFAULT_SCALE_INTEGER_AXIS, SD_FLAG_NONE, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, 0, VIDEO
+./settings/settings_def_video_output_misc.h:19:      DEFAULT_SCALE_INTEGER_SCALING, SD_FLAG_NONE, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, 0, VI
+./settings/settings_def_viewport_size.h:10:      0, SD_FLAG_ALLOW_INPUT, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, 1, 9999, 1, 0, NULL, setting_g
+./settings/settings_def_viewport_size.h:16:      0, SD_FLAG_ALLOW_INPUT, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, 1, 9999, 1, 0, NULL, setting_g
+./settings/settings_def_video_hdr_toggles.h:9:      DEFAULT_VIDEO_HDR_SCANLINES, SD_FLAG_NONE, SDESC_FLG_REFRESH, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES,
+./settings/settings_def_aspect_ratio.h:9:      DEFAULT_ASPECT_RATIO_IDX, SD_FLAG_CMD_APPLY_AUTO, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_SET_ASPECT_RATIO, 0, LAST_A
+./settings/settings_def_aspect_ratio.h:14:      DEFAULT_ASPECT_RATIO, "%.2f", SD_FLAG_NONE, SDESC_FLG_HAS_RANGE | SDESC_FLG_ENFORCE_MIN, CMD_EVENT_VIDEO_SET_ASP
+./settings/settings_def_aspect_ratio.h:20:      0, SD_FLAG_ALLOW_INPUT, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, -9999, 9999, 1, -9999, NULL, NU
+./settings/settings_def_aspect_ratio.h:26:      0, SD_FLAG_ALLOW_INPUT, SDESC_RANGE_MINMAX, CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, -9999, 9999, 1, -9999, NULL, NU

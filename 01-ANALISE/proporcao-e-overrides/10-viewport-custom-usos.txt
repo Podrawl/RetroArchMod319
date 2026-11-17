@@ -1,0 +1,4 @@
+./settings/settings_def_viewport_size.h:9:      "video_viewport_custom_width",
+./settings/settings_def_viewport_size.h:15:      "video_viewport_custom_height",
+./settings/settings_def_aspect_ratio.h:19:      "video_viewport_custom_x",
+./settings/settings_def_aspect_ratio.h:25:      "video_viewport_custom_y",
