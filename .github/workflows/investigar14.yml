@@ -17,20 +17,15 @@ jobs:
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
           git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
           git -C ra checkout -q FETCH_HEAD
-          S=01-ANALISE/troca-pagina2
+          S=01-ANALISE/troca-pagina3
           mkdir -p $S
-          F=ra/input/input_driver.c
-          for n in input_overlay_load_page 'input_overlay_next(' 'struct overlay$' 'struct overlay *{'; do
-            grep -n "$n" ra/input/*.c ra/input/*.h ra/*.c ra/*.h 2>/dev/null | head -8
-          done > $S/01-onde.txt
-          L=$(grep -n '^static.*input_overlay_load_page\|^enum input_overlay_page.*input_overlay_load_page\|input_overlay_load_page(input_overlay_t' $F | head -1 | cut -d: -f1)
-          sed -n "$((L-3)),$((L+70))p" $F > $S/02-load-page.txt
-          L=$(grep -n 'input_overlay_next(input_overlay_t' $F | tail -1 | cut -d: -f1)
-          sed -n "$((L-3)),$((L+40))p" $F > $S/03-next.txt
-          grep -rn 'CMD_EVENT_OVERLAY_NEXT:' -A 25 ra/command.c > $S/04-cmd.txt
-          grep -n 'char name\[' ra/input/input_overlay.h ra/input/*.h > $S/05-name.txt
-          grep -rn 'struct overlay$' -A 40 ra/input/input_overlay.h ra/input/input_types.h > $S/06-struct.txt
+          grep -rn 'CMD_EVENT_OVERLAY_NEXT' ra --include=*.c --include=*.h > $S/01-cmd-usos.txt
+          L=$(grep -n 'case CMD_EVENT_OVERLAY_NEXT' ra/command.c | head -1 | cut -d: -f1)
+          sed -n "$((L-2)),$((L+40))p" ra/command.c > $S/02-cmd.txt
+          sed -n 355,375p ra/input/input_overlay.h > $S/03-name.txt
+          grep -rn 'input_overlay_set_next\|input_overlay_next\|next_index' ra --include=*.c --include=*.h | head -40 > $S/04-next-uso.txt
+          sed -n 14215,14245p ra/input/input_driver.c > $S/05-14231.txt
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
-          git commit -m "Leitura 14b" && git pull --rebase -q && git push
+          git commit -m "Leitura 14c" && git pull --rebase -q && git push
