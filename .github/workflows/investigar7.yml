@@ -1,4 +1,4 @@
-name: Ler tratamento do botão Voltar (somente leitura)
+name: Ler tratamento do botão Voltar 2 (somente leitura)
 
 on:
   workflow_dispatch:
@@ -15,16 +15,17 @@ jobs:
         run: |
           set +e
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
-          S=01-ANALISE/botao-voltar
+          S=01-ANALISE/botao-voltar2
           mkdir -p $S
           cd ra
-          grep -n "AKEYCODE_BACK\|KEYCODE_BACK" -r input/ pkg/android/ --include=*.c --include=*.h --include=*.java | head -40 > ../$S/10-keycode-back.txt
-          grep -n "onBackPressed\|OnBackInvokedCallback\|onKeyDown\|onKeyUp\|dispatchKeyEvent\|enableOnBackInvokedCallback\|predictiveBack" -r pkg/android --include=*.java --include=*.xml | head -40 > ../$S/11-java-back.txt
-          grep -n "RETROK_ESCAPE\|RETROK_BACKSPACE" input/drivers/android_input.c input/input_keymaps.c input/drivers/android_input.c | head -20 > ../$S/12-retrok-escape.txt
-          grep -n "input_exit_emulator\|input_menu_toggle\|RARCH_QUIT_KEY\|RARCH_MENU_TOGGLE" configuration.c input/input_driver.c | head -40 > ../$S/13-hotkeys-padrao.txt
-          grep -n "android_keyboard_event\|static void handle_hotplug\|android_input_poll_event_type_key\|case AINPUT_EVENT_TYPE_KEY" input/drivers/android_input.c | head -20 > ../$S/14-funcoes-key.txt
+          sed -n '1975,2010p' input/drivers/android_input.c > ../$S/10-android-1985.txt
+          sed -n '2505,2575p' input/drivers/android_input.c > ../$S/11-android-2527.txt
+          sed -n '3660,3685p' input/drivers/android_input.c > ../$S/12-android-3675.txt
+          sed -n '1845,1890p' pkg/android/phoenix-common/src/com/retroarch/browser/retroactivity/RetroActivityCommon.java > ../$S/13-java-1865.txt
+          grep -rn "platform_menu_button" --include=*.c --include=*.h . | head -30 > ../$S/14-platform-menu-button.txt
+          grep -n "menu_toggle\|MENU_TOGGLE" input/drivers/android_input.c | head -20 > ../$S/15-android-menu-toggle.txt
           cd ..
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
-          git commit -m "Leitura 7: botão Voltar" && git pull --rebase -q && git push
+          git commit -m "Leitura 7b: botão Voltar" && git pull --rebase -q && git push
