@@ -1,0 +1,36 @@
+name: Ler desenho de retangulos e texto (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
+          git -C ra checkout -q FETCH_HEAD
+          S=01-ANALISE/desenho-widgets
+          mkdir -p $S
+          cd ra
+          sed -n '2170,2260p' gfx/gfx_widgets.c > ../$S/10-widgets-outline.txt
+          grep -n "^void gfx_widgets_frame\|^static void gfx_widgets_draw\|void gfx_widgets_frame(" gfx/gfx_widgets.c > ../$S/11-widgets-frame.txt
+          grep -n "gfx_display_draw_quad\|gfx_display_draw_text\|gfx_display_draw_text(" gfx/gfx_display.h > ../$S/12-display-proto.txt
+          L=$(grep -n "void gfx_display_draw_quad" gfx/gfx_display.h | head -1 | cut -d: -f1); sed -n "${L},$((L+14))p" gfx/gfx_display.h > ../$S/13-draw-quad-proto.txt
+          L=$(grep -n "void gfx_display_draw_text" gfx/gfx_display.h | head -1 | cut -d: -f1); sed -n "${L},$((L+14))p" gfx/gfx_display.h > ../$S/14-draw-text-proto.txt
+          grep -n "gfx_display_draw_quad(" gfx/gfx_widgets.c | head -6 > ../$S/15-uso-quad.txt
+          grep -n "gfx_display_draw_text(" gfx/gfx_widgets.c | head -6 > ../$S/16-uso-text.txt
+          grep -n "widgets_active\|gfx_widgets_ready()" gfx/video_driver.c | head -12 > ../$S/17-widgets-active.txt
+          grep -n "gfx_widgets_frame(" -r --include=*.c . | head -8 > ../$S/18-quem-chama-frame.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 12: desenho de retangulos e texto" && git pull --rebase -q && git push
