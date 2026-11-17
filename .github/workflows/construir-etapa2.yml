@@ -1,4 +1,4 @@
-name: Etapa 2 - editor: arrastar e redimensionar botoes (so memoria)
+name: Etapa 2 - editor de overlay (arrastar e redimensionar, so memoria)
 
 on:
   workflow_dispatch:
