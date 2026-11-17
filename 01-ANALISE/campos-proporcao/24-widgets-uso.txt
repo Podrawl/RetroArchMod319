@@ -1,0 +1,16 @@
+      unsigned overlay_height   = VIDEO_SCALE_H(video_info->dims);
+      float outline_color[16] = {
+      0.00, 1.00, 0.00, 1.00,
+      0.00, 1.00, 0.00, 1.00,
+      0.00, 1.00, 0.00, 1.00,
+      0.00, 1.00, 0.00, 1.00,
+      };
+
+      if (video_driver_get_viewport_info(&content_vp) && VIDEO_SCALE_W(content_vp.dims) && VIDEO_SCALE_H(content_vp.dims))
+      {
+         overlay_x      = VIDEO_POS_X(content_vp.pos) * (int)video_width
+            / (int)VIDEO_SCALE_W(output_dims);
+         overlay_y      = VIDEO_POS_Y(content_vp.pos);
+         overlay_width  = VIDEO_SCALE_W(content_vp.dims) * video_width
+            / VIDEO_SCALE_W(output_dims);
+         overlay_height = VIDEO_SCALE_H(content_vp.dims);

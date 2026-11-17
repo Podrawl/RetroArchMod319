@@ -1,0 +1,9 @@
+./gfx/video_defines.h:213:#define VIDEO_SCALE_PACK(w, h) \
+./gfx/video_defines.h:215:#define VIDEO_SCALE_W(d) (((unsigned)(d) >> 16) & VIDEO_SCALE_DIM_MAX)
+./gfx/video_defines.h:216:#define VIDEO_SCALE_H(d)  ((unsigned)(d)        & VIDEO_SCALE_DIM_MAX)
+./gfx/video_defines.h:233:#define VIDEO_SCALE_HI_MASK (VIDEO_SCALE_DIM_MAX << 16)
+./gfx/video_defines.h:234:#define VIDEO_SCALE_HALF_MIN(a, b, m) \
+./gfx/video_defines.h:237:#define VIDEO_SCALE_HALF_MAX(a, b, m) \
+./gfx/video_defines.h:272:#define VIDEO_POS_PACK(x, y) \
+./gfx/video_defines.h:275:#define VIDEO_POS_X(p) ((int)(int16_t)(((unsigned)(p) >> 16) & 0xffffu))
+./gfx/video_defines.h:276:#define VIDEO_POS_Y(p) ((int)(int16_t)( (unsigned)(p)        & 0xffffu))

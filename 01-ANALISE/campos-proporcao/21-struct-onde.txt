@@ -1,0 +1,2 @@
+./gfx/video_defines.h:323:typedef struct video_viewport
+./gfx/video_defines.h:342:typedef struct video_viewport_settings
