@@ -40,8 +40,11 @@ static int mod_ui_rects(int *r)
    int bw, bh, gap, x0, y0, k;
    if (mod_win_w <= 0 || mod_win_h <= 0)
       return 0;
-   bh  = mod_win_h * 12 / 100;
-   bw  = mod_win_h * 30 / 100;
+   {
+      int un = (mod_win_w < mod_win_h) ? mod_win_w : mod_win_h;
+      bh  = un * 12 / 100;
+      bw  = un * 30 / 100;
+   }
    gap = bh / 5;
    x0  = mod_win_w / 2 - bw - gap / 2;
    y0  = mod_win_h / 2 - (5 * bh + 4 * gap) / 2;
@@ -139,6 +142,7 @@ static void mod_ui_press(int b)
       mod_editor_active = false;
       mod_editor_sel    = -1;
       mod_editor_pinch  = false;
+      command_event(CMD_EVENT_UNPAUSE, NULL);
       runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,
             MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
       return;
@@ -163,6 +167,27 @@ static void mod_ui_press(int b)
 }
 
 '''
+
+# 0) 3 dedos tambem despausa; tamanho da janela atualizado a cada leitura (vertical/horizontal)
+trocar(
+    INPUT,
+    "      mod_editor_pinch  = false;\n      runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,",
+    "      mod_editor_pinch  = false;\n      command_event(CMD_EVENT_UNPAUSE, NULL);\n      runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,",
+)
+trocar(
+    INPUT,
+    "      mod_raw_y[kk] = (float)VIDEO_POS_Y(st->touch[kk]);\n   }\n",
+    "      mod_raw_y[kk] = (float)VIDEO_POS_Y(st->touch[kk]);\n   }\n"
+    "   {\n"
+    "      struct video_viewport vp2;\n"
+    "      memset(&vp2, 0, sizeof(vp2));\n"
+    "      if (video_driver_get_viewport_info(&vp2))\n"
+    "      {\n"
+    "         mod_win_w = (int)VIDEO_SCALE_W(vp2.full_dims);\n"
+    "         mod_win_h = (int)VIDEO_SCALE_H(vp2.full_dims);\n"
+    "      }\n"
+    "   }\n",
+)
 
 # 1) funcoes dos botoes, antes de mod_editor_frame (depois do bloco da tela)
 trocar(
