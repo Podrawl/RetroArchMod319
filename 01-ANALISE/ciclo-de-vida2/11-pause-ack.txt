@@ -1,0 +1,66 @@
+    return android_input_can_be_keyboard_jni(device->id);
+}
+
+/* Set once the background flush has been performed, cleared again on
+ * start or resume. A pause -> resume -> pause cycle therefore flushes
+ * twice, but a duplicate APP_CMD_PAUSE, or the APP_CMD_STOP that follows
+ * it, does not rewrite the config a second time. */
+static bool android_state_flushed = false;
+
+/* Set by the APP_CMD_PAUSE and APP_CMD_STOP handlers, consumed by
+ * android_input_flush_pending_state() at the top of the next runloop
+ * iteration. */
+static bool android_state_flush_pending = false;
+
+/* APP_CMD_PAUSE or APP_CMD_STOP whose acknowledgement is held back until
+ * the flush has run, or -1. See android_input_flush_pending_state(). */
+static int android_state_ack_cmd = -1;
+
+/* Set by the keypress haptic callback and taken by the haptic thread
+ * at once - or, with no thread, by android_input_flush_pending_haptics()
+ * at the top of the next runloop iteration. Cleared by the lifecycle
+ * handlers: the runloop blocks in the poll while backgrounded, so a
+ * press left pending would otherwise be delivered on the resume that
+ * follows. */
+static retro_atomic_int_t android_keypress_vibrate_pending;
+/* The thread that makes the buzz the moment a press asks for it, not a
+ * frame later: the press can come on a core's libco stack, where Java
+ * is not to be entered, and the runloop's top is up to a frame away. */
+static input_output_writer_t *android_haptic_writer;
+static void android_input_haptic_writer_cb(void *userdata, bool last);
+
+/* Hands a held-back APP_CMD_PAUSE/APP_CMD_STOP acknowledgement to the
+ * lifecycle callback waiting for it in android_app_set_activity_state(). */
+static void android_input_release_state_ack(struct android_app *android_app)
+{
+   if (android_state_ack_cmd < 0 || !android_app)
+      return;
+
+   android_lifecycle_set_state(&android_app->lc, android_state_ack_cmd);
+
+   android_state_ack_cmd = -1;
+}
+
+/* Swiping the task away from Recents and the low-memory killer end the
+ * process with SIGKILL, and a QUITFOCUS launch exits from the Java side's
+ * onStop(); onDestroy() is not delivered first in any of them, so
+ * retroarch_main_quit() never runs. What Android does
+ * guarantee is ordering: a task removed while RetroArch is in the
+ * foreground is killed only once the process drops to the background,
+ * which is after onPause() has returned, and a stopped process is only
+ * reclaimed after onStop() has returned.
+ *
+ * APP_CMD_PAUSE and APP_CMD_STOP are therefore acknowledged only after
+ * the flush has run. The lifecycle callback waiting in
+ * android_app_set_activity_state() does not return until then, so the
+ * files are on disk before the process can be killed.
+ *
+ * Called from the runloop rather than from the command handler: the
+ * command pipe is drained by android_input_poll(), which a core reaches
+ * through the input poll callback, so a flush performed there would read
+ * core memory and rewrite the config from inside retro_run(). */
+void android_input_flush_pending_state(void)
+{
+   if (!android_state_flush_pending)
+      return;
+   android_state_flush_pending = false;
