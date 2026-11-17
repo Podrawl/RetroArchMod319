@@ -1,0 +1,8 @@
+./menu/menu_displaylist.c:13843:      case DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/menu_displaylist.c:18023:         case DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/cbs/menu_cbs_deferred_push.c:199:GENERIC_DEFERRED_PUSH(deferred_push_overlay_mouse_settings_list,    DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST)
+./menu/cbs/menu_cbs_ok.c:447:      case ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c:1912:      case ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c:2131:   { MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS, ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST },
+./menu/menu_cbs.h:207:   ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST,
+./menu/menu_displaylist.h:231:   DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST,

@@ -1,0 +1,296 @@
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+--
+./settings/settings_def_menu_main_lists_4.h-28- * tables always carry this row via the strings pass. */
+./settings/settings_def_menu_main_lists_4.h-29-#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
+./settings/settings_def_menu_main_lists_4.h:30:S_ACTION_EX(OVERLAY_MOUSE_SETTINGS,
+./settings/settings_def_menu_main_lists_4.h:31:      "overlay_mouse_settings", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
+./settings/settings_def_menu_main_lists_4.h-32-      "Overlay Mouse",
+./settings/settings_def_menu_main_lists_4.h-33-      "Configure mouse input sent from the overlay. Note: 1-, 2-, and 3-finger taps send left, right, and middle button clicks.")
+./settings/settings_def_menu_main_lists_4.h-34-#endif
+./settings/settings_def_menu_main_lists_4.h-35-/* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+./settings/settings_def_menu_main_lists_4.h-36- * tables always carry this row via the strings pass. */
+./settings/settings_def_menu_main_lists_4.h-37-#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
+--
+./menu/menu_displaylist.c-13720-               {MENU_ENUM_LABEL_INPUT_OVERLAY_POINTER_ENABLE,              PARSE_ONLY_BOOL,  false },
+./menu/menu_displaylist.c-13721-               {MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS,                 PARSE_ACTION,     false },
+./menu/menu_displaylist.c:13722:               {MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS,                    PARSE_ACTION,     false },
+./menu/menu_displaylist.c-13723-               {MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS,                      PARSE_ACTION,     false },
+./menu/menu_displaylist.c-13724-            };
+./menu/menu_displaylist.c-13725-
+./menu/menu_displaylist.c-13726-            for (i = 0; i < ARRAY_SIZE(build_list); i++)
+./menu/menu_displaylist.c-13727-            {
+./menu/menu_displaylist.c-13728-               switch (build_list[i].enum_idx)
+--
+./menu/menu_displaylist.c-13792-                     break;
+./menu/menu_displaylist.c-13793-                  case MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS:
+./menu/menu_displaylist.c:13794:                  case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+./menu/menu_displaylist.c-13795-                     build_list[i].checked = input_overlay_enable && input_overlay_ptr_enable;
+./menu/menu_displaylist.c-13796-                     break;
+./menu/menu_displaylist.c-13797-                  case MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS:
+./menu/menu_displaylist.c-13798-                     build_list[i].checked = input_overlay_enable;
+./menu/menu_displaylist.c-13799-                     break;
+./menu/menu_displaylist.c-13800-                  default:
+--
+./menu/menu_displaylist.c-13841-         }
+./menu/menu_displaylist.c-13842-         break;
+./menu/menu_displaylist.c:13843:      case DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/menu_displaylist.c-13844-         {
+./menu/menu_displaylist.c-13845-            static const menu_displaylist_settings_row_t dl_rows_15[] = {
+./menu/menu_displaylist.c-13846-               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_SPEED, PARSE_ONLY_FLOAT, false },
+./menu/menu_displaylist.c-13847-               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_HOLD_TO_DRAG, PARSE_ONLY_BOOL, false },
+./menu/menu_displaylist.c-13848-               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_HOLD_MSEC, PARSE_ONLY_UINT, false },
+./menu/menu_displaylist.c-13849-               { MENU_ENUM_LABEL_INPUT_OVERLAY_MOUSE_DTAP_TO_DRAG, PARSE_ONLY_BOOL, false },
+--
+./menu/menu_displaylist.c-18021-         case DISPLAYLIST_OSK_OVERLAY_SETTINGS_LIST:
+./menu/menu_displaylist.c-18022-         case DISPLAYLIST_OVERLAY_LIGHTGUN_SETTINGS_LIST:
+./menu/menu_displaylist.c:18023:         case DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/menu_displaylist.c-18024-#endif
+./menu/menu_displaylist.c-18025-         case DISPLAYLIST_ACCOUNTS_CHEEVOS_LIST:
+./menu/menu_displaylist.c-18026-         case DISPLAYLIST_ACCOUNTS_LIST:
+./menu/menu_displaylist.c-18027-         case DISPLAYLIST_MENU_FILE_BROWSER_SETTINGS_LIST:
+./menu/menu_displaylist.c-18028-         case DISPLAYLIST_MEDIA_PLAYER_SETTINGS_LIST:
+./menu/menu_displaylist.c-18029-         case DISPLAYLIST_MENU_VIEWS_SETTINGS_LIST:
+--
+./menu/drivers/materialui.c-13028-                  || string_is_equal(label, MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS_STR)
+./menu/drivers/materialui.c-13029-                  || string_is_equal(label, MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS_STR)
+./menu/drivers/materialui.c:13030:                  || string_is_equal(label, MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS_STR)
+./menu/drivers/materialui.c-13031-                  || string_is_equal(label, MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_SETTINGS_STR)
+./menu/drivers/materialui.c-13032-                  || string_is_equal(label, MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_STR)
+./menu/drivers/materialui.c-13033-                  || string_is_equal(label, MENU_ENUM_LABEL_ACCOUNTS_LIST_STR)
+./menu/drivers/materialui.c-13034-                  || string_is_equal(label, MENU_ENUM_LABEL_REWIND_SETTINGS_STR)
+./menu/drivers/materialui.c-13035-                  || string_is_equal(label, MENU_ENUM_LABEL_FRAME_TIME_COUNTER_SETTINGS_STR)
+./menu/drivers/materialui.c-13036-                  || string_is_equal(label, MENU_ENUM_LABEL_ACCOUNTS_RETRO_ACHIEVEMENTS_STR)
+--
+./menu/drivers/xmb.c-4707-         return GFX_SURFACE_HANDLE(xmb->textures.list[XMB_TEXTURE_OVERLAY]);
+./menu/drivers/xmb.c-4708-      case MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS:
+./menu/drivers/xmb.c:4709:      case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+./menu/drivers/xmb.c-4710-      case MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS:
+./menu/drivers/xmb.c-4711-         return GFX_SURFACE_HANDLE(xmb->textures.list[XMB_TEXTURE_SETTING]);
+./menu/drivers/xmb.c-4712-      case MENU_ENUM_LABEL_UPDATE_CG_SHADERS:
+./menu/drivers/xmb.c-4713-      case MENU_ENUM_LABEL_UPDATE_GLSL_SHADERS:
+./menu/drivers/xmb.c-4714-      case MENU_ENUM_LABEL_UPDATE_SLANG_SHADERS:
+./menu/drivers/xmb.c-4715-      case MENU_ENUM_LABEL_AUTO_SHADERS_ENABLE:
+--
+./menu/drivers/ozone.c-2224-            return icons_tex[OZONE_ENTRIES_ICONS_TEXTURE_OVERLAY];
+./menu/drivers/ozone.c-2225-      case MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS:
+./menu/drivers/ozone.c:2226:      case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+./menu/drivers/ozone.c-2227-      case MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS:
+./menu/drivers/ozone.c-2228-         return icons_tex[OZONE_ENTRIES_ICONS_TEXTURE_SETTING];
+./menu/drivers/ozone.c-2229-      case MENU_ENUM_LABEL_UPDATE_CG_SHADERS:
+./menu/drivers/ozone.c-2230-      case MENU_ENUM_LABEL_UPDATE_GLSL_SHADERS:
+./menu/drivers/ozone.c-2231-      case MENU_ENUM_LABEL_UPDATE_SLANG_SHADERS:
+./menu/drivers/ozone.c-2232-      case MENU_ENUM_LABEL_AUTO_SHADERS_ENABLE:
+--
+./menu/cbs/menu_cbs_deferred_push.c-197-GENERIC_DEFERRED_PUSH(deferred_push_osk_overlay_settings_list,      DISPLAYLIST_OSK_OVERLAY_SETTINGS_LIST)
+./menu/cbs/menu_cbs_deferred_push.c-198-GENERIC_DEFERRED_PUSH(deferred_push_overlay_lightgun_settings_list, DISPLAYLIST_OVERLAY_LIGHTGUN_SETTINGS_LIST)
+./menu/cbs/menu_cbs_deferred_push.c:199:GENERIC_DEFERRED_PUSH(deferred_push_overlay_mouse_settings_list,    DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST)
+./menu/cbs/menu_cbs_deferred_push.c-200-#endif
+./menu/cbs/menu_cbs_deferred_push.c-201-GENERIC_DEFERRED_PUSH(deferred_push_menu_file_browser_settings_list,DISPLAYLIST_MENU_FILE_BROWSER_SETTINGS_LIST)
+./menu/cbs/menu_cbs_deferred_push.c-202-GENERIC_DEFERRED_PUSH(deferred_push_media_player_settings_list,DISPLAYLIST_MEDIA_PLAYER_SETTINGS_LIST)
+./menu/cbs/menu_cbs_deferred_push.c-203-GENERIC_DEFERRED_PUSH(deferred_push_menu_views_settings_list,       DISPLAYLIST_MENU_VIEWS_SETTINGS_LIST)
+./menu/cbs/menu_cbs_deferred_push.c-204-GENERIC_DEFERRED_PUSH(deferred_push_quick_menu_views_settings_list, DISPLAYLIST_QUICK_MENU_VIEWS_SETTINGS_LIST)
+./menu/cbs/menu_cbs_deferred_push.c-205-GENERIC_DEFERRED_PUSH(deferred_push_settings_views_settings_list, DISPLAYLIST_SETTINGS_VIEWS_SETTINGS_LIST)
+--
+./menu/cbs/menu_cbs_deferred_push.c-715-      {MENU_ENUM_LABEL_DEFERRED_OSK_OVERLAY_SETTINGS_LIST, deferred_push_osk_overlay_settings_list},
+./menu/cbs/menu_cbs_deferred_push.c-716-      {MENU_ENUM_LABEL_DEFERRED_OVERLAY_LIGHTGUN_SETTINGS_LIST, deferred_push_overlay_lightgun_settings_list},
+./menu/cbs/menu_cbs_deferred_push.c:717:      {MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST, deferred_push_overlay_mouse_settings_list},
+./menu/cbs/menu_cbs_deferred_push.c-718-#endif
+./menu/cbs/menu_cbs_deferred_push.c-719-      {MENU_ENUM_LABEL_DEFERRED_MENU_FILE_BROWSER_SETTINGS_LIST, deferred_push_menu_file_browser_settings_list},
+./menu/cbs/menu_cbs_deferred_push.c-720-      {MENU_ENUM_LABEL_DEFERRED_MEDIA_PLAYER_SETTINGS_LIST, deferred_push_media_player_settings_list},
+./menu/cbs/menu_cbs_deferred_push.c-721-      {MENU_ENUM_LABEL_DEFERRED_MENU_VIEWS_SETTINGS_LIST, deferred_push_menu_views_settings_list},
+./menu/cbs/menu_cbs_deferred_push.c-722-      {MENU_ENUM_LABEL_DEFERRED_SETTINGS_VIEWS_SETTINGS_LIST, deferred_push_settings_views_settings_list},
+./menu/cbs/menu_cbs_deferred_push.c-723-      {MENU_ENUM_LABEL_DEFERRED_QUICK_MENU_VIEWS_SETTINGS_LIST, deferred_push_quick_menu_views_settings_list},
+--
+./menu/cbs/menu_cbs_deferred_push.c-1103-            BIND_ACTION_DEFERRED_PUSH(cbs, deferred_push_overlay_lightgun_settings_list);
+./menu/cbs/menu_cbs_deferred_push.c-1104-            break;
+./menu/cbs/menu_cbs_deferred_push.c:1105:         case MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/cbs/menu_cbs_deferred_push.c:1106:            BIND_ACTION_DEFERRED_PUSH(cbs, deferred_push_overlay_mouse_settings_list);
+./menu/cbs/menu_cbs_deferred_push.c-1107-            break;
+./menu/cbs/menu_cbs_deferred_push.c-1108-#endif
+./menu/cbs/menu_cbs_deferred_push.c-1109-#ifdef HAVE_MICROPHONE
+./menu/cbs/menu_cbs_deferred_push.c-1110-         case MENU_ENUM_LABEL_DEFERRED_MICROPHONE_SETTINGS_LIST:
+./menu/cbs/menu_cbs_deferred_push.c-1111-            BIND_ACTION_DEFERRED_PUSH(cbs, deferred_push_microphone_settings_list);
+./menu/cbs/menu_cbs_deferred_push.c-1112-            break;
+--
+./menu/cbs/menu_cbs_title.c-198-   { MENU_ENUM_LABEL_DEFERRED_OSK_OVERLAY_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_OSK_OVERLAY_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c-199-   { MENU_ENUM_LABEL_DEFERRED_OVERLAY_LIGHTGUN_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_OVERLAY_LIGHTGUN_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c:200:   { MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_OVERLAY_MOUSE_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c-201-   { MENU_ENUM_LABEL_DEFERRED_MENU_VIEWS_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_MENU_VIEWS_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c-202-   { MENU_ENUM_LABEL_DEFERRED_SETTINGS_VIEWS_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_SETTINGS_VIEWS_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c-203-   { MENU_ENUM_LABEL_DEFERRED_QUICK_MENU_VIEWS_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_QUICK_MENU_VIEWS_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c-204-   { MENU_ENUM_LABEL_DEFERRED_MENU_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_MENU_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c-205-   { MENU_ENUM_LABEL_DEFERRED_USER_INTERFACE_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_USER_INTERFACE_SETTINGS, TITLE_VARIANT_PLAIN },
+./menu/cbs/menu_cbs_title.c-206-   { MENU_ENUM_LABEL_DEFERRED_AI_SERVICE_SETTINGS_LIST, MENU_ENUM_LABEL_VALUE_AI_SERVICE_SETTINGS, TITLE_VARIANT_PLAIN },
+--
+./menu/cbs/menu_cbs_ok.c-445-      case ACTION_OK_DL_OVERLAY_LIGHTGUN_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-446-         return MENU_ENUM_LABEL_DEFERRED_OVERLAY_LIGHTGUN_SETTINGS_LIST;
+./menu/cbs/menu_cbs_ok.c:447:      case ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c:448:         return MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST;
+./menu/cbs/menu_cbs_ok.c-449-      case ACTION_OK_DL_MENU_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-450-         return MENU_ENUM_LABEL_DEFERRED_MENU_SETTINGS_LIST;
+./menu/cbs/menu_cbs_ok.c-451-#ifdef _3DS
+./menu/cbs/menu_cbs_ok.c-452-      case ACTION_OK_DL_MENU_BOTTOM_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-453-         return MENU_ENUM_LABEL_DEFERRED_MENU_BOTTOM_SETTINGS_LIST;
+./menu/cbs/menu_cbs_ok.c-454-#endif
+--
+./menu/cbs/menu_cbs_ok.c-1910-      case ACTION_OK_DL_OSK_OVERLAY_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-1911-      case ACTION_OK_DL_OVERLAY_LIGHTGUN_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c:1912:      case ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-1913-      case ACTION_OK_DL_MENU_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-1914-#ifdef _3DS
+./menu/cbs/menu_cbs_ok.c-1915-      case ACTION_OK_DL_MENU_BOTTOM_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-1916-#endif
+./menu/cbs/menu_cbs_ok.c-1917-      case ACTION_OK_DL_MENU_VIEWS_SETTINGS_LIST:
+./menu/cbs/menu_cbs_ok.c-1918-      case ACTION_OK_DL_SETTINGS_VIEWS_SETTINGS_LIST:
+--
+./menu/cbs/menu_cbs_ok.c-2129-   { MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS, ACTION_OK_DL_ONSCREEN_OVERLAY_SETTINGS_LIST },
+./menu/cbs/menu_cbs_ok.c-2130-   { MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS, ACTION_OK_DL_OVERLAY_LIGHTGUN_SETTINGS_LIST },
+./menu/cbs/menu_cbs_ok.c:2131:   { MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS, ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST },
+./menu/cbs/menu_cbs_ok.c-2132-   { MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS, ACTION_OK_DL_OSK_OVERLAY_SETTINGS_LIST },
+./menu/cbs/menu_cbs_ok.c-2133-   { MENU_ENUM_LABEL_MENU_SETTINGS, ACTION_OK_DL_MENU_SETTINGS_LIST },
+./menu/cbs/menu_cbs_ok.c-2134-   { MENU_ENUM_LABEL_MENU_VIEWS_SETTINGS, ACTION_OK_DL_MENU_VIEWS_SETTINGS_LIST },
+./menu/cbs/menu_cbs_ok.c-2135-   { MENU_ENUM_LABEL_QUICK_MENU_OVERRIDE_OPTIONS, ACTION_OK_DL_QUICK_MENU_OVERRIDE_OPTIONS_LIST },
+./menu/cbs/menu_cbs_ok.c-2136-   { MENU_ENUM_LABEL_SETTINGS_VIEWS_SETTINGS, ACTION_OK_DL_SETTINGS_VIEWS_SETTINGS_LIST },
+./menu/cbs/menu_cbs_ok.c-2137-   { MENU_ENUM_LABEL_QUICK_MENU_VIEWS_SETTINGS, ACTION_OK_DL_QUICK_MENU_VIEWS_SETTINGS_LIST },
+--
+./menu/cbs/menu_cbs_sublabel.c-3117-      { MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS, MENU_ENUM_SUBLABEL_ONSCREEN_OVERLAY_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c-3118-      { MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS, MENU_ENUM_SUBLABEL_OVERLAY_LIGHTGUN_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c:3119:      { MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS, MENU_ENUM_SUBLABEL_OVERLAY_MOUSE_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c-3120-      { MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS, MENU_ENUM_SUBLABEL_OSK_OVERLAY_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c-3121-      { MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_SETTINGS, MENU_ENUM_SUBLABEL_ONSCREEN_NOTIFICATIONS_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c-3122-      { MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS, MENU_ENUM_SUBLABEL_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c-3123-      { MENU_ENUM_LABEL_MENU_SETTINGS, MENU_ENUM_SUBLABEL_MENU_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c-3124-      { MENU_ENUM_LABEL_MENU_VIEWS_SETTINGS, MENU_ENUM_SUBLABEL_MENU_VIEWS_SETTINGS },
+./menu/cbs/menu_cbs_sublabel.c-3125-      { MENU_ENUM_LABEL_QUICK_MENU_VIEWS_SETTINGS, MENU_ENUM_SUBLABEL_QUICK_MENU_VIEWS_SETTINGS },
+--
+./menu/menu_cbs.h-205-   ACTION_OK_DL_OSK_OVERLAY_SETTINGS_LIST,
+./menu/menu_cbs.h-206-   ACTION_OK_DL_OVERLAY_LIGHTGUN_SETTINGS_LIST,
+./menu/menu_cbs.h:207:   ACTION_OK_DL_OVERLAY_MOUSE_SETTINGS_LIST,
+./menu/menu_cbs.h-208-   ACTION_OK_DL_ONSCREEN_NOTIFICATIONS_SETTINGS_LIST,
+./menu/menu_cbs.h-209-   ACTION_OK_DL_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_LIST,
+./menu/menu_cbs.h-210-   ACTION_OK_DL_MENU_VIEWS_SETTINGS_LIST,
+./menu/menu_cbs.h-211-   ACTION_OK_DL_SETTINGS_VIEWS_SETTINGS_LIST,
+./menu/menu_cbs.h-212-   ACTION_OK_DL_QUICK_MENU_VIEWS_SETTINGS_LIST,
+./menu/menu_cbs.h-213-   ACTION_OK_DL_QUICK_MENU_OVERRIDE_OPTIONS_LIST,
+--
+./menu/menu_setting.c-20608-   { SETTINGS_LIST_OVERLAY_MOUSE, NULL,
+./menu/menu_setting.c-20609-     overlay_mouse_desc_0, (unsigned)ARRAY_SIZE(overlay_mouse_desc_0),
+./menu/menu_setting.c:20610:     MENU_ENUM_LABEL_VALUE_OVERLAY_MOUSE_SETTINGS,
+./menu/menu_setting.c-20611-     MSG_UNKNOWN,
+./menu/menu_setting.c-20612-     MENU_ENUM_LABEL_OVERLAY_SETTINGS },
+./menu/menu_setting.c-20613-#endif
+./menu/menu_setting.c-20614-   { SETTINGS_LIST_MENU, settings_build_menu, NULL, 0, MSG_UNKNOWN, MSG_UNKNOWN, MSG_UNKNOWN },
+./menu/menu_setting.c-20615-   { SETTINGS_LIST_MENU_FILE_BROWSER, NULL,
+./menu/menu_setting.c-20616-     menu_file_brow_desc_0, (unsigned)ARRAY_SIZE(menu_file_brow_desc_0),
+--
+./menu/menu_displaylist.h-229-   DISPLAYLIST_OSK_OVERLAY_SETTINGS_LIST,
+./menu/menu_displaylist.h-230-   DISPLAYLIST_OVERLAY_LIGHTGUN_SETTINGS_LIST,
+./menu/menu_displaylist.h:231:   DISPLAYLIST_OVERLAY_MOUSE_SETTINGS_LIST,
+./menu/menu_displaylist.h-232-#endif
+./menu/menu_displaylist.h-233-   DISPLAYLIST_AI_SERVICE_SETTINGS_LIST,
+./menu/menu_displaylist.h-234-#ifdef HAVE_SMBCLIENT
+./menu/menu_displaylist.h-235-   DISPLAYLIST_SMB_CLIENT_SETTINGS_LIST,
+./menu/menu_displaylist.h-236-#endif
+./menu/menu_displaylist.h-237-#ifdef HAVE_NFSCLIENT
+--
+./msg_hash.h-19753-   MENU_ENUM_LABEL_DEFERRED_OSK_OVERLAY_SETTINGS_LIST,
+./msg_hash.h-19754-   MENU_ENUM_LABEL_DEFERRED_OVERLAY_LIGHTGUN_SETTINGS_LIST,
+./msg_hash.h:19755:   MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST,
+./msg_hash.h-19756-   MENU_ENUM_LABEL_DEFERRED_ONSCREEN_VIDEO_LAYOUT_SETTINGS_LIST,
+./msg_hash.h-19757-   MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_SETTINGS_LIST,
+./msg_hash.h-19758-   MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_LIST,
+./msg_hash.h-19759-   MENU_ENUM_LABEL_DEFERRED_MENU_VIEWS_SETTINGS_LIST,
+./msg_hash.h-19760-   MENU_ENUM_LABEL_DEFERRED_QUICK_MENU_VIEWS_SETTINGS_LIST,
+./msg_hash.h-19761-   MENU_ENUM_LABEL_DEFERRED_SETTINGS_VIEWS_SETTINGS_LIST,
+--
+./msg_hash_lbl_str.h-272-#define MENU_ENUM_LABEL_DEFERRED_OSK_OVERLAY_SETTINGS_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_OSK_OVERLAY_SETTINGS_LIST)
+./msg_hash_lbl_str.h-273-#define MENU_ENUM_LABEL_DEFERRED_OVERLAY_LIGHTGUN_SETTINGS_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_OVERLAY_LIGHTGUN_SETTINGS_LIST)
+./msg_hash_lbl_str.h:274:#define MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST)
+./msg_hash_lbl_str.h-275-#define MENU_ENUM_LABEL_DEFERRED_ONSCREEN_VIDEO_LAYOUT_SETTINGS_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_ONSCREEN_VIDEO_LAYOUT_SETTINGS_LIST)
+./msg_hash_lbl_str.h-276-#define MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_SETTINGS_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_SETTINGS_LIST)
+./msg_hash_lbl_str.h-277-#define MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_LIST)
+./msg_hash_lbl_str.h-278-#define MENU_ENUM_LABEL_DEFERRED_PLAYLIST_SETTINGS_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_PLAYLIST_SETTINGS_LIST)
+./msg_hash_lbl_str.h-279-#define MENU_ENUM_LABEL_DEFERRED_PLAYLIST_MANAGER_LIST_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_PLAYLIST_MANAGER_LIST)
+./msg_hash_lbl_str.h-280-#define MENU_ENUM_LABEL_DEFERRED_PLAYLIST_MANAGER_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_DEFERRED_PLAYLIST_MANAGER_SETTINGS)
+--
+./msg_hash_lbl_str.h-1109-#define MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS)
+./msg_hash_lbl_str.h-1110-#define MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS)
+./msg_hash_lbl_str.h:1111:#define MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS)
+./msg_hash_lbl_str.h-1112-#define MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS)
+./msg_hash_lbl_str.h-1113-#define MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_SETTINGS)
+./msg_hash_lbl_str.h-1114-#define MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS)
+./msg_hash_lbl_str.h-1115-#define MENU_ENUM_LABEL_MENU_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_MENU_SETTINGS)
+./msg_hash_lbl_str.h-1116-#define MENU_ENUM_LABEL_MENU_VIEWS_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_MENU_VIEWS_SETTINGS)
+./msg_hash_lbl_str.h-1117-#define MENU_ENUM_LABEL_QUICK_MENU_VIEWS_SETTINGS_STR (msg_hash_us_lbl_blob.m_MENU_ENUM_LABEL_QUICK_MENU_VIEWS_SETTINGS)
+--
+./msg_hash_lbl_str.h-2058-#define MENU_ENUM_LABEL_DEFERRED_OSK_OVERLAY_SETTINGS_LIST_STR "deferred_osk_overlay_settings_list"
+./msg_hash_lbl_str.h-2059-#define MENU_ENUM_LABEL_DEFERRED_OVERLAY_LIGHTGUN_SETTINGS_LIST_STR "deferred_overlay_lightgun_settings_list"
+./msg_hash_lbl_str.h:2060:#define MENU_ENUM_LABEL_DEFERRED_OVERLAY_MOUSE_SETTINGS_LIST_STR "deferred_overlay_mouse_settings_list"
+./msg_hash_lbl_str.h-2061-#define MENU_ENUM_LABEL_DEFERRED_ONSCREEN_VIDEO_LAYOUT_SETTINGS_LIST_STR "deferred_onscreen_video_layout_settings_list"
+./msg_hash_lbl_str.h-2062-#define MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_SETTINGS_LIST_STR "deferred_onscreen_notifications_settings_list"
+./msg_hash_lbl_str.h-2063-#define MENU_ENUM_LABEL_DEFERRED_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_LIST_STR "deferred_onscreen_notifications_views_settings_list"
+./msg_hash_lbl_str.h-2064-#define MENU_ENUM_LABEL_DEFERRED_PLAYLIST_SETTINGS_LIST_STR "deferred_playlist_settings"
+./msg_hash_lbl_str.h-2065-#define MENU_ENUM_LABEL_DEFERRED_PLAYLIST_MANAGER_LIST_STR "deferred_playlist_manager_list"
+./msg_hash_lbl_str.h-2066-#define MENU_ENUM_LABEL_DEFERRED_PLAYLIST_MANAGER_SETTINGS_STR "deferred_playlist_manager_settings"
+--
+./msg_hash_lbl_str.h-2907-#define MENU_ENUM_LABEL_ONSCREEN_OVERLAY_SETTINGS_STR "onscreen_overlay_settings"
+./msg_hash_lbl_str.h-2908-#define MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS_STR "overlay_lightgun_settings"
+./msg_hash_lbl_str.h:2909:#define MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS_STR "overlay_mouse_settings"
+./msg_hash_lbl_str.h-2910-#define MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS_STR "osk_overlay_settings"
+./msg_hash_lbl_str.h-2911-#define MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_SETTINGS_STR "onscreen_notifications_settings"
+./msg_hash_lbl_str.h-2912-#define MENU_ENUM_LABEL_ONSCREEN_NOTIFICATIONS_VIEWS_SETTINGS_STR "onscreen_notifications_views_settings"
+./msg_hash_lbl_str.h-2913-#define MENU_ENUM_LABEL_MENU_SETTINGS_STR "menu_settings"
+./msg_hash_lbl_str.h-2914-#define MENU_ENUM_LABEL_MENU_VIEWS_SETTINGS_STR "menu_views_settings"
+./msg_hash_lbl_str.h-2915-#define MENU_ENUM_LABEL_QUICK_MENU_VIEWS_SETTINGS_STR "quick_menu_views_settings"
