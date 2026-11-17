@@ -70,7 +70,9 @@ static void mod_editor_seed_screen(void)
           || !VIDEO_SCALE_W(st->video_vp_custom.dims)
           || !VIDEO_SCALE_H(st->video_vp_custom.dims))
       {
-         st->video_vp_custom.pos  = vp.pos;
+         /* x,y personalizados sao DESLOCAMENTO a partir da ancora (centro por padrao);
+          * 0,0 mantem a imagem exatamente onde esta. */
+         st->video_vp_custom.pos  = VIDEO_POS_PACK(0, 0);
          st->video_vp_custom.dims = vp.dims;
       }
    }
