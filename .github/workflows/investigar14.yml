@@ -1,0 +1,31 @@
+name: Ler troca de pagina do overlay (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
+          git -C ra checkout -q FETCH_HEAD
+          S=01-ANALISE/troca-pagina
+          mkdir -p $S
+          F=ra/input/input_driver.c
+          grep -n 'ol->index\|->active *=\|ol->active\b.*=' $F | head -60 > $S/01-linhas.txt
+          grep -n '^struct overlay$' -A 70 $F > $S/02-struct-overlay.txt
+          grep -n 'void input_overlay_load_active\|void input_overlay_next\|input_overlay_set_next\|OVERLAY_NEXT\|overlay_next' $F > $S/03-next.txt
+          L=$(grep -n 'input_overlay_load_active' $F | head -1 | cut -d: -f1)
+          sed -n "$((L-5)),$((L+60))p" $F > $S/04-load-active.txt
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 14: troca de pagina" && git pull --rebase -q && git push
