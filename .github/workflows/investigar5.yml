@@ -1,0 +1,37 @@
+name: Ler como adicionar menu e desenhar (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/menu-e-desenho
+          mkdir -p $S
+          cd ra
+          sed -n '13670,13830p' menu/menu_displaylist.c > ../$S/10-displaylist-overlay-lista.txt
+          grep -n "MENU_ENUM_LABEL_OVERLAY_\|DISPLAYLIST_ONSCREEN_OVERLAY\|ONSCREEN_OVERLAY_SETTINGS" menu/menu_displaylist.c menu/menu_cbs_ok.c menu/menu_cbs_*.c menu/menu_driver.c msg_hash.h | head -80 > ../$S/11-onscreen-overlay-refs.txt
+          grep -n "MENU_ENUM_LABEL_INPUT_OVERLAY_HIDE_IN_MENU\|INPUT_OVERLAY_HIDE_IN_MENU" -r --include=*.c --include=*.h --include=*.def . | head -40 > ../$S/12-exemplo-um-item.txt
+          grep -n "overlay_enable_bool\|MENU_ENUM_LABEL_OVERLAY_ENABLE\|ACTION_OK_DL_ONSCREEN_OVERLAY" -r --include=*.c --include=*.h . | head -30 > ../$S/13-acao-ok-overlay.txt
+          grep -n "overlay_ptr\|overlay_enable\|input_overlay_unload\|CMD_EVENT_OVERLAY" command.c command.h | head -40 > ../$S/14-comandos-overlay.txt
+          grep -n "MENU_ENUM_LABEL_VALUE_.*OVERLAY" intl/msg_hash_us.h | head -80 > ../$S/15-textos-overlay-us.txt
+          grep -n "MENU_ENUM_LABEL_VALUE_.*OVERLAY" intl/msg_hash_pt_br.h | head -40 > ../$S/16-textos-overlay-ptbr.txt
+          grep -n "gfx_display_draw_quad\|gfx_display_draw_text\|void menu_input_pointer\|gfx_widgets_draw" gfx/gfx_display.h gfx/gfx_widgets.h menu/menu_input.h | head -30 > ../$S/20-desenho-funcoes.txt
+          grep -n "input_overlay_set_alpha_mod\|input_overlay_load_active\|input_overlay_set_scale_factor\|input_overlay_update_desc_geom" -r --include=*.c --include=*.h . | head -30 > ../$S/21-geom-chamadas.txt
+          sed -n '6751,6830p' input/input_driver.c > ../$S/22-set-scale-factor.txt
+          sed -n '6309,6340p' input/input_driver.c > ../$S/23-update-desc-geom.txt
+          sed -n '7440,7660p' input/input_driver.c > ../$S/24-overlay-poll-all.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 5: menu e desenho" && git pull --rebase -q && git push
