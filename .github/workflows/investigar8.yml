@@ -1,0 +1,30 @@
+name: Ler como a pasta flat monta direcional e analogico (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/common-overlays.git co
+          S=01-ANALISE/flat-grupos
+          mkdir -p $S
+          for c in psx gba neogeo; do
+            f=co/gamepads/flat/$c.cfg
+            sed -n '1,400p' "$f" | grep -E "^overlay0_desc[0-9]+(_overlay)? =|^overlay0_desc[0-9]+_(normalized|movable|alpha_mod|range_mod|reach)" > $S/$c-overlay0.txt
+            grep -E "^overlay[0-9]+_desc[0-9]+ = \"(up|down|left|right|up\|left|up\|right|down\|left|down\|right|analog_left|analog_right|dpad_area|abxy_area|nul)," "$f" | cut -d' ' -f1-3 | sed -n '1,60p' > $S/$c-dpad-analog-linhas.txt
+            grep -c "dpad_area" "$f" > $S/$c-conta-dpad_area.txt
+            grep -c "analog_left\|analog_right" "$f" > $S/$c-conta-analog.txt
+          done
+          rm -rf co
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 8: grupos dpad e analogico na pasta flat" && git pull --rebase -q && git push
