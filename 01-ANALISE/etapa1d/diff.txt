@@ -1,0 +1,7 @@
+ input/drivers/android_input.c             | 33 +++++++++++++++++++++++++++++++
+ input/input_driver.c                      | 14 +++++++++++++
+ menu/cbs/menu_cbs_ok.c                    | 13 ++++++++++++
+ menu/menu_displaylist.c                   |  2 ++
+ pkg/android/phoenix/build.gradle          |  4 ++--
+ settings/settings_def_menu_main_lists_4.h |  7 +++++++
+ 6 files changed, 71 insertions(+), 2 deletions(-)
