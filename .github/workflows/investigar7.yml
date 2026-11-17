@@ -1,4 +1,4 @@
-name: Ler ciclo de vida do app Android 2 (somente leitura)
+name: Ler checagem de jogo rodando (somente leitura)
 
 on:
   workflow_dispatch:
@@ -15,11 +15,15 @@ jobs:
         run: |
           set +e
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
-          S=01-ANALISE/ciclo-de-vida2
+          S=01-ANALISE/jogo-rodando
           mkdir -p $S
-          sed -n '985,1140p' ra/input/drivers/android_input.c > $S/10-cmd-985.txt
-          sed -n '735,800p' ra/input/drivers/android_input.c > $S/11-pause-ack.txt
+          grep -n "RUNLOOP_FLAG_CORE_RUNNING\|RUNLOOP_FLAG_PAUSED\|RUNLOOP_FLAG_IDLE" ra/runloop.h ra/input/input_driver.c ra/input/drivers/android_input.c | head -20 > $S/10-flags.txt
+          grep -n "#include" ra/input/drivers/android_input.c | head -80 > $S/11-includes-android-input.txt
+          grep -n "MENU_ST_FLAG_ALIVE" ra/input/input_driver.c ra/input/drivers/android_input.c | head -10 > $S/12-menu-alive.txt
+          grep -n "CMD_EVENT_MENU_TOGGLE" -B3 -A22 ra/command.c | sed -n '1,90p' > $S/13-menu-toggle-cmd.txt
+          grep -n "runloop_state_get_ptr\|menu_state_get_ptr\|command_event(" ra/input/drivers/android_input.c | head -20 > $S/14-uso-android-input.txt
+          grep -n "core_is_running\|RARCH_CTL_IS_CORE_RUNNING\|is_content_running\|content_is_running\|RUNLOOP_FLAG_CORE_RUNNING" -r ra --include=*.h | head -12 > $S/15-core-running.txt
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
-          git commit -m "Leitura 7d: ciclo de vida" && git pull --rebase -q && git push
+          git commit -m "Leitura 7e" && git pull --rebase -q && git push
