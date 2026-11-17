@@ -32,7 +32,7 @@ UI = r'''/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta 
 static int mod_ui_held   = -1;
 static int mod_ui_hold_n = 0;
 
-/* 7 retangulos (x, y, largura, altura) em pixels da janela */
+/* 5 retangulos (x, y, largura, altura) em pixels da janela */
 static int mod_ui_rects(int *r)
 {
    int bw, bh, gap, x0, y0, k;
@@ -42,28 +42,28 @@ static int mod_ui_rects(int *r)
    bw  = mod_win_h * 30 / 100;
    gap = bh / 5;
    x0  = mod_win_w / 2 - bw - gap / 2;
-   y0  = mod_win_h / 2 - (4 * bh + 3 * gap) / 2;
-   for (k = 0; k < 6; k++)
+   y0  = mod_win_h / 2 - (3 * bh + 2 * gap) / 2;
+   for (k = 0; k < 4; k++)
    {
       r[k * 4 + 0] = x0 + (k % 2) * (bw + gap);
       r[k * 4 + 1] = y0 + (k / 2) * (bh + gap);
       r[k * 4 + 2] = bw;
       r[k * 4 + 3] = bh;
    }
-   r[24] = x0;
-   r[25] = y0 + 3 * (bh + gap);
-   r[26] = 2 * bw + gap;
-   r[27] = bh;
-   return 7;
+   r[16] = x0;
+   r[17] = y0 + 2 * (bh + gap);
+   r[18] = 2 * bw + gap;
+   r[19] = bh;
+   return 5;
 }
 
 /* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
 int input_overlay_editor_ui(int *r, const char **lab, int max)
 {
-   static const char *nomes[7] =
-      { "Tudo -", "Tudo +", "Altura -", "Altura +", "Largura -", "Largura +", "Fechar" };
+   static const char *nomes[5] =
+      { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar" };
    int k, n;
-   if (!mod_editor_active || mod_editor_wait_close || max < 7)
+   if (!mod_editor_active || mod_editor_wait_close || max < 5)
       return 0;
    n = mod_ui_rects(r);
    for (k = 0; k < n; k++)
@@ -73,7 +73,7 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
 
 static int mod_ui_hit(float px, float py)
 {
-   int r[28];
+   int r[20];
    int k, n = mod_ui_rects(r);
    for (k = 0; k < n; k++)
       if (   px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
@@ -85,7 +85,7 @@ static int mod_ui_hit(float px, float py)
 static void mod_ui_press(int b)
 {
    int x, y, w, h;
-   if (b == 6)
+   if (b == 4)
    {
       static const char msg[] = "Editor de overlay encerrado.";
       mod_editor_active = false;
@@ -98,12 +98,12 @@ static void mod_ui_press(int b)
    mod_vp_get(&x, &y, &w, &h);
    switch (b)
    {
-      case 0: w -= 4; x += 2; h -= 4; y += 2; break;
-      case 1: w += 4; x -= 2; h += 4; y -= 2; break;
-      case 2: h -= 4; y += 2; break;
-      case 3: h += 4; y -= 2; break;
-      case 4: w -= 4; x += 2; break;
-      case 5: w += 4; x -= 2; break;
+      /* x,y sao deslocamento da ancora (centro): ao mudar w/h a imagem ja cresce
+       * para os dois lados sozinha, entao x,y NAO mudam. */
+      case 0: h -= 4; break;
+      case 1: h += 4; break;
+      case 2: w -= 4; break;
+      case 3: w += 4; break;
       default: return;
    }
    mod_vp_set(x, y, w, h);
@@ -177,9 +177,9 @@ WID = "gfx/gfx_widgets.c"
 DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
    {
       extern int input_overlay_editor_ui(int *r, const char **lab, int max);
-      int         ur[7 * 4];
-      const char *ulab[7];
-      int         un = input_overlay_editor_ui(ur, ulab, 7);
+      int         ur[5 * 4];
+      const char *ulab[5];
+      int         un = input_overlay_editor_ui(ur, ulab, 5);
       if (un > 0)
       {
          int      ui;
