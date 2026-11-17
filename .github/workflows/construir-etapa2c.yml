@@ -19,7 +19,11 @@ jobs:
         with:
           gradle-version: "9.3.1"
       - name: Baixar código oficial
-        run: git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+        run: |
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
+          git -C ra checkout -q FETCH_HEAD
+          git -C ra log -1 --format="%H %s"
       - name: Instalar NDK e ferramentas pedidas
         run: |
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;29.0.14206865" "build-tools;36.0.0" "platforms;android-36" > /dev/null || true

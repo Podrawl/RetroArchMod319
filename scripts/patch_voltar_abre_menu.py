@@ -11,15 +11,15 @@ arq = "input/drivers/android_input.c"
 caminho = f"{raiz}/{arq}"
 s = open(caminho, encoding="utf-8").read()
 
-antigo = (
+ANCORA = (
+    "static INLINE void android_input_poll_event_type_key(int port,\n"
+    "      const android_input_fields_t *key, int *handled)\n"
+    "{\n"
     "   int action  = key->action;\n"
     "   int keycode = key->keycode;\n"
-    "\n"
-    "   /* android_key_state[] has one row per pad slot plus the\n"
 )
-novo = (
-    "   int action  = key->action;\n"
-    "   int keycode = key->keycode;\n"
+antigo = ANCORA
+novo = ANCORA + (
     "\n"
     "   /* MOD: Voltar do sistema (botao ou gesto) abre o menu rapido do jogo.\n"
     "    * Cada tecla chega duas vezes (e uma vez por funcao que le o evento);\n"
@@ -45,8 +45,6 @@ novo = (
     "         }\n"
     "      }\n"
     "   }\n"
-    "\n"
-    "   /* android_key_state[] has one row per pad slot plus the\n"
 )
 n = s.count(antigo)
 if n != 1:
