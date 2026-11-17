@@ -1,0 +1,78 @@
+   }
+
+   if (p_dispwidget->current_msgs_size)
+      return true;
+
+   return false;
+}
+
+static void gfx_widgets_frame_state(void *data)
+{
+   size_t i;
+   video_frame_info_t *video_info   = (video_frame_info_t*)data;
+   gfx_display_t            *p_disp = (gfx_display_t*)video_info->disp_userdata;
+   gfx_display_ctx_driver_t *dispctx= p_disp->dispctx;
+   video_driver_state_t *video_st   = video_state_get_ptr();
+   dispgfx_widget_t *p_dispwidget   = (dispgfx_widget_t*)video_info->widgets_userdata;
+   bool fps_show                    = video_info->fps_show;
+   bool framecount_show             = video_info->framecount_show;
+   bool memory_show                 = video_info->memory_show;
+   bool core_status_msg_show        = video_info->core_status_msg_show;
+   bool time_show                   = video_info->time_show;
+   bool onscreen_panels             = fps_show || framecount_show || memory_show || core_status_msg_show || time_show;
+   void *userdata                   = video_info->userdata;
+   unsigned output_dims             = video_info->dims;
+   unsigned layout_dims             = gfx_widgets_layout_dims(output_dims,
+         video_info->widget_display_aspect);
+   unsigned video_width             = VIDEO_SCALE_W(layout_dims);
+   uint32_t video_flags             = video_info->video_st_flags;
+   bool widgets_is_paused           = (video_flags & VIDEO_FLAG_WIDGETS_PAUSED) != 0;
+   bool widgets_is_fastmotion       = (video_flags & VIDEO_FLAG_WIDGETS_FASTMOTION) != 0;
+   bool widgets_is_slowmotion       = (video_flags & VIDEO_FLAG_WIDGETS_SLOWMOTION) != 0;
+   bool widgets_is_rewinding        = (video_flags & VIDEO_FLAG_WIDGETS_REWINDING) != 0;
+#ifdef HAVE_MENU
+   bool menu_screensaver_active     = (video_info->menu_st_flags & MENU_ST_FLAG_SCREENSAVER_ACTIVE) != 0;
+#endif
+   bool notifications_hidden        = video_info->notifications_hidden || video_info->msg_queue_delay;
+   int top_right_x_advance          = video_width;
+
+   /* Second-pass icon layout: when async widget icons finish loading,
+    * detect the transition and recompute icon-dependent layout.
+    * Wait until ALL icons are loaded before flipping the flag —
+    * the layout function checks individual textures (e.g. hourglass)
+    * so partial loads produce wrong text offsets. */
+   if (!(p_dispwidget->flags & DISPGFX_WIDGET_FLAG_MSG_QUEUE_HAS_ICONS))
+   {
+      size_t _i;
+      bool all_loaded = true;
+      for (_i = 0; _i < MENU_WIDGETS_ICON_LAST; _i++)
+      {
+         if (!GFX_SURFACE_HANDLE(p_dispwidget->gfx_widgets_icons_textures[_i]))
+         {
+            all_loaded = false;
+            break;
+         }
+      }
+      if (all_loaded)
+      {
+         p_dispwidget->flags |= DISPGFX_WIDGET_FLAG_MSG_QUEUE_HAS_ICONS;
+         gfx_widgets_update_icon_layout(p_dispwidget);
+      }
+   }
+
+#ifdef HAVE_MENU
+   /* If menu screensaver is active, draw nothing */
+   if (menu_screensaver_active)
+      return;
+#endif
+   /* If notifications are hidden, draw nothing */
+   if (notifications_hidden)
+      return;
+
+   if (video_st->current_video && video_st->current_video->set_viewport)
+      video_st->current_video->set_viewport(
+            video_st->data, output_dims, true, false);
+
+   /* Laid out at layout_dims, stretched across the output */
+   if (layout_dims != output_dims)
+   {

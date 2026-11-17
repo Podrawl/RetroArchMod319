@@ -1,0 +1,8 @@
+151:   font_data_t *font;
+163:} gfx_widget_font_data_t;
+165:void gfx_widgets_font_sync(gfx_widget_font_data_t *font_data);
+170:   gfx_widget_font_data_t regular;
+171:   gfx_widget_font_data_t bold;
+172:   gfx_widget_font_data_t msg_queue;
+412:      gfx_widget_font_data_t* font_data,
+422:      gfx_widget_font_data_t* font_data);

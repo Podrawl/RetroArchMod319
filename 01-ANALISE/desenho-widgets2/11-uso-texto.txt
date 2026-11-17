@@ -1,0 +1,31 @@
+      gfx_widget_font_data_t* font_data,
+      const char *text,
+      float x, float y,
+      unsigned dims,
+      uint32_t color,
+      enum text_alignment text_align,
+      bool draw_outside)
+{
+   if (!font_data || !text || !*text)
+      return;
+
+   gfx_display_draw_text(
+         font_data->font,
+         text,
+         x, y,
+         dims,
+         color,
+         text_align,
+         1.0f,
+         false,
+         0.0f,
+         draw_outside);
+
+   font_data->usage_count++;
+}
+
+void gfx_widgets_flush_text(
+      unsigned video_dims,
+      gfx_widget_font_data_t* font_data)
+{
+   /* Flushing is slow - only do it if font

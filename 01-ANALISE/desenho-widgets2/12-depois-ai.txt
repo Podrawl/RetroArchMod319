@@ -1,0 +1,76 @@
+            );
+      /* left line */
+      gfx_display_draw_quad(
+            p_disp,
+            userdata,
+            video_info->dims,
+            overlay_x,
+            overlay_y,
+            VIDEO_SCALE_PACK(p_dispwidget->divider_width_1px, overlay_height),
+            video_info->dims,
+            outline_color,
+            NULL
+            );
+      /* right line */
+      gfx_display_draw_quad(
+            p_disp,
+            userdata,
+            video_info->dims,
+            overlay_x + overlay_width - p_dispwidget->divider_width_1px,
+            overlay_y,
+            VIDEO_SCALE_PACK(p_dispwidget->divider_width_1px, overlay_height),
+            video_info->dims,
+            outline_color,
+            NULL
+            );
+      if (gfx_widgets_ai_service_overlay_get_state() == 2)
+          gfx_widgets_ai_service_overlay_set_state(3);
+   }
+#endif
+
+   /* On-Screen Panels (FPS, framecount, memory, core status message, time) */
+   if (onscreen_panels)
+   {
+      const char *txt;
+      size_t      txt_len;
+      int         txt_width;
+      int         total_width;
+      int         status_txt_x;
+
+      if (*p_dispwidget->gfx_widgets_status_text == '\0')
+      {
+         /* Rare fallback when no panel content is set this frame. */
+         txt     = msg_hash_to_str(MENU_ENUM_LABEL_VALUE_NOT_AVAILABLE);
+         txt_len = strlen(txt);
+      }
+      else
+      {
+         /* Length was cached by the producer in video_driver.c —
+          * no per-frame strlen on a string that can be up to 256
+          * bytes long. */
+         txt     = p_dispwidget->gfx_widgets_status_text;
+         txt_len = p_dispwidget->gfx_widgets_status_text_len;
+      }
+
+      txt_width    = font_driver_get_message_width(
+            p_dispwidget->gfx_widget_fonts.regular.font,
+            txt, txt_len, 1.0f);
+      total_width  = txt_width
+         + p_dispwidget->simple_widget_padding * 2;
+
+      status_txt_x = top_right_x_advance
+         - p_dispwidget->simple_widget_padding - txt_width;
+      /* Ensure that left hand side of text does
+       * not bleed off the edge of the screen */
+      if (status_txt_x < 0)
+         status_txt_x      = 0;
+
+      gfx_display_set_alpha(p_dispwidget->backdrop_orig, DEFAULT_BACKDROP);
+
+      gfx_display_draw_quad(
+            p_disp,
+            userdata,
+            video_info->dims,
+            top_right_x_advance - total_width,
+            0,
+            VIDEO_SCALE_PACK(total_width, p_dispwidget->simple_widget_height),
