@@ -1,0 +1,32 @@
+name: Ler campos exatos da proporcao personalizada (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/campos-proporcao
+          mkdir -p $S
+          cd ra
+          cat settings/settings_def_aspect_ratio.h | cut -c1-260 > ../$S/10-def-aspect.txt
+          cat settings/settings_def_viewport_size.h | cut -c1-260 > ../$S/11-def-viewport-size.txt
+          sed -n '4660,4720p' gfx/video_driver.c > ../$S/12-video-4660.txt
+          sed -n '9105,9160p' gfx/video_driver.c > ../$S/13-video-9105.txt
+          grep -n "video_driver_get_viewport_info" -r --include=*.h --include=*.c . | head -8 > ../$S/14-get-viewport-info.txt
+          grep -n "struct video_viewport" -B2 -A14 gfx/video_driver.h | sed -n '1,40p' > ../$S/15-struct-viewport.txt
+          grep -n "settings->uints.video_aspect_ratio_idx\|video_aspect_ratio_idx" configuration.h | head -5 > ../$S/16-aspect-idx-cfg.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 10: campos da proporcao personalizada" && git pull --rebase -q && git push
