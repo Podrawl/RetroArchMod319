@@ -35,10 +35,19 @@ static float mod_editor_grab_dy    = 0.0f;
 static int   mod_editor_fingers    = 0;
 static bool  mod_editor_pinch      = false;
 static float mod_editor_pinch_d0   = 1.0f;
-static float mod_editor_rx0        = 0.0f;
-static float mod_editor_ry0        = 0.0f;
 static float mod_editor_x0         = 0.0f;
 static float mod_editor_y0         = 0.0f;
+
+/* Grupo movido/redimensionado junto (direcional inteiro, analogico + circulo) */
+#define MOD_MAX_GRP 64
+static int   mod_grp[MOD_MAX_GRP];
+static int   mod_grp_n = 0;
+static float mod_grp_x0[MOD_MAX_GRP];
+static float mod_grp_y0[MOD_MAX_GRP];
+static float mod_grp_rx0[MOD_MAX_GRP];
+static float mod_grp_ry0[MOD_MAX_GRP];
+static float mod_grp_px = 0.0f;
+static float mod_grp_py = 0.0f;
 
 static void input_overlay_scale(struct overlay *ol,
       const overlay_layout_t *layout);
@@ -75,6 +84,7 @@ static void mod_editor_frame(input_overlay_t *ol, int count)
    {
       mod_editor_sel   = -1;
       mod_editor_pinch = false;
+      mod_grp_n        = 0;
    }
    else if (count >= 3)
    {
@@ -85,6 +95,150 @@ static void mod_editor_frame(input_overlay_t *ol, int count)
       runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,
             MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
    }
+}
+
+static bool mod_mask_empty(const struct overlay_desc *d)
+{
+   size_t k;
+   for (k = 0; k < ARRAY_SIZE(d->button_mask.data); k++)
+      if (d->button_mask.data[k])
+         return false;
+   return true;
+}
+
+/* Botao so de direcao (cima/baixo/esquerda/direita e diagonais) ou area de dpad */
+static bool mod_is_dir(const struct overlay_desc *d)
+{
+   unsigned k;
+   bool any = false;
+   if (d->type == OVERLAY_TYPE_DPAD_AREA)
+      return true;
+   if (d->type != OVERLAY_TYPE_BUTTONS)
+      return false;
+   for (k = 0; k < 256; k++)
+   {
+      if (!BIT256_GET(d->button_mask, k))
+         continue;
+      if (   k == RETRO_DEVICE_ID_JOYPAD_UP   || k == RETRO_DEVICE_ID_JOYPAD_DOWN
+          || k == RETRO_DEVICE_ID_JOYPAD_LEFT || k == RETRO_DEVICE_ID_JOYPAD_RIGHT)
+         any = true;
+      else
+         return false;
+   }
+   return any;
+}
+
+static bool mod_is_analog(const struct overlay_desc *d)
+{
+   return d->type == OVERLAY_TYPE_ANALOG_LEFT
+       || d->type == OVERLAY_TYPE_ANALOG_RIGHT;
+}
+
+static bool mod_is_nul(const struct overlay_desc *d)
+{
+   return d->type == OVERLAY_TYPE_BUTTONS && mod_mask_empty(d);
+}
+
+/* Dois botoes vizinhos (encostados ou quase) */
+static bool mod_adj(const struct overlay_desc *a, const struct overlay_desc *b)
+{
+   float dx = a->x - b->x, dy = a->y - b->y;
+   if (dx < 0.0f) dx = -dx;
+   if (dy < 0.0f) dy = -dy;
+   return dx <= (a->range_x + b->range_x) * 1.6f
+       && dy <= (a->range_y + b->range_y) * 1.6f;
+}
+
+static void mod_grp_add(int i)
+{
+   int k;
+   for (k = 0; k < mod_grp_n; k++)
+      if (mod_grp[k] == i)
+         return;
+   if (mod_grp_n < MOD_MAX_GRP)
+      mod_grp[mod_grp_n++] = i;
+}
+
+/* Monta o grupo do botao tocado t. */
+static void mod_build_group(struct overlay *pg, int t)
+{
+   struct overlay_desc *descs = pg->descs;
+   int n = (int)pg->size;
+   int i, seed = -1;
+
+   mod_grp_n = 0;
+
+   /* analogico: ele mais os "nul" no mesmo lugar (a imagem do circulo) */
+   {
+      int anchor = -1;
+      if (mod_is_analog(&descs[t]))
+         anchor = t;
+      else if (mod_is_nul(&descs[t]))
+         for (i = 0; i < n; i++)
+            if (mod_is_analog(&descs[i]))
+            {
+               float dx = descs[t].x - descs[i].x, dy = descs[t].y - descs[i].y;
+               if (dx < 0.0f) dx = -dx;
+               if (dy < 0.0f) dy = -dy;
+               if (dx <= 0.5f * descs[i].range_x && dy <= 0.5f * descs[i].range_y)
+               {
+                  anchor = i;
+                  break;
+               }
+            }
+      if (anchor >= 0)
+      {
+         mod_grp_add(anchor);
+         for (i = 0; i < n; i++)
+         {
+            float dx, dy;
+            if (i == anchor || !mod_is_nul(&descs[i]))
+               continue;
+            dx = descs[i].x - descs[anchor].x;
+            dy = descs[i].y - descs[anchor].y;
+            if (dx < 0.0f) dx = -dx;
+            if (dy < 0.0f) dy = -dy;
+            if (dx <= 0.5f * descs[anchor].range_x && dy <= 0.5f * descs[anchor].range_y)
+               mod_grp_add(i);
+         }
+         return;
+      }
+   }
+
+   /* direcional: todos os botoes de direcao ligados entre si + "nul" do centro */
+   if (mod_is_dir(&descs[t]))
+      seed = t;
+   else if (mod_is_nul(&descs[t]))
+      for (i = 0; i < n; i++)
+         if (mod_is_dir(&descs[i]) && mod_adj(&descs[t], &descs[i]))
+         {
+            seed = i;
+            break;
+         }
+
+   if (seed >= 0)
+   {
+      int k;
+      mod_grp_add(seed);
+      for (k = 0; k < mod_grp_n; k++)       /* varre ampliando o grupo */
+         for (i = 0; i < n; i++)
+            if (mod_is_dir(&descs[i]) && mod_adj(&descs[mod_grp[k]], &descs[i]))
+               mod_grp_add(i);
+      {
+         int dirs = mod_grp_n;
+         for (i = 0; i < n; i++)
+            if (mod_is_nul(&descs[i]))
+               for (k = 0; k < dirs; k++)
+                  if (mod_adj(&descs[mod_grp[k]], &descs[i]))
+                  {
+                     mod_grp_add(i);
+                     break;
+                  }
+      }
+      return;
+   }
+
+   mod_grp_add(t);
 }
 
 /* Um dedo (idx) em (x,y), no mesmo espaco dos botoes (x_shift/y_shift). */
@@ -117,36 +271,63 @@ static void mod_editor_touch(input_overlay_t *ol, int idx, float x, float y)
                mod_editor_grab_dy  = y - d->y_shift;
             }
          }
+         if (mod_editor_sel >= 0)
+            mod_build_group(ol->active, mod_editor_sel);
       }
       else if (mod_editor_fingers < 2)
       {
-         struct overlay_desc *d = &descs[mod_editor_sel];
-         d->x += (x - mod_editor_grab_dx) - d->x_shift;
-         d->y += (y - mod_editor_grab_dy) - d->y_shift;
+         struct overlay_desc *t = &descs[mod_editor_sel];
+         float ddx = (x - mod_editor_grab_dx) - t->x_shift;
+         float ddy = (y - mod_editor_grab_dy) - t->y_shift;
+         int k;
+         for (k = 0; k < mod_grp_n; k++)
+         {
+            descs[mod_grp[k]].x += ddx;
+            descs[mod_grp[k]].y += ddy;
+         }
          mod_editor_apply(ol);
       }
    }
    else if (idx == 1 && mod_editor_sel >= 0)
    {
-      struct overlay_desc *d = &descs[mod_editor_sel];
       float dx = x - mod_editor_x0;
       float dy = y - mod_editor_y0;
       float dist = sqrtf(dx * dx + dy * dy);
+      int k;
 
       if (!mod_editor_pinch)
       {
+         float minx = 1e9f, maxx = -1e9f, miny = 1e9f, maxy = -1e9f;
          mod_editor_pinch    = true;
          mod_editor_pinch_d0 = (dist > 0.01f) ? dist : 0.01f;
-         mod_editor_rx0      = d->range_x;
-         mod_editor_ry0      = d->range_y;
+         for (k = 0; k < mod_grp_n; k++)
+         {
+            struct overlay_desc *d = &descs[mod_grp[k]];
+            mod_grp_x0[k]  = d->x;
+            mod_grp_y0[k]  = d->y;
+            mod_grp_rx0[k] = d->range_x;
+            mod_grp_ry0[k] = d->range_y;
+            if (d->x < minx) minx = d->x;
+            if (d->x > maxx) maxx = d->x;
+            if (d->y < miny) miny = d->y;
+            if (d->y > maxy) maxy = d->y;
+         }
+         mod_grp_px = 0.5f * (minx + maxx);
+         mod_grp_py = 0.5f * (miny + maxy);
       }
       else
       {
-         float k = dist / mod_editor_pinch_d0;
-         if (k < 0.3f) k = 0.3f;
-         if (k > 3.0f) k = 3.0f;
-         d->range_x = mod_editor_rx0 * k;
-         d->range_y = mod_editor_ry0 * k;
+         float f = dist / mod_editor_pinch_d0;
+         if (f < 0.3f) f = 0.3f;
+         if (f > 3.0f) f = 3.0f;
+         for (k = 0; k < mod_grp_n; k++)
+         {
+            struct overlay_desc *d = &descs[mod_grp[k]];
+            d->x       = mod_grp_px + (mod_grp_x0[k] - mod_grp_px) * f;
+            d->y       = mod_grp_py + (mod_grp_y0[k] - mod_grp_py) * f;
+            d->range_x = mod_grp_rx0[k] * f;
+            d->range_y = mod_grp_ry0[k] * f;
+         }
          mod_editor_apply(ol);
       }
    }
