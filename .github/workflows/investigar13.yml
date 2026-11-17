@@ -17,15 +17,10 @@ jobs:
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
           git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
           git -C ra checkout -q FETCH_HEAD
-          S=01-ANALISE/viewport-custom
+          S=01-ANALISE/viewport-custom2
           mkdir -p $S
-          grep -n 'video_vp_custom' -r ra --include=*.c --include=*.h > $S/01-usos.txt
-          grep -n 'video_driver_get_viewport_info' -r ra --include=*.c --include=*.h > $S/02-getinfo.txt
-          grep -n 'struct video_viewport' -A 14 ra/gfx/video_defines.h ra/retroarch_types.h > $S/03-struct.txt
+          sed -n "5700,5790p" ra/gfx/video_driver.c > $S/10-calc-a.txt; sed -n "5880,5960p" ra/gfx/video_driver.c > $S/11-calc-b.txt; sed -n "7640,7720p" ra/menu/menu_setting.c > $S/12-menu.txt
           F=$(grep -ln 'video_driver_get_viewport_info' -r ra/gfx/video_driver.c)
-          grep -n 'bool video_driver_get_viewport_info' -A 25 ra/gfx/video_driver.c > $S/04-impl.txt
-          grep -n 'ASPECT_RATIO_CUSTOM' -B3 -A 14 ra/gfx/video_driver.c > $S/05-custom-calc.txt
-          grep -n 'viewport_info\|get_viewport_info' ra/gfx/drivers/vulkan.c ra/gfx/drivers/gl_core.c ra/gfx/drivers/gl.c > $S/06-drivers.txt
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
