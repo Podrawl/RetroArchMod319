@@ -1,0 +1,27 @@
+name: Ler trecho novo da tecla Voltar (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/voltar-novo
+          mkdir -p $S
+          git -C ra log -1 --format='%H %cd %s' > $S/00-commit.txt
+          L=$(grep -n "android_input_poll_event_type_key(int port" ra/input/drivers/android_input.c | head -1 | cut -d: -f1)
+          sed -n "$((L-3)),$((L+40))p" ra/input/drivers/android_input.c > $S/10-funcao-key.txt
+          grep -n "android_input_poll_event_type_key" ra/input/drivers/android_input.c > $S/11-chamadas.txt
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 11: tecla Voltar (codigo novo)" && git pull --rebase -q && git push
