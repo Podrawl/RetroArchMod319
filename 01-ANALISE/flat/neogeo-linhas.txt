@@ -1,0 +1,1 @@
+563 co/gamepads/flat/neogeo.cfg

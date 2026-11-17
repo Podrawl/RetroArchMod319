@@ -1,0 +1,1 @@
+-rw-r--r-- 1 runner runner 14652064 Nov 17 01:07 ra/pkg/android/phoenix/build/outputs/apk/aarch64/release/phoenix-aarch64-release.apk
