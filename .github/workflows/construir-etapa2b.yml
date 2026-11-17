@@ -27,7 +27,7 @@ jobs:
         run: |
           python3 -I scripts/patch_pacote.py ra/pkg/android/phoenix/build.gradle
           python3 -I scripts/patch_etapa1.py ra
-          python3 -I scripts/patch_etapa2b.py ra
+          python3 -I scripts/patch_etapa2.py ra
           python3 -I scripts/patch_voltar_abre_menu.py ra
           cd ra && git diff --stat > ../01-ANALISE_diff.txt; cat ../01-ANALISE_diff.txt
       - name: Compilar
