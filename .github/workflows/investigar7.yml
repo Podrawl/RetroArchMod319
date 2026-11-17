@@ -1,0 +1,30 @@
+name: Ler tratamento do botão Voltar (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/botao-voltar
+          mkdir -p $S
+          cd ra
+          grep -n "AKEYCODE_BACK\|KEYCODE_BACK" -r input/ pkg/android/ --include=*.c --include=*.h --include=*.java | head -40 > ../$S/10-keycode-back.txt
+          grep -n "onBackPressed\|OnBackInvokedCallback\|onKeyDown\|onKeyUp\|dispatchKeyEvent\|enableOnBackInvokedCallback\|predictiveBack" -r pkg/android --include=*.java --include=*.xml | head -40 > ../$S/11-java-back.txt
+          grep -n "RETROK_ESCAPE\|RETROK_BACKSPACE" input/drivers/android_input.c input/input_keymaps.c input/drivers/android_input.c | head -20 > ../$S/12-retrok-escape.txt
+          grep -n "input_exit_emulator\|input_menu_toggle\|RARCH_QUIT_KEY\|RARCH_MENU_TOGGLE" configuration.c input/input_driver.c | head -40 > ../$S/13-hotkeys-padrao.txt
+          grep -n "android_keyboard_event\|static void handle_hotplug\|android_input_poll_event_type_key\|case AINPUT_EVENT_TYPE_KEY" input/drivers/android_input.c | head -20 > ../$S/14-funcoes-key.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 7: botão Voltar" && git pull --rebase -q && git push
