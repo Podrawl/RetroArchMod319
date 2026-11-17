@@ -1,4 +1,4 @@
-name: Ler ciclo de vida do app Android (somente leitura)
+name: Ler ciclo de vida do app Android 2 (somente leitura)
 
 on:
   workflow_dispatch:
@@ -15,14 +15,11 @@ jobs:
         run: |
           set +e
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
-          S=01-ANALISE/ciclo-de-vida
+          S=01-ANALISE/ciclo-de-vida2
           mkdir -p $S
-          cd ra
-          grep -n "APP_CMD_PAUSE\|APP_CMD_RESUME\|APP_CMD_GAINED_FOCUS\|APP_CMD_LOST_FOCUS\|APP_CMD_INIT_WINDOW\|APP_CMD_TERM_WINDOW\|APP_CMD_STOP\|APP_CMD_START" -r frontend/ input/ gfx/ --include=*.c --include=*.h | head -40 > ../$S/10-app-cmd.txt
-          grep -n "static void android_app_entry\|engine_handle_cmd\|android_app_handle_cmd\|void android_app_cmd\|handle_cmd" frontend/drivers/platform_unix.c | head -20 > ../$S/11-handle-cmd.txt
-          grep -n "pause_nonactive\|video_pause\|RARCH_CTL_.*PAUSE\|runloop_set_paused" frontend/drivers/platform_unix.c | head -30 > ../$S/12-pause-unix.txt
-          cd ..
+          sed -n '985,1140p' ra/input/drivers/android_input.c > $S/10-cmd-985.txt
+          sed -n '735,800p' ra/input/drivers/android_input.c > $S/11-pause-ack.txt
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
-          git commit -m "Leitura 7c: ciclo de vida" && git pull --rebase -q && git push
+          git commit -m "Leitura 7d: ciclo de vida" && git pull --rebase -q && git push
