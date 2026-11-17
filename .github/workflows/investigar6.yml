@@ -1,0 +1,29 @@
+name: Ler modelo de entrada de menu (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/modelo-entrada-menu
+          mkdir -p $S
+          cd ra
+          grep -rn -B2 -A6 "OVERLAY_MOUSE_SETTINGS\|overlay_mouse_settings" --include=*.c --include=*.h --include=*.def . 2>/dev/null | grep -v "^./intl/msg_hash_[a-z_]*\.h" | cut -c1-220 > ../$S/10-mouse-settings-contexto.txt
+          grep -n -B1 -A3 "OVERLAY_MOUSE_SETTINGS" intl/msg_hash_us.h | cut -c1-220 > ../$S/11-us-h.txt
+          grep -rn -B1 -A4 "OVERLAY_MOUSE_SETTINGS" msg_hash.h intl/msg_hash_lbl.h | cut -c1-220 > ../$S/12-lbl.txt
+          grep -rn "ACTION_OK_DL_OVERLAY_MOUSE\|DISPLAYLIST_OVERLAY_MOUSE" --include=*.c --include=*.h . | cut -c1-200 > ../$S/13-acoes.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 6: modelo de entrada de menu" && git pull --rebase -q && git push
