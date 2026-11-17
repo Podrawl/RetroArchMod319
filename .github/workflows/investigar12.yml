@@ -1,4 +1,4 @@
-name: Ler desenho de retangulos e texto (somente leitura)
+name: Ler desenho de retangulos e texto 2 (somente leitura)
 
 on:
   workflow_dispatch:
@@ -17,20 +17,14 @@ jobs:
           git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
           git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
           git -C ra checkout -q FETCH_HEAD
-          S=01-ANALISE/desenho-widgets
+          S=01-ANALISE/desenho-widgets2
           mkdir -p $S
-          cd ra
-          sed -n '2170,2260p' gfx/gfx_widgets.c > ../$S/10-widgets-outline.txt
-          grep -n "^void gfx_widgets_frame\|^static void gfx_widgets_draw\|void gfx_widgets_frame(" gfx/gfx_widgets.c > ../$S/11-widgets-frame.txt
-          grep -n "gfx_display_draw_quad\|gfx_display_draw_text\|gfx_display_draw_text(" gfx/gfx_display.h > ../$S/12-display-proto.txt
-          L=$(grep -n "void gfx_display_draw_quad" gfx/gfx_display.h | head -1 | cut -d: -f1); sed -n "${L},$((L+14))p" gfx/gfx_display.h > ../$S/13-draw-quad-proto.txt
-          L=$(grep -n "void gfx_display_draw_text" gfx/gfx_display.h | head -1 | cut -d: -f1); sed -n "${L},$((L+14))p" gfx/gfx_display.h > ../$S/14-draw-text-proto.txt
-          grep -n "gfx_display_draw_quad(" gfx/gfx_widgets.c | head -6 > ../$S/15-uso-quad.txt
-          grep -n "gfx_display_draw_text(" gfx/gfx_widgets.c | head -6 > ../$S/16-uso-text.txt
-          grep -n "widgets_active\|gfx_widgets_ready()" gfx/video_driver.c | head -12 > ../$S/17-widgets-active.txt
-          grep -n "gfx_widgets_frame(" -r --include=*.c . | head -8 > ../$S/18-quem-chama-frame.txt
-          cd ..
+          sed -n '2095,2172p' ra/gfx/gfx_widgets.c > $S/10-inicio-funcao.txt
+          sed -n '1070,1100p' ra/gfx/gfx_widgets.c > $S/11-uso-texto.txt
+          sed -n '2260,2335p' ra/gfx/gfx_widgets.c > $S/12-depois-ai.txt
+          grep -rn 'TEXT_ALIGN_CENTER' ra/gfx/font_driver.h ra/font_driver.h > $S/13-align.txt
+          grep -n 'font_data_t' ra/gfx/gfx_widgets.h > $S/14-font-campo.txt
           rm -rf ra
           git config user.name "bot"; git config user.email "bot@example.com"
           git add $S
-          git commit -m "Leitura 12: desenho de retangulos e texto" && git pull --rebase -q && git push
+          git commit -m "Leitura 12b: desenho de retangulos e texto" && git pull --rebase -q && git push
