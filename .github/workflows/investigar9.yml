@@ -1,0 +1,31 @@
+name: Ler proporcao personalizada e overrides (somente leitura)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair
+        run: |
+          set +e
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          S=01-ANALISE/proporcao-e-overrides
+          mkdir -p $S
+          cd ra
+          grep -rn "video_viewport_custom" --include=*.c --include=*.h . | grep -v "intl/\|msg_hash\|deps/" | cut -c1-200 | head -80 > ../$S/10-viewport-custom-usos.txt
+          grep -n "ASPECT_RATIO_CUSTOM" -r --include=*.c --include=*.h . | grep -v "intl/" | cut -c1-180 | head -40 > ../$S/11-aspect-custom.txt
+          grep -n "bool config_save_overrides\|config_save_overrides(" configuration.c configuration.h menu/cbs/menu_cbs_ok.c | head -10 > ../$S/12-save-overrides-sig.txt
+          L=$(grep -n "^bool config_save_overrides" configuration.c | head -1 | cut -d: -f1); [ -n "$L" ] && sed -n "${L},$((L+330))p" configuration.c > ../$S/13-save-overrides-corpo.txt
+          grep -n "video_viewport_custom\|input_overlay\b\|path_overlay\|overlay_" configuration.c | sed -n '1,60p' | cut -c1-160 > ../$S/14-config-linhas.txt
+          grep -rn "video_driver_set_viewport\|video_driver_apply_state_changes\|CMD_EVENT_VIDEO_APPLY_STATE_CHANGES\|CMD_EVENT_VIDEO_SET_ASPECT_RATIO" --include=*.c --include=*.h . | grep -v "intl/" | cut -c1-160 | head -30 > ../$S/15-aplicar-video.txt
+          cd ..
+          rm -rf ra
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add $S
+          git commit -m "Leitura 9: proporcao personalizada e overrides" && git pull --rebase -q && git push
