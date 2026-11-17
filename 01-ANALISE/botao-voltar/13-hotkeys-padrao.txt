@@ -1,0 +1,18 @@
+configuration.c:395:   DECLARE_META_BIND(1, menu_toggle,           RARCH_MENU_TOGGLE,            MENU_ENUM_LABEL_VALUE_INPUT_META_MENU_TOGGLE),
+configuration.c:397:   DECLARE_META_BIND(2, exit_emulator,         RARCH_QUIT_KEY,               MENU_ENUM_LABEL_VALUE_INPUT_META_RESTART_KEY),
+configuration.c:399:   DECLARE_META_BIND(2, exit_emulator,         RARCH_QUIT_KEY,               MENU_ENUM_LABEL_VALUE_INPUT_META_QUIT_KEY),
+input/input_driver.c:2243:            BIT256_SET_PTR(bits, RARCH_MENU_TOGGLE);
+input/input_driver.c:2262:            BIT256_SET_PTR(bits, RARCH_QUIT_KEY);
+input/input_driver.c:7801:             || !BIT256_GET(desc->button_mask, RARCH_MENU_TOGGLE))
+input/input_driver.c:14005:      if (BIT256_GET(ol->active->descs[d].button_mask, RARCH_MENU_TOGGLE))
+input/input_driver.c:14698:   maybe[RARCH_MENU_TOGGLE >> 5] |= (1u << (RARCH_MENU_TOGGLE & 31));
+input/input_driver.c:15120:   const struct retro_keybind *menu   = INPUT_CONFIG_BIND(port, RARCH_MENU_TOGGLE);
+input/input_driver.c:16632:      i = RARCH_MENU_TOGGLE;
+input/input_driver.c:16673:               || (i == RARCH_MENU_TOGGLE && input_st->platform_menu_button)
+input/input_driver.c:16693:      i = RARCH_MENU_TOGGLE;
+input/input_driver.c:16800:               || (i == RARCH_MENU_TOGGLE && input_st->platform_menu_button))
+input/input_driver.c:16834:            if (i == RARCH_MENU_TOGGLE)
+input/input_driver.c:16874:            if (i == RARCH_MENU_TOGGLE)
+input/input_driver.c:20830:            {0,                RARCH_QUIT_KEY                }, /* 14 */
+input/input_driver.c:20838:         ids[14][0] = RETRO_KEYBIND_KEY(&input_config_binds[0][RARCH_QUIT_KEY]);
+input/input_driver.c:20940:      unsigned menu_combo = settings->uints.input_menu_toggle_gamepad_combo;

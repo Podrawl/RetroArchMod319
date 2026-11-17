@@ -1,0 +1,6 @@
+input/drivers/android_input.c:1985:   (     ANDROID_KEY_BACK            == AKEYCODE_BACK
+input/drivers/android_input.c:2527:         key->keycode == AKEYCODE_BACK);
+input/drivers/android_input.c:3675:               return ANDROID_KEYBOARD_INPUT_PRESSED(AKEYCODE_BACK);
+input/input_keymaps.c:1722:   { AKEYCODE_BACKSLASH, RETROK_BACKSLASH },
+input/input_keymaps.c:1806:   { KEYCODE_BACKSPACE, RETROK_BACKSPACE },
+pkg/android/phoenix-common/src/com/retroarch/browser/retroactivity/RetroActivityCommon.java:1865:              if (keyCode == KeyEvent.KEYCODE_BACK

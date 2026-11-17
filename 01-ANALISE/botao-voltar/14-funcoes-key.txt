@@ -1,0 +1,7 @@
+1933:static INLINE void android_input_poll_event_type_keyboard(
+1992:static INLINE void android_input_poll_event_type_key(int port,
+2200:static void handle_hotplug(android_input_t *android,
+2558:      android_input_poll_event_type_keyboard(key, handled);
+2559:      android_input_poll_event_type_key(ANDROID_KEYBOARD_PORT, key,
+2563:      android_input_poll_event_type_key(port, key, handled);
+2698:      case AINPUT_EVENT_TYPE_KEY:
