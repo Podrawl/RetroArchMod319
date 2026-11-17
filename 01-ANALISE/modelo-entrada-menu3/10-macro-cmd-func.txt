@@ -1,0 +1,13 @@
+254:#define STATIC_DEFAULT_ACTION_OK_CMD_FUNC(func_name, cmd) \
+255-static int (func_name)(const char *path, const char *label, unsigned type, size_t idx, size_t entry_idx) \
+256-{ \
+257-   return generic_action_ok_command(cmd); \
+258-}
+259-
+260-#define STATIC_DEFAULT_ACTION_OK_FUNC(func_name, lbl) \
+261-static int (func_name)(const char *path, const char *label, unsigned type, size_t idx, size_t entry_idx) \
+262-{ \
+263-   return generic_action_ok_displaylist_push(path, NULL, label, type, idx, entry_idx, lbl); \
+264-}
+265-
+266-#define DEFAULT_ACTION_OK_FUNC(func_name, lbl) \

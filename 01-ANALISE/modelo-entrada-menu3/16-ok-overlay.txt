@@ -1,0 +1,10 @@
+2868:DEFAULT_ACTION_OK_SET(action_ok_set_path_audiofilter, ACTION_OK_SET_PATH_AUDIO_FILTER, MSG_UNKNOWN)
+2869:DEFAULT_ACTION_OK_SET(action_ok_set_path_videofilter, ACTION_OK_SET_PATH_VIDEO_FILTER, MSG_UNKNOWN)
+2870:DEFAULT_ACTION_OK_SET(action_ok_set_path_overlay,     ACTION_OK_SET_PATH_OVERLAY,      MSG_UNKNOWN)
+2871:DEFAULT_ACTION_OK_SET(action_ok_set_path_osk_overlay, ACTION_OK_SET_PATH_OSK_OVERLAY,  MSG_UNKNOWN)
+2874:static int action_ok_compressed_archive_push_overlay(const char *path,
+2925:static int action_ok_set_path_overlay_carchive(const char *path,
+2965:DEFAULT_ACTION_OK_SET(action_ok_set_path_video_font,  ACTION_OK_SET_PATH_VIDEO_FONT,   MSG_UNKNOWN)
+2966:DEFAULT_ACTION_OK_SET(action_ok_set_path,             ACTION_OK_SET_PATH,              MSG_UNKNOWN)
+3037:      return action_ok_set_path(path, label, type, idx, entry_idx);
+6526:DEFAULT_ACTION_OK_DOWNLOAD(action_ok_update_overlays, MENU_ENUM_LABEL_CB_UPDATE_OVERLAYS)

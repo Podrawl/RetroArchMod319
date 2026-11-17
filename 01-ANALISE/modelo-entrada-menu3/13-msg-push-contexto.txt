@@ -1,0 +1,30 @@
+3289:               runloop_msg_queue_push(msg, _len, 1, 100, true, NULL,
+3290-                     MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
+3291-            }
+3292-         }
+3293-      }
+3294-   }
+3295-
+3296-   /* Ensure core path is valid */
+3297-   if (   !*core_path
+--
+3359:      runloop_msg_queue_push(_msg, strlen(_msg), 1, 100, true, NULL,
+3360-            MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_ERROR);
+3361-   }
+3362-#ifdef HAVE_CORE_LOAD_CHECK
+3363-refused:
+3364-#endif
+3365-
+3366-   /* Single-click playlist return */
+3367-   if (settings->bools.input_menu_singleclick_playlists)
+--
+3462:      runloop_msg_queue_push(_msg, strlen(_msg), 1, 100, true, NULL,
+3463-            MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_ERROR);
+3464-
+3465-      return -1;
+3466-   }
+3467-
+3468-   sysinfo = &runloop_state_get_ptr()->system.info;
+3469-
+3470-   if (sysinfo && (sysinfo->library_name && *sysinfo->library_name))
+--

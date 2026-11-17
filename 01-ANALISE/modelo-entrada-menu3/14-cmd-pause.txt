@@ -1,0 +1,6 @@
+command.h:174:   CMD_EVENT_RESUME,
+command.h:182:   CMD_EVENT_MENU_PAUSE_LIBRETRO,
+command.h:183:   CMD_EVENT_PAUSE,
+command.h:185:   CMD_EVENT_UNPAUSE,
+command.c:1087:            command_event(CMD_EVENT_PAUSE, NULL);
+command.c:2898:         command_event(on ? CMD_EVENT_PAUSE : CMD_EVENT_UNPAUSE, NULL);
