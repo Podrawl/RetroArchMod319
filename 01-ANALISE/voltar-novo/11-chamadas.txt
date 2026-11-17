@@ -1,0 +1,5 @@
+1959:static INLINE void android_input_poll_event_type_keyboard(
+2018:static INLINE void android_input_poll_event_type_key(int port,
+2584:      android_input_poll_event_type_keyboard(key, handled);
+2585:      android_input_poll_event_type_key(ANDROID_KEYBOARD_PORT, key,
+2589:      android_input_poll_event_type_key(port, key, handled);

@@ -1,0 +1,1 @@
+0247447b60c4a9905fc5dd353ab7b3114b23768f Tue Nov 17 13:03:19 2026 +0100 net_http: a transfer takes its connection's strings
