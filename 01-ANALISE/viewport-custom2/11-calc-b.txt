@@ -1,0 +1,81 @@
+    *
+    * If square pixels are used, base_height will be equal to
+    * system->av_info.base_height. */
+   content_width = (unsigned)roundf(content_height * aspect_ratio);
+
+   if (content_width < 2 || content_height < 2)
+      return;
+
+   /* Use regular scaling if there is no room for 1x */
+   if (content_width > width || content_height > height)
+   {
+      float device_aspect      = (float)width / height;
+      video_viewport_get_scaled_aspect(ps, vp, dims,
+            y_down, device_aspect, aspect_ratio);
+      return;
+   }
+
+   content_width  = (content_width  > width)  ? width  : content_width;
+   content_height = (content_height > height) ? height : content_height;
+
+   if (video_aspect_ratio_idx == ASPECT_RATIO_CUSTOM)
+   {
+      {
+         x         = VIDEO_POS_X(ps->custom_pos);
+         y         = VIDEO_POS_Y(ps->custom_pos);
+
+         if (!y_down)
+            y = -y;
+
+         padding_x = width - (int)VIDEO_SCALE_W(ps->custom_dims);
+         padding_y = height - (int)VIDEO_SCALE_H(ps->custom_dims);
+
+         if (padding_x < 0)
+         {
+            x -= padding_x * vp_bias_x;
+            padding_x *= 2;
+         }
+         if (padding_y < 0)
+         {
+            y -= padding_y * vp_bias_y;
+            padding_y *= 2;
+         }
+
+         width     = VIDEO_SCALE_W(ps->custom_dims);
+         height    = VIDEO_SCALE_H(ps->custom_dims);
+      }
+   }
+   /* Make sure that we don't get 0x scale ... */
+   else if (width >= content_width && height >= content_height)
+   {
+      if (keep_aspect)
+      {
+         int8_t half_w       = 0;
+         int8_t half_h       = 0;
+         uint8_t max_scale   = 1;
+         uint8_t max_scale_w = 1;
+         uint8_t max_scale_h = 1;
+
+         /* Overscale if only overscan or a small number of rows get cropped.
+          * Otherwise, underscale if the smallest margin doesn't exceed 12%.
+          * Otherwise, fall back to non-integer scaling. */
+         if (scaling == VIDEO_SCALE_INTEGER_SCALING_SMART)
+         {
+            unsigned max_scale_w  = width / content_width;
+            unsigned underscale_h = height / content_height;
+            /* Always check if the next integer factor results in a usable
+             * overscale even if the underscale factor already fills the screen.
+             * This is particularly relevant when scaling 240p content to 4k -
+             * a x9 scale will fill the height, but a x10 overscale will only
+             * crop overscan and fills more of the screen. */
+            unsigned overscale_h  = underscale_h + 1;
+            unsigned max_scale_h  = underscale_h;
+            /* This is the minimum amount content that must be shown in order
+             * for overscan to be used.
+             *
+             * Handhelds don't have overscan, but there are noteworthy cases
+             * where overscaling crops so few pixels that it's worth allowing:
+             * - Atari Lynx @ 800p
+             * - GBA @ 1080p or 4k
+             * - PSP @ 800p, 1080p or 4k
+             * 6 pixels has no special significance, it's simply the smallest

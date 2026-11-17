@@ -1,0 +1,81 @@
+   /* the port is pinned to the keyboard chosen, not to its number */
+   input_keyboard_pin_from_index(setting->index_offset);
+   settings->flags |= SETTINGS_FLG_MODIFIED;
+   return 0;
+}
+
+static int setting_uint_action_left_custom_vp_width(
+      rarch_setting_t *setting, size_t idx, bool wraparound)
+{
+   video_driver_state_t *video_st       = video_state_get_ptr();
+   struct retro_system_av_info *av_info = &video_st->av_info;
+   settings_t                 *settings = config_get_ptr();
+   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+   unsigned width                 = VIDEO_SCALE_W(custom->dims);
+
+   if (!settings || !av_info)
+      return -1;
+
+   if (width <= setting->min)
+      width = setting->min;
+   else if (settings->bools.video_scale_integer)
+   {
+      struct retro_game_geometry *geom = (struct retro_game_geometry*)
+         &av_info->geometry;
+      unsigned int rotation = retroarch_get_rotation();
+      if (rotation % 2)
+      {
+         if (width > geom->base_height)
+            width -= geom->base_height;
+
+         if (width < geom->base_height)
+            width  = geom->base_height;
+      }
+      else
+      {
+         if (width > geom->base_width)
+            width -= geom->base_width;
+
+         if (width < geom->base_width)
+            width  = geom->base_width;
+      }
+   }
+   else
+      width -= 1;
+
+   /* aspectratio_lut[ASPECT_RATIO_CUSTOM].value
+    * is updated in general_write_handler() */
+
+   VIDEO_SCALE_PUT_W(custom->dims, width);
+
+   return 0;
+}
+
+static int setting_uint_action_left_custom_vp_height(
+      rarch_setting_t *setting, size_t idx, bool wraparound)
+{
+   video_driver_state_t *video_st       = video_state_get_ptr();
+   struct retro_system_av_info *av_info = &video_st->av_info;
+   settings_t                 *settings = config_get_ptr();
+   video_viewport_settings_t   *custom  = &settings->video_vp_custom;
+   unsigned height                = VIDEO_SCALE_H(custom->dims);
+
+   if (!settings || !av_info)
+      return -1;
+
+   if (height <= setting->min)
+      height = setting->min;
+   else if (settings->bools.video_scale_integer)
+   {
+      struct retro_game_geometry *geom =
+         (struct retro_game_geometry*)&av_info->geometry;
+      unsigned int rotation = retroarch_get_rotation();
+      if (rotation % 2)
+      {
+         if (height > geom->base_width)
+            height -= geom->base_width;
+
+         if (height < geom->base_width)
+            height  = geom->base_width;
+      }
+      else
