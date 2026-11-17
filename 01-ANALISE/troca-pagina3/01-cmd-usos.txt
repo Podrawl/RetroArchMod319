@@ -1,0 +1,6 @@
+ra/command.h:308:   CMD_EVENT_OVERLAY_NEXT,
+ra/samples/tasks/content_load/content_load_test.c:2198:      command_event(CMD_EVENT_OVERLAY_NEXT, NULL);
+ra/retroarch.c:5032:      case CMD_EVENT_OVERLAY_NEXT:
+ra/input/input_driver.c:7092:             * Note: tmp == false. This prevents CMD_EVENT_OVERLAY_NEXT
+ra/input/input_driver.c:7095:            command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
+ra/runloop.c:8328:      HOTKEY_CHECK(RARCH_OVERLAY_NEXT, CMD_EVENT_OVERLAY_NEXT, true, &check_next_rotation);

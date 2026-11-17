@@ -1,0 +1,31 @@
+         size_t i;
+         for (i = 0; i < data->anim_list->size; i++)
+         {
+            overlay_anim_src_t *src =
+               (overlay_anim_src_t*)data->anim_list->elems[i].attr.p;
+            if (src)
+               free(src->data);
+            free(src);
+         }
+         string_list_free(data->anim_list);
+      }
+      free(data);
+      return;
+   }
+   ol->overlays    = data->overlays;
+   ol->size        = data->size;
+   ol->active      = data->active;
+   ol->path        = data->overlay_path;
+   ol->num_images  = data->image_list->size;
+   ol->next_index  = (unsigned)((ol->index + 1) % ol->size);
+   ol->flags      |= INPUT_OVERLAY_ALIVE;
+   if (data->flags & OVERLAY_LOADER_IS_OSK)
+      ol->flags   |= INPUT_OVERLAY_IS_OSK;
+   if (data->flags & OVERLAY_LOADER_HAS_LEDS)
+      ol->flags   |= INPUT_OVERLAY_HAS_LEDS;
+
+   /* One block for the sent alphas and the pass's scratch, sized for
+    * the page with the most images. Without it every alpha is set
+    * every pass, as before. */
+   {
+      size_t i, cap = 0;

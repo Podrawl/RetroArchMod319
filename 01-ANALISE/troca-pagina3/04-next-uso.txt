@@ -1,0 +1,40 @@
+ra/tasks/task_overlay.c:884:               desc->next_index_name, sizeof(desc->next_index_name));
+ra/tasks/task_overlay.c:1064:      const char *next          = desc->next_index_name;
+ra/tasks/task_overlay.c:1079:      desc->next_index = (unsigned)next_idx;
+ra/menu/cbs/menu_cbs_left.c:589:   unsigned next_index                  = 0;
+ra/menu/cbs/menu_cbs_left.c:611:         next_index = current_index - 1;
+ra/menu/cbs/menu_cbs_left.c:613:         next_index = (unsigned)(scan_method_list->size - 1);
+ra/menu/cbs/menu_cbs_left.c:618:      (enum manual_content_scan_method)next_index);
+ra/menu/cbs/menu_cbs_left.c:634:   unsigned next_index                  = 0;
+ra/menu/cbs/menu_cbs_left.c:656:         next_index = current_index - 1;
+ra/menu/cbs/menu_cbs_left.c:658:         next_index = (unsigned)(scan_use_db_list->size - 1);
+ra/menu/cbs/menu_cbs_left.c:662:   manual_content_scan_set_menu_scan_use_db((enum manual_content_scan_db_usage)next_index);
+ra/menu/cbs/menu_cbs_left.c:691:   unsigned next_index                                             = 0;
+ra/menu/cbs/menu_cbs_left.c:715:         next_index = current_index - 1;
+ra/menu/cbs/menu_cbs_left.c:717:         next_index = (unsigned)(system_name_list->size - 1);
+ra/menu/cbs/menu_cbs_left.c:722:   if (next_index == (unsigned)MANUAL_CONTENT_SCAN_SELECT_DB_AUTO)
+ra/menu/cbs/menu_cbs_left.c:724:   else if (next_index == (unsigned)MANUAL_CONTENT_SCAN_SELECT_DB_AUTO_FIRST_MATCH)
+ra/menu/cbs/menu_cbs_left.c:729:   next_system_name = system_name_list->elems[next_index].data;
+ra/menu/cbs/menu_cbs_left.c:761:   unsigned next_index                                             = 0;
+ra/menu/cbs/menu_cbs_left.c:785:         next_index = current_index - 1;
+ra/menu/cbs/menu_cbs_left.c:787:         next_index = (unsigned)(system_name_list->size - 1);
+ra/menu/cbs/menu_cbs_left.c:791:   if (next_index == (unsigned)MANUAL_CONTENT_SCAN_SYSTEM_NAME_CONTENT_DIR)
+ra/menu/cbs/menu_cbs_left.c:793:   else if (next_index == (unsigned)MANUAL_CONTENT_SCAN_SYSTEM_NAME_CUSTOM)
+ra/menu/cbs/menu_cbs_left.c:795:   else if (next_index == (unsigned)MANUAL_CONTENT_SCAN_SYSTEM_NAME_AUTO)
+ra/menu/cbs/menu_cbs_left.c:798:   next_system_name = system_name_list->elems[next_index].data;
+ra/menu/cbs/menu_cbs_left.c:821:   unsigned next_index                               = 0;
+ra/menu/cbs/menu_cbs_left.c:844:         next_index = current_index - 1;
+ra/menu/cbs/menu_cbs_left.c:846:         next_index = (unsigned)(core_name_list->size - 1);
+ra/menu/cbs/menu_cbs_left.c:850:   if (next_index == (unsigned)MANUAL_CONTENT_SCAN_CORE_DETECT)
+ra/menu/cbs/menu_cbs_left.c:853:   next_core_name = core_name_list->elems[next_index].data;
+ra/menu/cbs/menu_cbs_right.c:755:   unsigned next_index                                             = 0;
+ra/menu/cbs/menu_cbs_right.c:777:      next_index = current_index + 1;
+ra/menu/cbs/menu_cbs_right.c:778:      if (next_index >= scan_method_list->size)
+ra/menu/cbs/menu_cbs_right.c:780:         next_index = 0;
+ra/menu/cbs/menu_cbs_right.c:782:            next_index = (unsigned)(scan_method_list->size - 1);
+ra/menu/cbs/menu_cbs_right.c:789:      (enum manual_content_scan_method)next_index);
+ra/menu/cbs/menu_cbs_right.c:806:   unsigned next_index                                             = 0;
+ra/menu/cbs/menu_cbs_right.c:827:      next_index = current_index + 1;
+ra/menu/cbs/menu_cbs_right.c:828:      if (next_index >= scan_use_db_list->size)
+ra/menu/cbs/menu_cbs_right.c:830:         next_index = 0;
+ra/menu/cbs/menu_cbs_right.c:832:            next_index = (unsigned)(scan_use_db_list->size - 1);
