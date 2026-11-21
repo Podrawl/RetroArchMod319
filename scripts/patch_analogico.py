@@ -55,5 +55,40 @@ trocar(
     "      else if (use_range_mod && (desc->flags & OVERLAY_DESC_RANGE_MOD_EXCLUSIVE))\n"
     "         desc_prio = 2;\n",
 )
+
+# Limite circular: mantem o angulo do dedo quando passa do maximo
+trocar(
+    "   out->analog[base + 0] = clamp_float(x_val_sat, -1.0f, 1.0f) * 32767.0f;\n"
+    "   out->analog[base + 1] = clamp_float(y_val_sat, -1.0f, 1.0f) * 32767.0f;\n",
+    "   {\n"
+    "      /* MOD: limite circular (mantem a direcao do dedo) */\n"
+    "      float mod_mag = sqrt(x_val_sat * x_val_sat + y_val_sat * y_val_sat);\n"
+    "      if (mod_mag > 1.0f)\n"
+    "      {\n"
+    "         x_val_sat /= mod_mag;\n"
+    "         y_val_sat /= mod_mag;\n"
+    "      }\n"
+    "   }\n"
+    "   out->analog[base + 0] = clamp_float(x_val_sat, -1.0f, 1.0f) * 32767.0f;\n"
+    "   out->analog[base + 1] = clamp_float(y_val_sat, -1.0f, 1.0f) * 32767.0f;\n",
+)
+trocar(
+    "         desc->delta_x = clamp_float(x_dist, -desc->range_x, desc->range_x)\n"
+    "            * ol->active->mod_w;\n"
+    "         desc->delta_y = clamp_float(y_dist, -desc->range_y, desc->range_y)\n"
+    "            * ol->active->mod_h;\n",
+    "         float mod_nx = x_dist / desc->range_x;\n"
+    "         float mod_ny = y_dist / desc->range_y;\n"
+    "         float mod_r  = sqrt(mod_nx * mod_nx + mod_ny * mod_ny);\n"
+    "         if (mod_r > 1.0f)\n"
+    "         {\n"
+    "            x_dist /= mod_r;\n"
+    "            y_dist /= mod_r;\n"
+    "         }\n"
+    "         desc->delta_x = clamp_float(x_dist, -desc->range_x, desc->range_x)\n"
+    "            * ol->active->mod_w;\n"
+    "         desc->delta_y = clamp_float(y_dist, -desc->range_y, desc->range_y)\n"
+    "            * ol->active->mod_h;\n",
+)
 open(arq, "w", encoding="utf-8").write(s)
 print("patch_analogico aplicado")
