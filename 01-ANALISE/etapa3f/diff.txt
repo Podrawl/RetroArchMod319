@@ -1,0 +1,8 @@
+ gfx/gfx_widgets.c                         |  55 +++
+ input/drivers/android_input.c             |  25 +
+ input/input_driver.c                      | 732 +++++++++++++++++++++++++++++-
+ menu/cbs/menu_cbs_ok.c                    |  13 +
+ menu/menu_displaylist.c                   |   2 +
+ pkg/android/phoenix/build.gradle          |   4 +-
+ settings/settings_def_menu_main_lists_4.h |   7 +
+ 7 files changed, 834 insertions(+), 4 deletions(-)

@@ -1,0 +1,7 @@
+21:        android:name="com.retroarch.playcore.RetroArchApplication"
+33:        <activity android:name="com.retroarch.browser.retroactivity.RetroActivityFuture" android:exported="true" android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|density" android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:launchMode="singleInstance">
+40:        <activity-alias android:name="com.retroarch.browser.mainmenu.MainMenuActivity"
+41:            android:targetActivity="com.retroarch.browser.retroactivity.RetroActivityFuture"
+55:        <receiver android:name="com.retroarch.browser.receiver.InstalledCoresReceiver" android:exported="true">
+57:                <action android:name="com.retroarch.QUERY_INSTALLED_CORES" />
+61:        android:name="com.retroarch.browser.provider.RetroDocumentsProvider"
