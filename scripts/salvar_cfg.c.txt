@@ -240,3 +240,116 @@ static void mod_save_cfg(bool overwrite)
    free(buf);
 }
 
+/* ----- gerenciar copias criadas pelo app: renomear e apagar (chamado pelo menu) ----- */
+void input_overlay_mod_toast(const char *m)
+{
+   mod_toast(m);
+}
+
+bool input_overlay_mod_is_copy(const char *path)
+{
+   return mod_cfg_is_mod(path);
+}
+
+/* true se o arquivo e o overlay carregado agora ou o escolhido nas configuracoes */
+bool input_overlay_mod_in_use(const char *path)
+{
+   input_overlay_t *ol = input_driver_st.overlay_ptr;
+   settings_t *st      = config_get_ptr();
+   return (ol && ol->path[0] && !strcmp(ol->path, path))
+       || (st && st->paths.path_overlay[0] && !strcmp(st->paths.path_overlay, path));
+}
+
+bool input_overlay_mod_delete(const char *path)
+{
+   char msg[PATH_MAX_LENGTH + 64];
+   if (!mod_cfg_is_mod(path))
+   {
+      mod_toast("So da para apagar copias criadas pelo app.");
+      return false;
+   }
+   if (input_overlay_mod_in_use(path))
+   {
+      mod_toast("Esta copia esta em uso. Escolha outro overlay antes de apagar.");
+      return false;
+   }
+   if (filestream_delete(path) != 0)
+   {
+      mod_toast("Nao consegui apagar o arquivo.");
+      return false;
+   }
+   if (!strcmp(mod_last_saved, path))
+      mod_last_saved[0] = '\0';
+   snprintf(msg, sizeof(msg), "Apagado: %s", path_basename(path));
+   mod_toast(msg);
+   return true;
+}
+
+bool input_overlay_mod_rename(const char *path, const char *novo)
+{
+   char   nome[64];
+   char   dst[PATH_MAX_LENGTH];
+   char   msg[PATH_MAX_LENGTH + 64];
+   size_t n = 0;
+   const char *p;
+   const char *barra;
+   if (!novo)
+      return false;
+   if (!mod_cfg_is_mod(path))
+   {
+      mod_toast("So da para renomear copias criadas pelo app.");
+      return false;
+   }
+   if (input_overlay_mod_in_use(path))
+   {
+      mod_toast("Esta copia esta em uso. Escolha outro overlay antes de renomear.");
+      return false;
+   }
+   for (p = novo; *p == ' '; p++) { }
+   for (; *p && n < sizeof(nome) - 1; p++)
+   {
+      char c = *p;
+      if (c == ' ')
+         c = '-';
+      if (   (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+          || (c >= '0' && c <= '9') || c == '-' || c == '_')
+         nome[n++] = c;
+      else if (c == '.' && !strcasecmp(p, ".cfg"))
+         break;
+      else
+      {
+         mod_toast("Nome invalido: use so letras, numeros, - e _");
+         return false;
+      }
+   }
+   while (n > 0 && nome[n - 1] == '-')
+      n--;
+   nome[n] = '\0';
+   if (n == 0)
+   {
+      mod_toast("Nome vazio.");
+      return false;
+   }
+   barra = strrchr(path, '/');
+   if (!barra)
+      return false;
+   snprintf(dst, sizeof(dst), "%.*s/%s.cfg", (int)(barra - path), path, nome);
+   if (!strcmp(dst, path))
+      return false;
+   if (path_is_valid(dst))
+   {
+      mod_toast("Ja existe um arquivo com esse nome.");
+      return false;
+   }
+   if (filestream_rename(path, dst) != 0)
+   {
+      mod_toast("Nao consegui renomear o arquivo.");
+      return false;
+   }
+   if (!strcmp(mod_last_saved, path))
+      strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
+   snprintf(msg, sizeof(msg), "Renomeado para: %s", path_basename(dst));
+   mod_toast(msg);
+   return true;
+}
+
