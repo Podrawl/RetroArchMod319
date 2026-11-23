@@ -9,7 +9,7 @@ static char        mod_last_saved[PATH_MAX_LENGTH];
 
 static void mod_toast(const char *m)
 {
-   runloop_msg_queue_push(m, strlen(m), 1, 240, true, NULL,
+   runloop_msg_queue_push(m, strlen(m), 1, 480, true, NULL,
          MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
 }
 
@@ -65,6 +65,7 @@ static void mod_save_cfg(bool overwrite)
    int64_t  len  = 0;
    char    *out;
    size_t   cap, olen = 0, i, nl = 1, changed = 0;
+   char     ex[128];
    const char *p, *end;
    bool     has_mark;
    if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
@@ -124,6 +125,7 @@ static void mod_save_cfg(bool overwrite)
    /* monta o texto novo: o arquivo de origem com so as linhas alteradas trocadas */
    p        = (const char*)buf;
    end      = p + len;
+   ex[0]    = '\0';
    has_mark = (len >= (int64_t)strlen(MOD_CFG_MARCA)
          && !strncmp(p, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
    for (i = 0; i < (size_t)len; i++)
@@ -201,6 +203,9 @@ static void mod_save_cfg(bool overwrite)
                         olen += n - (size_t)(q2 - t);
                         if (eol)
                            out[olen++] = '\n';
+                        if (!ex[0])
+                           snprintf(ex, sizeof(ex), "; ex.: pag %u botao %u x %.3f>%.3f y %.3f>%.3f",
+                                 o, d, sv[0], dd->x, sv[1], dd->y);
                         changed++;
                         done = true;
                      }
@@ -218,9 +223,15 @@ static void mod_save_cfg(bool overwrite)
    }
    if (filestream_write_file(dst, out, (int64_t)olen))
    {
+      void   *chk  = NULL;
+      int64_t clen = 0;
+      bool    ok   = filestream_read_file(dst, &chk, &clen) && chk
+            && (size_t)clen == olen && !memcmp(chk, out, olen);
+      free(chk);
       strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
-      snprintf(msg, sizeof(msg), "Salvo: %s (%u botoes alterados)",
-            path_basename(dst), (unsigned)changed);
+      snprintf(msg, sizeof(msg), "Salvo: %s a partir de %s (%u botoes alterados%s)%s",
+            path_basename(dst), path_basename(ol->path), (unsigned)changed, ex,
+            ok ? "" : " [conferencia do arquivo FALHOU]");
    }
    else
       snprintf(msg, sizeof(msg), "Salvar: falhou ao gravar %s", path_basename(dst));
