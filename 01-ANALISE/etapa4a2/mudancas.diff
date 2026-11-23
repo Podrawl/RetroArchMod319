@@ -1,0 +1,1266 @@
+diff --git a/gfx/gfx_widgets.c b/gfx/gfx_widgets.c
+index 9cb26e2..21df1ed 100644
+--- a/gfx/gfx_widgets.c
++++ b/gfx/gfx_widgets.c
+@@ -2189,6 +2189,61 @@ static void gfx_widgets_frame_state(void *data)
+    p_dispwidget->gfx_widget_fonts.msg_queue.raster_block.carr.coords.vertices = 0;
+    p_dispwidget->gfx_widget_fonts.msg_queue.usage_count                       = 0;
+ 
++   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
++   {
++      extern int input_overlay_editor_ui(int *r, const char **lab, int max);
++      int         ur[12 * 4];
++      const char *ulab[12];
++      int         un = input_overlay_editor_ui(ur, ulab, 12);
++      if (un > 0)
++      {
++         int      ui;
++         int      out_w = (int)VIDEO_SCALE_W(output_dims);
++         int      out_h = (int)VIDEO_SCALE_H(output_dims);
++         int      lay_w = (int)VIDEO_SCALE_W(video_info->dims);
++         int      lay_h = (int)VIDEO_SCALE_H(video_info->dims);
++         float    fill[16] = {
++            0.05f, 0.05f, 0.10f, 0.78f,
++            0.05f, 0.05f, 0.10f, 0.78f,
++            0.05f, 0.05f, 0.10f, 0.78f,
++            0.05f, 0.05f, 0.10f, 0.78f,
++         };
++         if (out_w > 0 && out_h > 0)
++         {
++            gfx_display_blend_begin(dispctx, userdata);
++            for (ui = 0; ui < un; ui++)
++            {
++               int bx = ur[ui * 4 + 0] * lay_w / out_w;
++               int by = ur[ui * 4 + 1] * lay_h / out_h;
++               int bw = ur[ui * 4 + 2] * lay_w / out_w;
++               int bh = ur[ui * 4 + 3] * lay_h / out_h;
++               gfx_display_draw_quad(
++                     p_disp, userdata, video_info->dims,
++                     bx, by, VIDEO_SCALE_PACK(bw, bh),
++                     video_info->dims, fill, NULL);
++            }
++            gfx_display_blend_end(dispctx, userdata);
++            for (ui = 0; ui < un; ui++)
++            {
++               int bx = ur[ui * 4 + 0] * lay_w / out_w;
++               int by = ur[ui * 4 + 1] * lay_h / out_h;
++               int bw = ur[ui * 4 + 2] * lay_w / out_w;
++               int bh = ur[ui * 4 + 3] * lay_h / out_h;
++               gfx_display_draw_text(
++                     p_dispwidget->gfx_widget_fonts.regular.font,
++                     ulab[ui],
++                     (float)(bx + bw / 2), (float)(by + bh * 65 / 100),
++                     video_info->dims,
++                     0xFFFFFFFF, TEXT_ALIGN_CENTER,
++                     1.0f, false, 0.0f, false);
++               p_dispwidget->gfx_widget_fonts.regular.usage_count++;
++            }
++            gfx_widgets_flush_text(video_info->dims,
++                  &p_dispwidget->gfx_widget_fonts.regular);
++         }
++      }
++   }
++
+ #ifdef HAVE_TRANSLATE
+    /* AI Service overlay */
+    if (gfx_widgets_ai_service_overlay_get_state() > 0)
+diff --git a/input/drivers/android_input.c b/input/drivers/android_input.c
+index 63f9828..d993710 100644
+--- a/input/drivers/android_input.c
++++ b/input/drivers/android_input.c
+@@ -2021,6 +2021,31 @@ static INLINE void android_input_poll_event_type_key(int port,
+    int action  = key->action;
+    int keycode = key->keycode;
+ 
++   /* MOD: Voltar do sistema (botao ou gesto) abre o menu rapido do jogo.
++    * Cada tecla chega duas vezes (e uma vez por funcao que le o evento);
++    * event_time evita abrir e fechar na mesma tecla.
++    * Mascara: GAMEPAD e KEYBOARD compartilham bits; comparar o valor todo. */
++   if (     keycode == AKEYCODE_BACK
++         && action  == AKEY_EVENT_ACTION_DOWN
++         && (key->source & AINPUT_SOURCE_GAMEPAD)  != AINPUT_SOURCE_GAMEPAD
++         && (key->source & AINPUT_SOURCE_JOYSTICK) != AINPUT_SOURCE_JOYSTICK)
++   {
++      static int64_t mod_ultimo_voltar = -1;
++      if ((int64_t)key->event_time != mod_ultimo_voltar)
++      {
++         mod_ultimo_voltar = (int64_t)key->event_time;
++         if (   (runloop_get_flags() & RUNLOOP_FLAG_CORE_RUNNING)
++             && !(menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE))
++         {
++            extern void input_overlay_editor_exit(void);
++            input_overlay_editor_exit();
++            command_event(CMD_EVENT_MENU_TOGGLE, NULL);
++            *handled = 1;
++            return;
++         }
++      }
++   }
++
+    /* a row of keys for each pad slot, and the keyboard's at
+     * ANDROID_KEYBOARD_PORT */
+    if (port < 0 || port > ANDROID_KEYBOARD_PORT)
+diff --git a/input/input_driver.c b/input/input_driver.c
+index 27993ad..81e0dc0 100644
+--- a/input/input_driver.c
++++ b/input/input_driver.c
+@@ -6085,6 +6085,19 @@ static void input_overlay_get_analog_state(
+    x_val_sat = x_val   / desc->analog_saturate_pct;
+    y_val_sat = y_val   / desc->analog_saturate_pct;
+ 
++   {
++      /* MOD: ganho de 1,1 (maximo um pouco antes da borda, como o DuckStation)
++       * e limite circular (mantem a direcao do dedo) */
++      float mod_mag;
++      x_val_sat *= 1.1f;
++      y_val_sat *= 1.1f;
++      mod_mag = sqrt(x_val_sat * x_val_sat + y_val_sat * y_val_sat);
++      if (mod_mag > 1.0f)
++      {
++         x_val_sat /= mod_mag;
++         y_val_sat /= mod_mag;
++      }
++   }
+    out->analog[base + 0] = clamp_float(x_val_sat, -1.0f, 1.0f) * 32767.0f;
+    out->analog[base + 1] = clamp_float(y_val_sat, -1.0f, 1.0f) * 32767.0f;
+ }
+@@ -6206,6 +6219,943 @@ static void input_overlay_get_eightway_contact(const input_overlay_t *ol,
+       bits_or_bits(out->data, eightway->right.data, ARRAY_SIZE(out->data));
+ }
+ 
++
++/* ===== MOD: editor de overlay (etapa 2) =====
++ * Arrastar/redimensionar botoes do overlay ativo, so em memoria. */
++#define MOD_MAX_LAYOUTS 64
++static overlay_layout_t mod_layouts[MOD_MAX_LAYOUTS];
++static bool mod_layout_ok[MOD_MAX_LAYOUTS];
++
++static bool  mod_editor_active     = false;
++static bool  mod_editor_wait_close = false;
++static int   mod_editor_sel        = -1;
++static float mod_editor_grab_dx    = 0.0f;
++static float mod_editor_grab_dy    = 0.0f;
++static int   mod_editor_fingers    = 0;
++static bool  mod_editor_pinch      = false;
++static float mod_editor_pinch_d0   = 1.0f;
++static float mod_editor_x0         = 0.0f;
++static float mod_editor_y0         = 0.0f;
++
++/* Grupo movido/redimensionado junto (direcional inteiro, analogico + circulo) */
++#define MOD_MAX_GRP 64
++static int   mod_grp[MOD_MAX_GRP];
++static int   mod_grp_n = 0;
++static float mod_grp_x0[MOD_MAX_GRP];
++static float mod_grp_y0[MOD_MAX_GRP];
++static float mod_grp_rx0[MOD_MAX_GRP];
++static float mod_grp_ry0[MOD_MAX_GRP];
++static float mod_grp_px = 0.0f;
++static float mod_grp_py = 0.0f;
++
++static void input_overlay_scale(struct overlay *ol,
++      const overlay_layout_t *layout);
++static void input_overlay_set_vertex_geom(input_overlay_t *ol);
++
++static void mod_editor_apply(input_overlay_t *ol)
++{
++   size_t pi = (size_t)(ol->active - ol->overlays);
++   if (pi >= MOD_MAX_LAYOUTS || !mod_layout_ok[pi])
++      return;
++   input_overlay_scale(ol->active, &mod_layouts[pi]);
++   input_overlay_set_vertex_geom(ol);
++}
++
++/* ----- tela do jogo = proporcao personalizada (x, y, largura, altura) ----- */
++#define MOD_VP_Y_SINAL 1   /* se arrastar para cima mover a imagem para baixo, trocar para -1 */
++static bool  mod_editor_screen = false;
++static float mod_raw_x[2];
++static float mod_raw_y[2];
++static int   mod_win_w = 0;
++static int   mod_win_h = 0;
++static float mod_scr_px0 = 0.0f;
++static float mod_scr_py0 = 0.0f;
++static int   mod_scr_x0 = 0, mod_scr_y0 = 0, mod_scr_w0 = 1, mod_scr_h0 = 1;
++static float mod_scr_d0 = 1.0f;
++
++static void mod_vp_get(int *x, int *y, int *w, int *h)
++{
++   settings_t *st = config_get_ptr();
++   *x = VIDEO_POS_X(st->video_vp_custom.pos);
++   *y = VIDEO_POS_Y(st->video_vp_custom.pos);
++   *w = (int)VIDEO_SCALE_W(st->video_vp_custom.dims);
++   *h = (int)VIDEO_SCALE_H(st->video_vp_custom.dims);
++}
++
++static void mod_vp_set(int x, int y, int w, int h)
++{
++   settings_t *st = config_get_ptr();
++   if (w < 16)    w = 16;
++   if (h < 16)    h = 16;
++   if (w > 9999)  w = 9999;
++   if (h > 9999)  h = 9999;
++   if (x < -9999) x = -9999;
++   if (x > 9999)  x = 9999;
++   if (y < -9999) y = -9999;
++   if (y > 9999)  y = 9999;
++   st->video_vp_custom.pos  = VIDEO_POS_PACK(x, y);
++   st->video_vp_custom.dims = VIDEO_SCALE_PACK(w, h);
++   command_event(CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, NULL);
++}
++
++/* Liga o modo Personalizado partindo da posicao atual da imagem. */
++static void mod_editor_seed_screen(void)
++{
++   settings_t *st = config_get_ptr();
++   struct video_viewport vp;
++   memset(&vp, 0, sizeof(vp));
++   if (video_driver_get_viewport_info(&vp))
++   {
++      mod_win_w = (int)VIDEO_SCALE_W(vp.full_dims);
++      mod_win_h = (int)VIDEO_SCALE_H(vp.full_dims);
++      if (   st->uints.video_aspect_ratio_idx != ASPECT_RATIO_CUSTOM
++          || !VIDEO_SCALE_W(st->video_vp_custom.dims)
++          || !VIDEO_SCALE_H(st->video_vp_custom.dims))
++      {
++         /* x,y personalizados sao DESLOCAMENTO a partir da ancora (centro por padrao);
++          * 0,0 mantem a imagem exatamente onde esta. */
++         st->video_vp_custom.pos  = VIDEO_POS_PACK(0, 0);
++         st->video_vp_custom.dims = vp.dims;
++      }
++   }
++   if (st->uints.video_aspect_ratio_idx != ASPECT_RATIO_CUSTOM)
++   {
++      st->uints.video_aspect_ratio_idx = ASPECT_RATIO_CUSTOM;
++      command_event(CMD_EVENT_VIDEO_SET_ASPECT_RATIO, NULL);
++   }
++   command_event(CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, NULL);
++}
++
++/* Dedo 0 em pixels da janela. */
++static void mod_scr_finger(int k, float *px, float *py)
++{
++   *px = ((mod_raw_x[k] + 32767.0f) / 65535.0f) * (float)mod_win_w;
++   *py = ((mod_raw_y[k] + 32767.0f) / 65535.0f) * (float)mod_win_h;
++}
++
++static void mod_screen_begin(void)
++{
++   if (mod_win_w <= 0 || mod_win_h <= 0)
++      return;
++   mod_scr_finger(0, &mod_scr_px0, &mod_scr_py0);
++   mod_vp_get(&mod_scr_x0, &mod_scr_y0, &mod_scr_w0, &mod_scr_h0);
++   if (mod_scr_w0 < 1) mod_scr_w0 = 1;
++   if (mod_scr_h0 < 1) mod_scr_h0 = 1;
++   mod_editor_screen = true;
++}
++
++static void mod_screen_move(void)
++{
++   float px, py;
++   mod_scr_finger(0, &px, &py);
++   mod_vp_set(mod_scr_x0 + (int)(px - mod_scr_px0),
++              mod_scr_y0 + MOD_VP_Y_SINAL * (int)(py - mod_scr_py0),
++              mod_scr_w0, mod_scr_h0);
++}
++
++/* 2 dedos: muda o tamanho mantendo a proporcao, em volta do centro da imagem. */
++static void mod_screen_pinch(bool primeira)
++{
++   float ax, ay, bx, by, dx, dy, dist, f;
++   int w, h, cx, cy;
++   mod_scr_finger(0, &ax, &ay);
++   mod_scr_finger(1, &bx, &by);
++   dx   = bx - ax;
++   dy   = by - ay;
++   dist = sqrtf(dx * dx + dy * dy);
++   if (primeira)
++   {
++      mod_scr_d0 = (dist > 20.0f) ? dist : 20.0f;
++      mod_vp_get(&mod_scr_x0, &mod_scr_y0, &mod_scr_w0, &mod_scr_h0);
++      if (mod_scr_w0 < 1) mod_scr_w0 = 1;
++      if (mod_scr_h0 < 1) mod_scr_h0 = 1;
++      return;
++   }
++   f = dist / mod_scr_d0;
++   if (f < 0.2f) f = 0.2f;
++   if (f > 5.0f) f = 5.0f;
++   w  = (int)((float)mod_scr_w0 * f);
++   h  = (int)((float)mod_scr_h0 * f);
++   cx = mod_scr_x0 + mod_scr_w0 / 2;
++   cy = mod_scr_y0 + mod_scr_h0 / 2;
++   mod_vp_set(cx - w / 2, cy - h / 2, w, h);
++}
++
++/* ----- salvar uma copia do .cfg com as posicoes/tamanhos ajustados ----- */
++#include <streams/file_stream.h>
++#define MOD_CFG_MARCA "# criado pelo RetroArch Mod (editor de overlay)"
++static float      *mod_snap    = NULL;   /* 4 floats por botao (x, y, range_x, range_y) do momento da carga */
++static size_t      mod_snap_n  = 0;
++static const void *mod_snap_id = NULL;
++static char        mod_snap_path[PATH_MAX_LENGTH];
++static char        mod_last_saved[PATH_MAX_LENGTH];
++
++static void mod_toast(const char *m)
++{
++   runloop_msg_queue_push(m, strlen(m), 1, 480, true, NULL,
++         MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++}
++
++/* Guarda os valores originais de todas as paginas (uma vez por overlay carregado). */
++static void mod_snap_take(input_overlay_t *ol)
++{
++   size_t i, j, k = 0, n = 0;
++   if (!ol || !ol->overlays)
++      return;
++   for (i = 0; i < ol->size; i++)
++      n += ol->overlays[i].size;
++   if (   mod_snap && mod_snap_id == (const void*)ol->overlays
++       && mod_snap_n == n && !strcmp(mod_snap_path, ol->path))
++      return;
++   free(mod_snap);
++   mod_snap   = (float*)malloc((n ? n : 1) * 4 * sizeof(float));
++   mod_snap_n = 0;
++   if (!mod_snap)
++      return;
++   for (i = 0; i < ol->size; i++)
++      for (j = 0; j < ol->overlays[i].size; j++, k++)
++      {
++         const struct overlay_desc *d = &ol->overlays[i].descs[j];
++         mod_snap[k * 4 + 0] = d->x;
++         mod_snap[k * 4 + 1] = d->y;
++         mod_snap[k * 4 + 2] = d->range_x;
++         mod_snap[k * 4 + 3] = d->range_y;
++      }
++   mod_snap_n  = n;
++   mod_snap_id = ol->overlays;
++   strlcpy(mod_snap_path, ol->path, sizeof(mod_snap_path));
++}
++
++static bool mod_cfg_is_mod(const char *path)
++{
++   void   *b   = NULL;
++   int64_t len = 0;
++   bool    r;
++   if (!path || !path[0] || !filestream_read_file(path, &b, &len) || !b)
++      return false;
++   r = (len >= (int64_t)strlen(MOD_CFG_MARCA)
++         && !strncmp((const char*)b, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
++   free(b);
++   return r;
++}
++
++static void mod_save_cfg(bool overwrite)
++{
++   input_overlay_t *ol = input_driver_st.overlay_ptr;
++   char     dst[PATH_MAX_LENGTH];
++   char     msg[PATH_MAX_LENGTH + 96];
++   void    *buf  = NULL;
++   int64_t  len  = 0;
++   char    *out;
++   size_t   cap, olen = 0, i, nl = 1, changed = 0;
++   char     ex[128];
++   const char *p, *end;
++   bool     has_mark;
++   if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
++   {
++      mod_toast("Salvar: overlay nao carregado.");
++      return;
++   }
++   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
++   {
++      mod_toast("Salvar: nao consegui ler o .cfg do overlay.");
++      free(buf);
++      return;
++   }
++   /* destino */
++   dst[0] = '\0';
++   if (overwrite)
++   {
++      if (mod_cfg_is_mod(ol->path))
++         strlcpy(dst, ol->path, sizeof(dst));
++      else if (mod_last_saved[0] && mod_cfg_is_mod(mod_last_saved))
++         strlcpy(dst, mod_last_saved, sizeof(dst));
++      else
++      {
++         mod_toast("Sobrescrever so vale para copia criada pelo app. Use Salvar novo.");
++         free(buf);
++         return;
++      }
++   }
++   else
++   {
++      char base[PATH_MAX_LENGTH];
++      size_t bl;
++      unsigned n;
++      strlcpy(base, ol->path, sizeof(base));
++      bl = strlen(base);
++      if (bl > 4 && !strcasecmp(base + bl - 4, ".cfg"))
++         base[bl - 4] = '\0';
++      bl = strlen(base);
++      {
++         /* tira um "-mod" ou "-modN" do final, para nao acumular */
++         size_t q = bl;
++         while (q > 0 && base[q - 1] >= '0' && base[q - 1] <= '9')
++            q--;
++         if (q >= 4 && !strncmp(base + q - 4, "-mod", 4))
++            base[q - 4] = '\0';
++      }
++      for (n = 1; n < 1000; n++)
++      {
++         if (n == 1)
++            snprintf(dst, sizeof(dst), "%s-mod.cfg", base);
++         else
++            snprintf(dst, sizeof(dst), "%s-mod%u.cfg", base, n);
++         if (!path_is_valid(dst))
++            break;
++      }
++   }
++   /* monta o texto novo: o arquivo de origem com so as linhas alteradas trocadas */
++   p        = (const char*)buf;
++   end      = p + len;
++   ex[0]    = '\0';
++   has_mark = (len >= (int64_t)strlen(MOD_CFG_MARCA)
++         && !strncmp(p, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
++   for (i = 0; i < (size_t)len; i++)
++      if (p[i] == '\n')
++         nl++;
++   cap = (size_t)len + 80 * nl + 256;
++   out = (char*)malloc(cap);
++   if (!out)
++   {
++      free(buf);
++      return;
++   }
++   if (!has_mark)
++      olen += (size_t)snprintf(out + olen, cap - olen, "%s\n", MOD_CFG_MARCA);
++   while (p < end)
++   {
++      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
++      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
++      size_t      adv = eol ? n + 1 : n;
++      bool        done = false;
++      char        t[1024];
++      unsigned    o, d;
++      int         nn = 0;
++      if (n > 0 && n < sizeof(t))
++      {
++         memcpy(t, p, n);
++         t[n] = '\0';
++         if (sscanf(t, "overlay%u_desc%u%n", &o, &d, &nn) == 2 && nn > 0)
++         {
++            char *q1, *q2;
++            size_t k = (size_t)nn;
++            while (t[k] == ' ' || t[k] == '\t')
++               k++;
++            if (   t[k] == '=' && (q1 = strchr(t + k, '"'))
++                && (q2 = strchr(q1 + 1, '"'))
++                && o < ol->size && d < ol->overlays[o].size)
++            {
++               char   v[512];
++               char  *tok[8];
++               int    nt = 0;
++               char  *c;
++               size_t vl = (size_t)(q2 - (q1 + 1));
++               if (vl < sizeof(v))
++               {
++                  memcpy(v, q1 + 1, vl);
++                  v[vl] = '\0';
++                  c = v;
++                  tok[nt++] = c;
++                  while (nt < 8 && (c = strchr(c, ',')))
++                  {
++                     *c++ = '\0';
++                     tok[nt++] = c;
++                  }
++                  if (nt == 6)
++                  {
++                     size_t off = 0, pg;
++                     const struct overlay_desc *dd = &ol->overlays[o].descs[d];
++                     const float *sv;
++                     for (pg = 0; pg < o; pg++)
++                        off += ol->overlays[pg].size;
++                     sv = &mod_snap[(off + d) * 4];
++                     if (   fabsf(dd->x - sv[0]) > 1e-6f
++                         || fabsf(dd->y - sv[1]) > 1e-6f
++                         || fabsf(dd->range_x - sv[2]) > 1e-6f
++                         || fabsf(dd->range_y - sv[3]) > 1e-6f)
++                     {
++                        size_t pre = (size_t)(q1 + 1 - t);
++                        memcpy(out + olen, t, pre);
++                        olen += pre;
++                        olen += (size_t)snprintf(out + olen, cap - olen,
++                              "%s,%.5f,%.5f,%s,%.6f,%.6f",
++                              tok[0], dd->x, dd->y, tok[3],
++                              dd->range_x, dd->range_y);
++                        memcpy(out + olen, q2, n - (size_t)(q2 - t));
++                        olen += n - (size_t)(q2 - t);
++                        if (eol)
++                           out[olen++] = '\n';
++                        if (!ex[0])
++                           snprintf(ex, sizeof(ex), "; ex.: pag %u botao %u x %.3f>%.3f y %.3f>%.3f",
++                                 o, d, sv[0], dd->x, sv[1], dd->y);
++                        changed++;
++                        done = true;
++                     }
++                  }
++               }
++            }
++         }
++      }
++      if (!done)
++      {
++         memcpy(out + olen, p, adv);
++         olen += adv;
++      }
++      p += adv;
++   }
++   if (filestream_write_file(dst, out, (int64_t)olen))
++   {
++      void   *chk  = NULL;
++      int64_t clen = 0;
++      bool    ok   = filestream_read_file(dst, &chk, &clen) && chk
++            && (size_t)clen == olen && !memcmp(chk, out, olen);
++      free(chk);
++      strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
++      snprintf(msg, sizeof(msg), "Salvo: %s a partir de %s (%u botoes alterados%s)%s",
++            path_basename(dst), path_basename(ol->path), (unsigned)changed, ex,
++            ok ? "" : " [conferencia do arquivo FALHOU]");
++   }
++   else
++      snprintf(msg, sizeof(msg), "Salvar: falhou ao gravar %s", path_basename(dst));
++   mod_toast(msg);
++   free(out);
++   free(buf);
++}
++
++/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
++static int  mod_ui_held   = -1;
++static char mod_ui_title[96];
++static int mod_ui_hold_n = 0;
++static int mod_ui_timer  = 0;   /* quadros restantes com o painel visivel */
++static int mod_main_page = 0;   /* pagina marcada como principal (so memoria por enquanto) */
++
++/* 10 retangulos (x, y, largura, altura) em pixels da janela:
++ * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (toque = marcar como principal), 8 centralizar, 9 original */
++static int mod_ui_rects(int *r)
++{
++   int bw, bh, gap, x0, y0, k;
++   if (mod_win_w <= 0 || mod_win_h <= 0)
++      return 0;
++   {
++      int un = (mod_win_w < mod_win_h) ? mod_win_w : mod_win_h;
++      bh  = un * 8 / 100;
++      bw  = un * 22 / 100;
++   }
++   gap = bh / 5;
++   x0  = mod_win_w / 2 - bw - gap / 2;
++   y0  = mod_win_h / 2 - (7 * bh + 6 * gap) / 2;
++   for (k = 0; k < 4; k++)
++   {
++      r[k * 4 + 0] = x0 + (k % 2) * (bw + gap);
++      r[k * 4 + 1] = y0 + (2 + k / 2) * (bh + gap);
++      r[k * 4 + 2] = bw;
++      r[k * 4 + 3] = bh;
++   }
++   r[16] = x0;                      /* Fechar: ultima fileira, largura toda */
++   r[17] = y0 + 6 * (bh + gap);
++   r[18] = 2 * bw + gap;
++   r[19] = bh;
++   r[32] = x0;                      /* Centralizar: metade esquerda */
++   r[33] = y0 + 4 * (bh + gap);
++   r[34] = bw;
++   r[35] = bh;
++   r[36] = x0 + bw + gap;           /* Original: metade direita */
++   r[37] = y0 + 4 * (bh + gap);
++   r[38] = bw;
++   r[39] = bh;
++   r[40] = x0;                      /* Salvar novo */
++   r[41] = y0 + 5 * (bh + gap);
++   r[42] = bw;
++   r[43] = bh;
++   r[44] = x0 + bw + gap;           /* Sobrescrever */
++   r[45] = y0 + 5 * (bh + gap);
++   r[46] = bw;
++   r[47] = bh;
++   for (k = 0; k < 2; k++)
++   {
++      r[20 + k * 4 + 0] = x0 + k * (bw + gap);
++      r[20 + k * 4 + 1] = y0 + (bh + gap);
++      r[20 + k * 4 + 2] = bw;
++      r[20 + k * 4 + 3] = bh;
++   }
++   r[28] = x0;
++   r[29] = y0;
++   r[30] = 2 * bw + gap;
++   r[31] = bh;
++   return 12;
++}
++
++/* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
++int input_overlay_editor_ui(int *r, const char **lab, int max)
++{
++   static const char *nomes[12] =
++      { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar",
++        "Pag <", "Pag >", NULL, "Centralizar", "Original",
++        "Salvar novo", "Sobrescrever" };
++   int k, n;
++   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 12)
++      return 0;
++   n = mod_ui_rects(r);
++   for (k = 0; k < n; k++)
++      lab[k] = nomes[k];
++   {
++      input_overlay_t *ol = input_driver_st.overlay_ptr;
++      if (ol && ol->active)
++         snprintf(mod_ui_title, sizeof(mod_ui_title), "%s%s (%u de %u)",
++               ((unsigned)ol->index == (unsigned)mod_main_page) ? "* " : "",
++               ol->active->name, (unsigned)ol->index + 1, (unsigned)ol->size);
++      else
++         snprintf(mod_ui_title, sizeof(mod_ui_title), "?");
++      lab[7] = mod_ui_title;
++   }
++   return n;
++}
++
++static int mod_ui_hit(float px, float py)
++{
++   int r[48];
++   int k, n;
++   if (mod_ui_timer <= 0)
++      return -1;
++   n = mod_ui_rects(r);
++   for (k = 0; k < n; k++)
++      if (   px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
++          && py >= (float)r[k * 4 + 1] && py < (float)(r[k * 4 + 1] + r[k * 4 + 3]))
++         return k;
++   return -1;
++}
++
++/* Vai para a pagina anterior/proxima (pula as de nome "hidden..."). */
++static void mod_page_goto(int dir)
++{
++   input_overlay_t *ol = input_driver_st.overlay_ptr;
++   size_t   tries;
++   unsigned idx;
++   bool     tmp = false;
++   if (!ol || ol->size < 2)
++      return;
++   idx = (unsigned)ol->index;
++   for (tries = 0; tries < ol->size; tries++)
++   {
++      idx = (unsigned)((idx + (dir > 0 ? 1 : ol->size - 1)) % ol->size);
++      if (strncmp(ol->overlays[idx].name, "hidden", 6) != 0)
++         break;
++   }
++   if (idx == (unsigned)ol->index
++         || strncmp(ol->overlays[idx].name, "hidden", 6) == 0)
++      return;
++   ol->next_index   = idx;
++   command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
++   mod_editor_sel   = -1;
++   mod_grp_n        = 0;
++}
++
++static void mod_ui_press(int b)
++{
++   int x, y, w, h;
++   if (b == 4)
++   {
++      static const char msg[] = "Editor de overlay encerrado.";
++      mod_editor_active = false;
++      mod_editor_sel    = -1;
++      mod_editor_pinch  = false;
++      command_event(CMD_EVENT_UNPAUSE, NULL);
++      runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,
++            MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++      return;
++   }
++   if (b == 7)
++   {
++      input_overlay_t *ol = input_driver_st.overlay_ptr;
++      if (ol)
++         mod_main_page = (int)ol->index;
++      return;
++   }
++   if (b == 5 || b == 6)
++   {
++      mod_page_goto(b == 6 ? 1 : -1);
++      return;
++   }
++   if (b == 10 || b == 11)
++   {
++      mod_save_cfg(b == 11);
++      return;
++   }
++   mod_vp_get(&x, &y, &w, &h);
++   switch (b)
++   {
++      /* x,y sao deslocamento da ancora (centro): ao mudar w/h a imagem ja cresce
++       * para os dois lados sozinha, entao x,y NAO mudam. */
++      case 0: h -= 4; break;
++      case 1: h += 4; break;
++      case 2: w -= 4; break;
++      case 3: w += 4; break;
++      case 8: x = 0; y = 0; break;
++      case 9:
++      {
++         /* proporcao original do jogo (a do nucleo), a maior que cabe na tela, centralizada */
++         video_driver_state_t *vs = video_state_get_ptr();
++         float asp = vs->av_info.geometry.aspect_ratio;
++         if (asp <= 0.0f && vs->av_info.geometry.base_height)
++            asp = (float)vs->av_info.geometry.base_width
++                / (float)vs->av_info.geometry.base_height;
++         if (asp <= 0.0f || mod_win_w <= 0 || mod_win_h <= 0)
++            return;
++         w = mod_win_w;
++         h = (int)((float)w / asp);
++         if (h > mod_win_h)
++         {
++            h = mod_win_h;
++            w = (int)((float)h * asp);
++         }
++         x = 0;
++         y = 0;
++         break;
++      }
++      default: return;
++   }
++   mod_vp_set(x, y, w, h);
++}
++
++/* Uma vez por leitura de toques; count = dedos na tela. */
++static void mod_editor_frame(input_overlay_t *ol, int count,
++      const input_overlay_state_t *st)
++{
++   int kk;
++   bool menu_alive = (menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE) != 0;
++
++   for (kk = 0; kk < 2 && kk < count; kk++)
++   {
++      mod_raw_x[kk] = (float)VIDEO_POS_X(st->touch[kk]);
++      mod_raw_y[kk] = (float)VIDEO_POS_Y(st->touch[kk]);
++   }
++   if (count > 0)
++      mod_ui_timer = 300;
++   else if (mod_ui_timer > 0)
++      mod_ui_timer--;
++   {
++      struct video_viewport vp2;
++      memset(&vp2, 0, sizeof(vp2));
++      if (video_driver_get_viewport_info(&vp2))
++      {
++         mod_win_w = (int)VIDEO_SCALE_W(vp2.full_dims);
++         mod_win_h = (int)VIDEO_SCALE_H(vp2.full_dims);
++      }
++   }
++
++   /* So considera "menu aberto" depois de ter visto o menu fechado uma vez */
++   if (mod_editor_wait_close)
++   {
++      if (!menu_alive)
++      {
++         mod_editor_wait_close = false;
++         mod_editor_seed_screen();
++         mod_ui_timer = 300;
++         mod_snap_take(input_driver_st.overlay_ptr);
++      }
++   }
++   else if (menu_alive)
++   {
++      mod_editor_active = false;
++      return;
++   }
++
++   mod_editor_fingers = count;
++   if (count == 0)
++   {
++      mod_editor_sel    = -1;
++      mod_editor_pinch  = false;
++      mod_editor_screen = false;
++      mod_ui_held       = -1;
++      mod_grp_n         = 0;
++   }
++   else if (count >= 3)
++   {
++      static const char msg[] = "Editor de overlay encerrado.";
++      mod_editor_active = false;
++      mod_editor_sel    = -1;
++      mod_editor_pinch  = false;
++      command_event(CMD_EVENT_UNPAUSE, NULL);
++      runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,
++            MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++   }
++}
++
++static bool mod_mask_empty(const struct overlay_desc *d)
++{
++   size_t k;
++   for (k = 0; k < ARRAY_SIZE(d->button_mask.data); k++)
++      if (d->button_mask.data[k])
++         return false;
++   return true;
++}
++
++/* Botao so de direcao (cima/baixo/esquerda/direita e diagonais) ou area de dpad */
++static bool mod_is_dir(const struct overlay_desc *d)
++{
++   unsigned k;
++   bool any = false;
++   if (d->type == OVERLAY_TYPE_DPAD_AREA)
++      return true;
++   if (d->type != OVERLAY_TYPE_BUTTONS)
++      return false;
++   for (k = 0; k < 256; k++)
++   {
++      if (!BIT256_GET(d->button_mask, k))
++         continue;
++      if (   k == RETRO_DEVICE_ID_JOYPAD_UP   || k == RETRO_DEVICE_ID_JOYPAD_DOWN
++          || k == RETRO_DEVICE_ID_JOYPAD_LEFT || k == RETRO_DEVICE_ID_JOYPAD_RIGHT)
++         any = true;
++      else
++         return false;
++   }
++   return any;
++}
++
++static bool mod_is_analog(const struct overlay_desc *d)
++{
++   return d->type == OVERLAY_TYPE_ANALOG_LEFT
++       || d->type == OVERLAY_TYPE_ANALOG_RIGHT;
++}
++
++static bool mod_is_nul(const struct overlay_desc *d)
++{
++   return d->type == OVERLAY_TYPE_BUTTONS && mod_mask_empty(d);
++}
++
++/* Dois botoes vizinhos (encostados ou quase) */
++static bool mod_adj(const struct overlay_desc *a, const struct overlay_desc *b)
++{
++   float dx = a->x - b->x, dy = a->y - b->y;
++   if (dx < 0.0f) dx = -dx;
++   if (dy < 0.0f) dy = -dy;
++   return dx <= (a->range_x + b->range_x) * 1.6f
++       && dy <= (a->range_y + b->range_y) * 1.6f;
++}
++
++static void mod_grp_add(int i)
++{
++   int k;
++   for (k = 0; k < mod_grp_n; k++)
++      if (mod_grp[k] == i)
++         return;
++   if (mod_grp_n < MOD_MAX_GRP)
++      mod_grp[mod_grp_n++] = i;
++}
++
++/* Monta o grupo do botao tocado t. */
++static void mod_build_group(struct overlay *pg, int t)
++{
++   struct overlay_desc *descs = pg->descs;
++   int n = (int)pg->size;
++   int i, seed = -1;
++
++   mod_grp_n = 0;
++
++   /* analogico: ele mais os "nul" no mesmo lugar (a imagem do circulo) */
++   {
++      int anchor = -1;
++      if (mod_is_analog(&descs[t]))
++         anchor = t;
++      else if (mod_is_nul(&descs[t]))
++         for (i = 0; i < n; i++)
++            if (mod_is_analog(&descs[i]))
++            {
++               float dx = descs[t].x - descs[i].x, dy = descs[t].y - descs[i].y;
++               if (dx < 0.0f) dx = -dx;
++               if (dy < 0.0f) dy = -dy;
++               if (dx <= 0.5f * descs[i].range_x && dy <= 0.5f * descs[i].range_y)
++               {
++                  anchor = i;
++                  break;
++               }
++            }
++      if (anchor >= 0)
++      {
++         mod_grp_add(anchor);
++         for (i = 0; i < n; i++)
++         {
++            float dx, dy;
++            if (i == anchor || !mod_is_nul(&descs[i]))
++               continue;
++            dx = descs[i].x - descs[anchor].x;
++            dy = descs[i].y - descs[anchor].y;
++            if (dx < 0.0f) dx = -dx;
++            if (dy < 0.0f) dy = -dy;
++            if (dx <= 0.5f * descs[anchor].range_x && dy <= 0.5f * descs[anchor].range_y)
++               mod_grp_add(i);
++         }
++         return;
++      }
++   }
++
++   /* direcional: todos os botoes de direcao ligados entre si + "nul" do centro */
++   if (mod_is_dir(&descs[t]))
++      seed = t;
++   else if (mod_is_nul(&descs[t]))
++      for (i = 0; i < n; i++)
++         if (mod_is_dir(&descs[i]) && mod_adj(&descs[t], &descs[i]))
++         {
++            seed = i;
++            break;
++         }
++
++   if (seed >= 0)
++   {
++      int k;
++      mod_grp_add(seed);
++      for (k = 0; k < mod_grp_n; k++)       /* varre ampliando o grupo */
++         for (i = 0; i < n; i++)
++            if (mod_is_dir(&descs[i]) && mod_adj(&descs[mod_grp[k]], &descs[i]))
++               mod_grp_add(i);
++      {
++         int dirs = mod_grp_n;
++         for (i = 0; i < n; i++)
++            if (mod_is_nul(&descs[i]))
++               for (k = 0; k < dirs; k++)
++                  if (mod_adj(&descs[mod_grp[k]], &descs[i]))
++                  {
++                     mod_grp_add(i);
++                     break;
++                  }
++      }
++      return;
++   }
++
++   mod_grp_add(t);
++}
++
++/* Um dedo (idx) em (x,y), no mesmo espaco dos botoes (x_shift/y_shift). */
++static void mod_editor_touch(input_overlay_t *ol, int idx, float x, float y)
++{
++   struct overlay_desc *descs = ol->active->descs;
++
++   if (idx == 0)
++   {
++      mod_editor_x0 = x;
++      mod_editor_y0 = y;
++
++      if (mod_editor_sel < 0 && !mod_editor_screen)
++      {
++         float upx, upy;
++         int   ub;
++         mod_scr_finger(0, &upx, &upy);
++         ub = mod_ui_hit(upx, upy);
++         if (ub >= 0 && (mod_ui_held < 0 || mod_ui_held == ub))
++         {
++            if (mod_ui_held != ub)
++            {
++               mod_ui_held   = ub;
++               mod_ui_hold_n = 0;
++               mod_ui_press(ub);
++            }
++            else
++            {
++               mod_ui_hold_n++;
++               if ((ub < 4) && mod_ui_hold_n > 24 && (mod_ui_hold_n % 4) == 0)
++                  mod_ui_press(ub);
++            }
++            return;
++         }
++         if (mod_ui_held >= 0)
++            return;
++      }
++
++      if (mod_editor_sel < 0 && !mod_editor_screen)
++      {
++         size_t i;
++         float  best = 1e9f;
++         for (i = 0; i < ol->active->size; i++)
++         {
++            struct overlay_desc *d = &descs[i];
++            float area = d->range_x * d->range_y;
++            if (area <= 0.0f)
++               continue;
++            if (!input_overlay_coords_inside_hitbox(d, x, y, false))
++               continue;
++            if (area < best)
++            {
++               best                = area;
++               mod_editor_sel      = (int)i;
++               mod_editor_grab_dx  = x - d->x_shift;
++               mod_editor_grab_dy  = y - d->y_shift;
++            }
++         }
++         if (mod_editor_sel >= 0)
++            mod_build_group(ol->active, mod_editor_sel);
++         else
++            mod_screen_begin();
++      }
++      else if (mod_editor_screen)
++      {
++         if (mod_editor_fingers < 2)
++            mod_screen_move();
++      }
++      else if (mod_editor_fingers < 2)
++      {
++         struct overlay_desc *t = &descs[mod_editor_sel];
++         float ddx = (x - mod_editor_grab_dx) - t->x_shift;
++         float ddy = (y - mod_editor_grab_dy) - t->y_shift;
++         int k;
++         for (k = 0; k < mod_grp_n; k++)
++         {
++            descs[mod_grp[k]].x += ddx;
++            descs[mod_grp[k]].y += ddy;
++         }
++         mod_editor_apply(ol);
++      }
++   }
++   else if (idx == 1 && mod_editor_screen)
++   {
++      /* tamanho da tela: pelos botoes do editor */
++   }
++   else if (idx == 1 && mod_editor_sel >= 0)
++   {
++      float dx = x - mod_editor_x0;
++      float dy = y - mod_editor_y0;
++      float dist = sqrtf(dx * dx + dy * dy);
++      int k;
++
++      if (!mod_editor_pinch)
++      {
++         float minx = 1e9f, maxx = -1e9f, miny = 1e9f, maxy = -1e9f;
++         mod_editor_pinch    = true;
++         mod_editor_pinch_d0 = (dist > 0.01f) ? dist : 0.01f;
++         for (k = 0; k < mod_grp_n; k++)
++         {
++            struct overlay_desc *d = &descs[mod_grp[k]];
++            mod_grp_x0[k]  = d->x;
++            mod_grp_y0[k]  = d->y;
++            mod_grp_rx0[k] = d->range_x;
++            mod_grp_ry0[k] = d->range_y;
++            if (d->x < minx) minx = d->x;
++            if (d->x > maxx) maxx = d->x;
++            if (d->y < miny) miny = d->y;
++            if (d->y > maxy) maxy = d->y;
++         }
++         mod_grp_px = 0.5f * (minx + maxx);
++         mod_grp_py = 0.5f * (miny + maxy);
++      }
++      else
++      {
++         float f = dist / mod_editor_pinch_d0;
++         if (f < 0.3f) f = 0.3f;
++         if (f > 3.0f) f = 3.0f;
++         for (k = 0; k < mod_grp_n; k++)
++         {
++            struct overlay_desc *d = &descs[mod_grp[k]];
++            d->x       = mod_grp_px + (mod_grp_x0[k] - mod_grp_px) * f;
++            d->y       = mod_grp_py + (mod_grp_y0[k] - mod_grp_py) * f;
++            d->range_x = mod_grp_rx0[k] * f;
++            d->range_y = mod_grp_ry0[k] * f;
++         }
++         mod_editor_apply(ol);
++      }
++   }
++}
++/* ===== fim MOD ===== */
++
+ static bool input_overlay_poll(
+       input_overlay_t *ol,
+       input_overlay_state_t *out,
+@@ -6231,24 +7181,40 @@ static bool input_overlay_poll(
+    x *= touch_scale;
+    y *= touch_scale;
+ 
++   /* MOD: no modo editor, o toque nao aperta botao: edita */
++   if (mod_editor_active)
++   {
++      mod_editor_touch(ol, touch_idx, x, y);
++      return false;
++   }
++
+    for (i = 0; i < ol->active->size; i++)
+    {
+       float x_dist, y_dist;
+       unsigned int base         = 0;
+       unsigned int desc_prio    = 0;
+       struct overlay_desc *desc = &descs[i];
++      bool mod_analog_preso;
+ 
+       /* Use range_mod if this touch pointer contributed
+        * to desc's touch_mask in the previous poll */
+       use_range_mod = (old_touch_idx != -1)
+             && BIT32_GET(desc->old_touch_mask, old_touch_idx);
+ 
+-      if (!input_overlay_coords_inside_hitbox(desc, x, y, use_range_mod))
++      /* MOD: dedo que ja estava no analogico continua preso a ele */
++      mod_analog_preso = use_range_mod
++            && (desc->type == OVERLAY_TYPE_ANALOG_LEFT
++             || desc->type == OVERLAY_TYPE_ANALOG_RIGHT);
++
++      if (!mod_analog_preso
++            && !input_overlay_coords_inside_hitbox(desc, x, y, use_range_mod))
+          continue;
+ 
+       /* Check for exclusive hitbox, which blocks other input.
+        * range_mod_exclusive has priority over exclusive. */
+-      if (use_range_mod && (desc->flags & OVERLAY_DESC_RANGE_MOD_EXCLUSIVE))
++      if (mod_analog_preso)
++         desc_prio = 2;
++      else if (use_range_mod && (desc->flags & OVERLAY_DESC_RANGE_MOD_EXCLUSIVE))
+          desc_prio = 2;
+       else if (desc->flags & OVERLAY_DESC_EXCLUSIVE)
+          desc_prio = 1;
+@@ -6319,6 +7285,14 @@ static bool input_overlay_poll(
+ 
+       if (desc->flags & OVERLAY_DESC_MOVABLE)
+       {
++         float mod_nx = x_dist / desc->range_x;
++         float mod_ny = y_dist / desc->range_y;
++         float mod_r  = sqrt(mod_nx * mod_nx + mod_ny * mod_ny);
++         if (mod_r > 1.0f)
++         {
++            x_dist /= mod_r;
++            y_dist /= mod_r;
++         }
+          desc->delta_x = clamp_float(x_dist, -desc->range_x, desc->range_x)
+             * ol->active->mod_w;
+          desc->delta_y = clamp_float(y_dist, -desc->range_y, desc->range_y)
+@@ -6804,6 +7778,11 @@ void input_overlay_set_scale_factor(
+ 
+       input_overlay_parse_layout(current_overlay,
+             layout_desc, display_aspect_ratio, &overlay_layout);
++      if (i < MOD_MAX_LAYOUTS)
++      {
++         mod_layouts[i]   = overlay_layout;
++         mod_layout_ok[i] = true;
++      }
+       input_overlay_scale(current_overlay, &overlay_layout);
+    }
+ 
+@@ -7612,6 +8591,8 @@ INPUT_NOINLINE static void input_poll_overlay(
+          ol_state->touch[i] = pos;
+       }
+       ol_state->touch_count = i;
++      if (mod_editor_active)
++         mod_editor_frame(ol, (int)i, ol_state);
+ 
+       /* Update lookup table of new to old touch indexes */
+       input_overlay_track_touch_inputs(ol_state, old_ol_state);
+@@ -21617,3 +22598,32 @@ static void input_keyboard_event_now_act(bool down, unsigned code,
+       }
+    }
+ }
++
++#ifdef HAVE_OVERLAY
++/* MOD: editor de overlay (etapa 1). So entra no modo: fecha o menu,
++ * pausa o jogo e avisa. Mover/salvar vem nas proximas etapas. */
++void input_overlay_editor_enter(void)
++{
++   static const char msg[] =
++         "Editor: arraste botoes ou a tela do jogo. Botoes no centro mudam o tamanho. Voltar sai.";
++   mod_editor_active     = true;
++   mod_editor_wait_close = true;
++   mod_editor_sel        = -1;
++   mod_editor_pinch      = false;
++   mod_editor_screen     = false;
++   command_event(CMD_EVENT_RESUME, NULL);
++   command_event(CMD_EVENT_PAUSE, NULL);
++   runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 180, true, NULL,
++         MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++}
++#endif
++
++#ifdef HAVE_OVERLAY
++/* MOD: sai do modo editor (chamado, por exemplo, pelo botao Voltar) */
++void input_overlay_editor_exit(void)
++{
++   mod_editor_active = false;
++   mod_editor_sel    = -1;
++   mod_editor_pinch  = false;
++}
++#endif
+diff --git a/menu/cbs/menu_cbs_ok.c b/menu/cbs/menu_cbs_ok.c
+index 2ba5a0e..ab5944e 100644
+--- a/menu/cbs/menu_cbs_ok.c
++++ b/menu/cbs/menu_cbs_ok.c
+@@ -6729,6 +6729,16 @@ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_cheat_apply_changes,      CMD_EVENT_
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_save_new_config,          CMD_EVENT_MENU_SAVE_CONFIG)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_save_main_config,         CMD_EVENT_MENU_SAVE_MAIN_CONFIG)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_resume_content,           CMD_EVENT_RESUME)
++#ifdef HAVE_OVERLAY
++/* MOD: editor de overlay (etapa 1); definido em input/input_driver.c */
++void input_overlay_editor_enter(void);
++static int action_ok_overlay_editor(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   input_overlay_editor_enter();
++   return 0;
++}
++#endif
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_screenshot,               CMD_EVENT_TAKE_SCREENSHOT)
+ #if defined(HAVE_CG) || defined(HAVE_GLSL) || defined(HAVE_SLANG) || defined(HAVE_HLSL)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_shader_apply_changes,     CMD_EVENT_SHADERS_APPLY_CHANGES)
+@@ -10265,6 +10275,9 @@ static int menu_cbs_init_bind_ok_compare_label(menu_file_list_cbs_t *cbs,
+          {MENU_ENUM_LABEL_PLAY_REPLAY,                         action_ok_play_replay},
+          {MENU_ENUM_LABEL_HALT_REPLAY,                         action_ok_halt_replay},
+          {MENU_ENUM_LABEL_RESUME_CONTENT,                      action_ok_resume_content},
++#ifdef HAVE_OVERLAY
++         {MENU_ENUM_LABEL_OVERLAY_EDITOR,                      action_ok_overlay_editor},
++#endif
+          {MENU_ENUM_LABEL_ADD_TO_FAVORITES_PLAYLIST,           action_ok_add_to_favorites_playlist},
+          {MENU_ENUM_LABEL_ADD_ENTRY_TO_PLAYLIST,               action_ok_add_entry_to_playlist},
+          {MENU_ENUM_LABEL_ADD_ENTRY_TO_PLAYLIST_QUICKMENU,     action_ok_add_entry_to_playlist_quickmenu},
+diff --git a/menu/menu_displaylist.c b/menu/menu_displaylist.c
+index de117aa..aa8b8ca 100644
+--- a/menu/menu_displaylist.c
++++ b/menu/menu_displaylist.c
+@@ -13807,6 +13807,7 @@ unsigned menu_displaylist_build_list(
+                {MENU_ENUM_LABEL_INPUT_OVERLAY_POINTER_ENABLE,              PARSE_ONLY_BOOL,  false },
+                {MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS,                 PARSE_ACTION,     false },
+                {MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS,                    PARSE_ACTION,     false },
++               {MENU_ENUM_LABEL_OVERLAY_EDITOR,                            PARSE_ACTION,     false },
+                {MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS,                      PARSE_ACTION,     false },
+             };
+ 
+@@ -13881,6 +13882,7 @@ unsigned menu_displaylist_build_list(
+                   case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+                      build_list[i].checked = input_overlay_enable && input_overlay_ptr_enable;
+                      break;
++                  case MENU_ENUM_LABEL_OVERLAY_EDITOR:
+                   case MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS:
+                      build_list[i].checked = input_overlay_enable;
+                      break;
+diff --git a/pkg/android/phoenix/build.gradle b/pkg/android/phoenix/build.gradle
+index 02ab0bf..374cd1e 100644
+--- a/pkg/android/phoenix/build.gradle
++++ b/pkg/android/phoenix/build.gradle
+@@ -68,8 +68,8 @@ android {
+       dimension "variant"
+     }
+     aarch64 {
+-      applicationIdSuffix '.aarch64'
+-      resValue "string", "app_name", "RetroArch (AArch64)"
++      applicationIdSuffix '.aarch64.mod'
++      resValue "string", "app_name", "RetroArch Mod"
+       buildConfigField "boolean", "PLAY_STORE_BUILD", "false"
+ 
+       dimension "variant"
+diff --git a/settings/settings_def_menu_main_lists_4.h b/settings/settings_def_menu_main_lists_4.h
+index 3077648..47e1988 100644
+--- a/settings/settings_def_menu_main_lists_4.h
++++ b/settings/settings_def_menu_main_lists_4.h
+@@ -32,6 +32,13 @@ S_ACTION_EX(OVERLAY_MOUSE_SETTINGS,
+       "Overlay Mouse",
+       "Configure mouse input sent from the overlay. Note: 1-, 2-, and 3-finger taps send left, right, and middle button clicks.")
+ #endif
++/* MOD: editor de overlay (etapa 1) */
++#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
++S_ACTION_EX(OVERLAY_EDITOR,
++      "overlay_editor", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
++      "Edit Overlay Layout",
++      "Move and resize the on-screen buttons and the game screen. Work in progress.")
++#endif
+ /* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+  * tables always carry this row via the strings pass. */
+ #if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
