@@ -35,8 +35,8 @@ static int mod_ui_hold_n = 0;
 static int mod_ui_timer  = 0;   /* quadros restantes com o painel visivel */
 static int mod_main_page = 0;   /* pagina marcada como principal (so memoria por enquanto) */
 
-/* 9 retangulos (x, y, largura, altura) em pixels da janela:
- * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (toque = marcar como principal), 8 centralizar */
+/* 10 retangulos (x, y, largura, altura) em pixels da janela:
+ * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (toque = marcar como principal), 8 centralizar, 9 original */
 static int mod_ui_rects(int *r)
 {
    int bw, bh, gap, x0, y0, k;
@@ -49,7 +49,7 @@ static int mod_ui_rects(int *r)
    }
    gap = bh / 5;
    x0  = mod_win_w / 2 - bw - gap / 2;
-   y0  = mod_win_h / 2 - (5 * bh + 4 * gap) / 2;
+   y0  = mod_win_h / 2 - (6 * bh + 5 * gap) / 2;
    for (k = 0; k < 4; k++)
    {
       r[k * 4 + 0] = x0 + (k % 2) * (bw + gap);
@@ -57,14 +57,18 @@ static int mod_ui_rects(int *r)
       r[k * 4 + 2] = bw;
       r[k * 4 + 3] = bh;
    }
-   r[16] = x0 + bw + gap;           /* Fechar: metade direita */
-   r[17] = y0 + 4 * (bh + gap);
-   r[18] = bw;
+   r[16] = x0;                      /* Fechar: ultima fileira, largura toda */
+   r[17] = y0 + 5 * (bh + gap);
+   r[18] = 2 * bw + gap;
    r[19] = bh;
    r[32] = x0;                      /* Centralizar: metade esquerda */
    r[33] = y0 + 4 * (bh + gap);
    r[34] = bw;
    r[35] = bh;
+   r[36] = x0 + bw + gap;           /* Original: metade direita */
+   r[37] = y0 + 4 * (bh + gap);
+   r[38] = bw;
+   r[39] = bh;
    for (k = 0; k < 2; k++)
    {
       r[20 + k * 4 + 0] = x0 + k * (bw + gap);
@@ -76,17 +80,17 @@ static int mod_ui_rects(int *r)
    r[29] = y0;
    r[30] = 2 * bw + gap;
    r[31] = bh;
-   return 9;
+   return 10;
 }
 
 /* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
 int input_overlay_editor_ui(int *r, const char **lab, int max)
 {
-   static const char *nomes[9] =
+   static const char *nomes[10] =
       { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar",
-        "Pag <", "Pag >", NULL, "Centralizar" };
+        "Pag <", "Pag >", NULL, "Centralizar", "Original" };
    int k, n;
-   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 9)
+   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 10)
       return 0;
    n = mod_ui_rects(r);
    for (k = 0; k < n; k++)
@@ -106,7 +110,7 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
 
 static int mod_ui_hit(float px, float py)
 {
-   int r[36];
+   int r[40];
    int k, n;
    if (mod_ui_timer <= 0)
       return -1;
@@ -179,6 +183,27 @@ static void mod_ui_press(int b)
       case 2: w -= 4; break;
       case 3: w += 4; break;
       case 8: x = 0; y = 0; break;
+      case 9:
+      {
+         /* proporcao original do jogo (a do nucleo), a maior que cabe na tela, centralizada */
+         video_driver_state_t *vs = video_state_get_ptr();
+         float asp = vs->av_info.geometry.aspect_ratio;
+         if (asp <= 0.0f && vs->av_info.geometry.base_height)
+            asp = (float)vs->av_info.geometry.base_width
+                / (float)vs->av_info.geometry.base_height;
+         if (asp <= 0.0f || mod_win_w <= 0 || mod_win_h <= 0)
+            return;
+         w = mod_win_w;
+         h = (int)((float)w / asp);
+         if (h > mod_win_h)
+         {
+            h = mod_win_h;
+            w = (int)((float)h * asp);
+         }
+         x = 0;
+         y = 0;
+         break;
+      }
       default: return;
    }
    mod_vp_set(x, y, w, h);
@@ -285,9 +310,9 @@ WID = "gfx/gfx_widgets.c"
 DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
    {
       extern int input_overlay_editor_ui(int *r, const char **lab, int max);
-      int         ur[9 * 4];
-      const char *ulab[9];
-      int         un = input_overlay_editor_ui(ur, ulab, 9);
+      int         ur[10 * 4];
+      const char *ulab[10];
+      int         un = input_overlay_editor_ui(ur, ulab, 10);
       if (un > 0)
       {
          int      ui;
