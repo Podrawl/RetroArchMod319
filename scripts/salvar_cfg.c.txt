@@ -1,0 +1,231 @@
+/* ----- salvar uma copia do .cfg com as posicoes/tamanhos ajustados ----- */
+#include <streams/file_stream.h>
+#define MOD_CFG_MARCA "# criado pelo RetroArch Mod (editor de overlay)"
+static float      *mod_snap    = NULL;   /* 4 floats por botao (x, y, range_x, range_y) do momento da carga */
+static size_t      mod_snap_n  = 0;
+static const void *mod_snap_id = NULL;
+static char        mod_snap_path[PATH_MAX_LENGTH];
+static char        mod_last_saved[PATH_MAX_LENGTH];
+
+static void mod_toast(const char *m)
+{
+   runloop_msg_queue_push(m, strlen(m), 1, 240, true, NULL,
+         MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
+}
+
+/* Guarda os valores originais de todas as paginas (uma vez por overlay carregado). */
+static void mod_snap_take(input_overlay_t *ol)
+{
+   size_t i, j, k = 0, n = 0;
+   if (!ol || !ol->overlays)
+      return;
+   for (i = 0; i < ol->size; i++)
+      n += ol->overlays[i].size;
+   if (   mod_snap && mod_snap_id == (const void*)ol->overlays
+       && mod_snap_n == n && !strcmp(mod_snap_path, ol->path))
+      return;
+   free(mod_snap);
+   mod_snap   = (float*)malloc((n ? n : 1) * 4 * sizeof(float));
+   mod_snap_n = 0;
+   if (!mod_snap)
+      return;
+   for (i = 0; i < ol->size; i++)
+      for (j = 0; j < ol->overlays[i].size; j++, k++)
+      {
+         const struct overlay_desc *d = &ol->overlays[i].descs[j];
+         mod_snap[k * 4 + 0] = d->x;
+         mod_snap[k * 4 + 1] = d->y;
+         mod_snap[k * 4 + 2] = d->range_x;
+         mod_snap[k * 4 + 3] = d->range_y;
+      }
+   mod_snap_n  = n;
+   mod_snap_id = ol->overlays;
+   strlcpy(mod_snap_path, ol->path, sizeof(mod_snap_path));
+}
+
+static bool mod_cfg_is_mod(const char *path)
+{
+   void   *b   = NULL;
+   int64_t len = 0;
+   bool    r;
+   if (!path || !path[0] || !filestream_read_file(path, &b, &len) || !b)
+      return false;
+   r = (len >= (int64_t)strlen(MOD_CFG_MARCA)
+         && !strncmp((const char*)b, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
+   free(b);
+   return r;
+}
+
+static void mod_save_cfg(bool overwrite)
+{
+   input_overlay_t *ol = input_driver_st.overlay_ptr;
+   char     dst[PATH_MAX_LENGTH];
+   char     msg[PATH_MAX_LENGTH + 96];
+   void    *buf  = NULL;
+   int64_t  len  = 0;
+   char    *out;
+   size_t   cap, olen = 0, i, nl = 1, changed = 0;
+   const char *p, *end;
+   bool     has_mark;
+   if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
+   {
+      mod_toast("Salvar: overlay nao carregado.");
+      return;
+   }
+   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
+   {
+      mod_toast("Salvar: nao consegui ler o .cfg do overlay.");
+      free(buf);
+      return;
+   }
+   /* destino */
+   dst[0] = '\0';
+   if (overwrite)
+   {
+      if (mod_cfg_is_mod(ol->path))
+         strlcpy(dst, ol->path, sizeof(dst));
+      else if (mod_last_saved[0] && mod_cfg_is_mod(mod_last_saved))
+         strlcpy(dst, mod_last_saved, sizeof(dst));
+      else
+      {
+         mod_toast("Sobrescrever so vale para copia criada pelo app. Use Salvar novo.");
+         free(buf);
+         return;
+      }
+   }
+   else
+   {
+      char base[PATH_MAX_LENGTH];
+      size_t bl;
+      unsigned n;
+      strlcpy(base, ol->path, sizeof(base));
+      bl = strlen(base);
+      if (bl > 4 && !strcasecmp(base + bl - 4, ".cfg"))
+         base[bl - 4] = '\0';
+      bl = strlen(base);
+      {
+         /* tira um "-mod" ou "-modN" do final, para nao acumular */
+         size_t q = bl;
+         while (q > 0 && base[q - 1] >= '0' && base[q - 1] <= '9')
+            q--;
+         if (q >= 4 && !strncmp(base + q - 4, "-mod", 4))
+            base[q - 4] = '\0';
+      }
+      for (n = 1; n < 1000; n++)
+      {
+         if (n == 1)
+            snprintf(dst, sizeof(dst), "%s-mod.cfg", base);
+         else
+            snprintf(dst, sizeof(dst), "%s-mod%u.cfg", base, n);
+         if (!path_is_valid(dst))
+            break;
+      }
+   }
+   /* monta o texto novo: o arquivo de origem com so as linhas alteradas trocadas */
+   p        = (const char*)buf;
+   end      = p + len;
+   has_mark = (len >= (int64_t)strlen(MOD_CFG_MARCA)
+         && !strncmp(p, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
+   for (i = 0; i < (size_t)len; i++)
+      if (p[i] == '\n')
+         nl++;
+   cap = (size_t)len + 80 * nl + 256;
+   out = (char*)malloc(cap);
+   if (!out)
+   {
+      free(buf);
+      return;
+   }
+   if (!has_mark)
+      olen += (size_t)snprintf(out + olen, cap - olen, "%s\n", MOD_CFG_MARCA);
+   while (p < end)
+   {
+      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
+      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
+      size_t      adv = eol ? n + 1 : n;
+      bool        done = false;
+      char        t[1024];
+      unsigned    o, d;
+      int         nn = 0;
+      if (n > 0 && n < sizeof(t))
+      {
+         memcpy(t, p, n);
+         t[n] = '\0';
+         if (sscanf(t, "overlay%u_desc%u%n", &o, &d, &nn) == 2 && nn > 0)
+         {
+            char *q1, *q2;
+            size_t k = (size_t)nn;
+            while (t[k] == ' ' || t[k] == '\t')
+               k++;
+            if (   t[k] == '=' && (q1 = strchr(t + k, '"'))
+                && (q2 = strchr(q1 + 1, '"'))
+                && o < ol->size && d < ol->overlays[o].size)
+            {
+               char   v[512];
+               char  *tok[8];
+               int    nt = 0;
+               char  *c;
+               size_t vl = (size_t)(q2 - (q1 + 1));
+               if (vl < sizeof(v))
+               {
+                  memcpy(v, q1 + 1, vl);
+                  v[vl] = '\0';
+                  c = v;
+                  tok[nt++] = c;
+                  while (nt < 8 && (c = strchr(c, ',')))
+                  {
+                     *c++ = '\0';
+                     tok[nt++] = c;
+                  }
+                  if (nt == 6)
+                  {
+                     size_t off = 0, pg;
+                     const struct overlay_desc *dd = &ol->overlays[o].descs[d];
+                     const float *sv;
+                     for (pg = 0; pg < o; pg++)
+                        off += ol->overlays[pg].size;
+                     sv = &mod_snap[(off + d) * 4];
+                     if (   fabsf(dd->x - sv[0]) > 1e-6f
+                         || fabsf(dd->y - sv[1]) > 1e-6f
+                         || fabsf(dd->range_x - sv[2]) > 1e-6f
+                         || fabsf(dd->range_y - sv[3]) > 1e-6f)
+                     {
+                        size_t pre = (size_t)(q1 + 1 - t);
+                        memcpy(out + olen, t, pre);
+                        olen += pre;
+                        olen += (size_t)snprintf(out + olen, cap - olen,
+                              "%s,%.5f,%.5f,%s,%.6f,%.6f",
+                              tok[0], dd->x, dd->y, tok[3],
+                              dd->range_x, dd->range_y);
+                        memcpy(out + olen, q2, n - (size_t)(q2 - t));
+                        olen += n - (size_t)(q2 - t);
+                        if (eol)
+                           out[olen++] = '\n';
+                        changed++;
+                        done = true;
+                     }
+                  }
+               }
+            }
+         }
+      }
+      if (!done)
+      {
+         memcpy(out + olen, p, adv);
+         olen += adv;
+      }
+      p += adv;
+   }
+   if (filestream_write_file(dst, out, (int64_t)olen))
+   {
+      strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
+      snprintf(msg, sizeof(msg), "Salvo: %s (%u botoes alterados)",
+            path_basename(dst), (unsigned)changed);
+   }
+   else
+      snprintf(msg, sizeof(msg), "Salvar: falhou ao gravar %s", path_basename(dst));
+   mod_toast(msg);
+   free(out);
+   free(buf);
+}
+

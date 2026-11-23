@@ -28,7 +28,7 @@ def trocar(arq, antigo, novo):
 
 INPUT = "input/input_driver.c"
 
-UI = r'''/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
+UI = r'''SALVAR_PLACEHOLDER/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
 static int  mod_ui_held   = -1;
 static char mod_ui_title[96];
 static int mod_ui_hold_n = 0;
@@ -49,7 +49,7 @@ static int mod_ui_rects(int *r)
    }
    gap = bh / 5;
    x0  = mod_win_w / 2 - bw - gap / 2;
-   y0  = mod_win_h / 2 - (6 * bh + 5 * gap) / 2;
+   y0  = mod_win_h / 2 - (7 * bh + 6 * gap) / 2;
    for (k = 0; k < 4; k++)
    {
       r[k * 4 + 0] = x0 + (k % 2) * (bw + gap);
@@ -58,7 +58,7 @@ static int mod_ui_rects(int *r)
       r[k * 4 + 3] = bh;
    }
    r[16] = x0;                      /* Fechar: ultima fileira, largura toda */
-   r[17] = y0 + 5 * (bh + gap);
+   r[17] = y0 + 6 * (bh + gap);
    r[18] = 2 * bw + gap;
    r[19] = bh;
    r[32] = x0;                      /* Centralizar: metade esquerda */
@@ -69,6 +69,14 @@ static int mod_ui_rects(int *r)
    r[37] = y0 + 4 * (bh + gap);
    r[38] = bw;
    r[39] = bh;
+   r[40] = x0;                      /* Salvar novo */
+   r[41] = y0 + 5 * (bh + gap);
+   r[42] = bw;
+   r[43] = bh;
+   r[44] = x0 + bw + gap;           /* Sobrescrever */
+   r[45] = y0 + 5 * (bh + gap);
+   r[46] = bw;
+   r[47] = bh;
    for (k = 0; k < 2; k++)
    {
       r[20 + k * 4 + 0] = x0 + k * (bw + gap);
@@ -80,17 +88,18 @@ static int mod_ui_rects(int *r)
    r[29] = y0;
    r[30] = 2 * bw + gap;
    r[31] = bh;
-   return 10;
+   return 12;
 }
 
 /* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
 int input_overlay_editor_ui(int *r, const char **lab, int max)
 {
-   static const char *nomes[10] =
+   static const char *nomes[12] =
       { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar",
-        "Pag <", "Pag >", NULL, "Centralizar", "Original" };
+        "Pag <", "Pag >", NULL, "Centralizar", "Original",
+        "Salvar novo", "Sobrescrever" };
    int k, n;
-   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 10)
+   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 12)
       return 0;
    n = mod_ui_rects(r);
    for (k = 0; k < n; k++)
@@ -110,7 +119,7 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
 
 static int mod_ui_hit(float px, float py)
 {
-   int r[40];
+   int r[48];
    int k, n;
    if (mod_ui_timer <= 0)
       return -1;
@@ -173,6 +182,11 @@ static void mod_ui_press(int b)
       mod_page_goto(b == 6 ? 1 : -1);
       return;
    }
+   if (b == 10 || b == 11)
+   {
+      mod_save_cfg(b == 11);
+      return;
+   }
    mod_vp_get(&x, &y, &w, &h);
    switch (b)
    {
@@ -211,6 +225,9 @@ static void mod_ui_press(int b)
 
 '''
 
+import os
+UI = UI.replace('SALVAR_PLACEHOLDER', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salvar_cfg.c.txt'), encoding='utf-8').read())
+
 # 0) 3 dedos tambem despausa; tamanho da janela atualizado a cada leitura (vertical/horizontal)
 trocar(
     INPUT,
@@ -241,7 +258,7 @@ trocar(
 trocar(
     INPUT,
     "         mod_editor_seed_screen();\n",
-    "         mod_editor_seed_screen();\n         mod_ui_timer = 300;\n",
+    "         mod_editor_seed_screen();\n         mod_ui_timer = 300;\n         mod_snap_take(input_driver_st.overlay_ptr);\n",
 )
 
 # 1) funcoes dos botoes, antes de mod_editor_frame (depois do bloco da tela)
@@ -310,9 +327,9 @@ WID = "gfx/gfx_widgets.c"
 DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
    {
       extern int input_overlay_editor_ui(int *r, const char **lab, int max);
-      int         ur[10 * 4];
-      const char *ulab[10];
-      int         un = input_overlay_editor_ui(ur, ulab, 10);
+      int         ur[12 * 4];
+      const char *ulab[12];
+      int         un = input_overlay_editor_ui(ur, ulab, 12);
       if (un > 0)
       {
          int      ui;
