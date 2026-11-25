@@ -30,6 +30,7 @@ INPUT = "input/input_driver.c"
 
 UI = r'''SALVAR_PLACEHOLDERBOTOES_PLACEHOLDER/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
 static int  mod_ui_held   = -1;
+static bool mod_ui_held_g = false;
 static char mod_ui_title[96];
 static int mod_ui_hold_n = 0;
 static int mod_ui_timer  = 0;   /* quadros restantes com o painel visivel */
@@ -59,31 +60,49 @@ static int mod_ui_rects(int *r)
    r[(i) * 4 + 1] = y0 + (row) * (bh + gap); \
    r[(i) * 4 + 2] = (span) * bw + ((span) - 1) * gap; \
    r[(i) * 4 + 3] = bh; } while (0)
+   if (mod_grid_open)
+   {
+      input_overlay_t *ol = input_driver_st.overlay_ptr;
+      int cand[MOD_REG_MAX];
+      int nc   = mod_reg_cand(ol, cand, MOD_REG_MAX);
+      int cols = (mod_win_w >= mod_win_h) ? 4 : 3;
+      int rows = 12 / cols;
+      int m    = ((mod_win_w < mod_win_h) ? mod_win_w : mod_win_h) * 5 / 100;
+      int cw   = (mod_win_w - 2 * m - (cols - 1) * gap) / cols;
+      int ch   = (mod_win_h - 2 * m - rows * gap) / (rows + 1);
+      int nw   = (mod_win_w - 2 * m - 2 * gap) / 3;
+      int first = mod_grid_scroll * 12;
+      for (k = 0; k < 12; k++)
+      {
+         if (first + k >= nc)
+            continue;
+         r[k * 4 + 0] = m + (k % cols) * (cw + gap);
+         r[k * 4 + 1] = m + (k / cols) * (ch + gap);
+         r[k * 4 + 2] = cw;
+         r[k * 4 + 3] = ch;
+      }
+      for (k = 0; k < 3; k++)
+      {
+         r[(12 + k) * 4 + 0] = m + k * (nw + gap);
+         r[(12 + k) * 4 + 1] = m + rows * (ch + gap);
+         r[(12 + k) * 4 + 2] = nw;
+         r[(12 + k) * 4 + 3] = ch;
+      }
+      return 18;
+   }
    MOD_R(7, 0, 0, 2);
    MOD_R(5, 1, 0, 1);
    MOD_R(6, 1, 1, 1);
    MOD_R(10, 5, 0, 1);
    MOD_R(11, 5, 1, 1);
-   if (mod_tab == 0)
-   {
-      MOD_R(0, 2, 0, 1);
-      MOD_R(1, 2, 1, 1);
-      MOD_R(2, 3, 0, 1);
-      MOD_R(3, 3, 1, 1);
-      MOD_R(8, 4, 0, 1);
-      MOD_R(9, 4, 1, 1);
-      MOD_R(12, 6, 0, 1);
-      MOD_R(4, 6, 1, 1);
-   }
-   else
-   {
-      MOD_R(14, 2, 0, 1);
-      MOD_R(15, 2, 1, 1);
-      MOD_R(16, 3, 0, 2);
-      MOD_R(17, 4, 0, 2);
-      MOD_R(13, 6, 0, 1);
-      MOD_R(4, 6, 1, 1);
-   }
+   MOD_R(0, 2, 0, 1);
+   MOD_R(1, 2, 1, 1);
+   MOD_R(2, 3, 0, 1);
+   MOD_R(3, 3, 1, 1);
+   MOD_R(8, 4, 0, 1);
+   MOD_R(9, 4, 1, 1);
+   MOD_R(12, 6, 0, 1);
+   MOD_R(4, 6, 1, 1);
 #undef MOD_R
    return 18;
 }
@@ -94,10 +113,9 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
    static const char *nomes[18] =
       { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar",
         "Pag <", "Pag >", NULL, "Centralizar", "Original",
-        "Salvar novo", "Sobrescrever", "Botoes >", "< Tela",
-        "Botao <", "Botao >", NULL, NULL };
-   static char cand_lab[80];
-   static char rm_lab[48];
+        "Salvar novo", "Sobrescrever", "Botoes", NULL,
+        NULL, NULL, NULL, NULL };
+   static char cell_lab[12][48];
    int k, n;
    if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 18)
       return 0;
@@ -106,6 +124,25 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
       lab[k] = nomes[k];
    {
       input_overlay_t *ol = input_driver_st.overlay_ptr;
+      if (mod_grid_open)
+      {
+         int cand[MOD_REG_MAX];
+         int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
+         for (k = 0; k < 12; k++)
+         {
+            lab[k] = NULL;
+            if (mod_grid_scroll * 12 + k < nc)
+            {
+               snprintf(cell_lab[k], sizeof(cell_lab[k]), "%s",
+                     mod_reg[cand[mod_grid_scroll * 12 + k]].label);
+               lab[k] = cell_lab[k];
+            }
+         }
+         lab[12] = "<";
+         lab[13] = (nc > 0) ? "Fechar" : "Nada novo p/ adicionar - Fechar";
+         lab[14] = ">";
+         return n;
+      }
       if (ol && ol->active)
          snprintf(mod_ui_title, sizeof(mod_ui_title), "%s%s (%u de %u)",
                ((unsigned)ol->index == (unsigned)mod_main_page) ? "* " : "",
@@ -113,28 +150,6 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
       else
          snprintf(mod_ui_title, sizeof(mod_ui_title), "?");
       lab[7] = mod_ui_title;
-      if (mod_tab == 1 && ol)
-      {
-         int cand[MOD_REG_MAX];
-         int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-         if (mod_reg_sel >= nc)
-            mod_reg_sel = 0;
-         if (nc > 0)
-            snprintf(cand_lab, sizeof(cand_lab), "+ %s (%d/%d)",
-                  mod_reg[cand[mod_reg_sel]].label, mod_reg_sel + 1, nc);
-         else
-            snprintf(cand_lab, sizeof(cand_lab), "(nada novo p/ adicionar)");
-         lab[16] = cand_lab;
-         if (mod_reload_wait > 0)
-            snprintf(rm_lab, sizeof(rm_lab), "Recarregando...");
-         else if (mod_rm_confirm)
-            snprintf(rm_lab, sizeof(rm_lab), "Toque de novo: remover");
-         else if (mod_rm_n > 0 && mod_rm_page == (int)ol->index)
-            snprintf(rm_lab, sizeof(rm_lab), "Remover botao tocado");
-         else
-            snprintf(rm_lab, sizeof(rm_lab), "Remover (toque um botao antes)");
-         lab[17] = rm_lab;
-      }
    }
    return n;
 }
@@ -204,43 +219,34 @@ static void mod_ui_press(int b)
       mod_page_goto(b == 6 ? 1 : -1);
       return;
    }
-   if (b == 12 || b == 13)
-   {
-      mod_tab         = (b == 12);
-      mod_rm_confirm  = false;
-      if (b == 12)
-         mod_reg_build(input_driver_st.overlay_ptr);
-      return;
-   }
-   if (b == 14 || b == 15)
+   if (mod_grid_open)
    {
       input_overlay_t *ol = input_driver_st.overlay_ptr;
       int cand[MOD_REG_MAX];
       int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-      if (nc > 0)
-         mod_reg_sel = (mod_reg_sel + (b == 15 ? 1 : nc - 1)) % nc;
+      int pages = (nc + 11) / 12;
+      if (b < 12)
+      {
+         if (mod_grid_scroll * 12 + b < nc)
+         {
+            mod_reg_sel   = mod_grid_scroll * 12 + b;
+            mod_grid_open = false;
+            mod_struct_op(1);
+         }
+      }
+      else if (b == 12 && mod_grid_scroll > 0)
+         mod_grid_scroll--;
+      else if (b == 14 && mod_grid_scroll + 1 < pages)
+         mod_grid_scroll++;
+      else if (b == 13)
+         mod_grid_open = false;
       return;
    }
-   if (b == 16)
+   if (b == 12)
    {
-      mod_struct_op(1);
-      return;
-   }
-   if (b == 17)
-   {
-      input_overlay_t *ol = input_driver_st.overlay_ptr;
-      if (!ol || mod_rm_n <= 0 || mod_rm_page != (int)ol->index)
-      {
-         mod_toast("Toque num botao do overlay (para seleciona-lo) e depois em Remover.");
-         return;
-      }
-      if (!mod_rm_confirm)
-      {
-         mod_rm_confirm = true;
-         return;
-      }
-      mod_rm_confirm = false;
-      mod_struct_op(2);
+      mod_reg_build(input_driver_st.overlay_ptr);
+      mod_grid_scroll = 0;
+      mod_grid_open   = true;
       return;
    }
    if (b == 10 || b == 11)
@@ -314,7 +320,7 @@ trocar(
 trocar(
     INPUT,
     "   {\n      struct video_viewport vp2;\n",
-    "   if (count > 0)\n      mod_ui_timer = 300;\n   else if (mod_ui_timer > 0)\n      mod_ui_timer--;\n   {\n      struct video_viewport vp2;\n",
+    "   if (count > 0 || mod_grid_open)\n      mod_ui_timer = 300;\n   else if (mod_ui_timer > 0)\n      mod_ui_timer--;\n   {\n      struct video_viewport vp2;\n",
 )
 
 trocar(
@@ -334,7 +340,7 @@ trocar(
 trocar(
     INPUT,
     "      mod_editor_screen = false;\n      mod_grp_n         = 0;\n",
-    "      mod_editor_screen = false;\n      mod_ui_held       = -1;\n      mod_grp_n         = 0;\n",
+    "      mod_editor_screen = false;\n      mod_ui_held       = -1;\n      mod_tap_block     = false;\n      mod_grp_n         = 0;\n",
 )
 
 # 3) toque do dedo 0: primeiro ve se pegou um botao do editor
@@ -354,13 +360,14 @@ trocar(
     "            if (mod_ui_held != ub)\n"
     "            {\n"
     "               mod_ui_held   = ub;\n"
+    "               mod_ui_held_g = mod_grid_open;\n"
     "               mod_ui_hold_n = 0;\n"
     "               mod_ui_press(ub);\n"
     "            }\n"
     "            else\n"
     "            {\n"
     "               mod_ui_hold_n++;\n"
-    "               if ((ub < 4) && mod_ui_hold_n > 24 && (mod_ui_hold_n % 4) == 0)\n"
+    "               if ((ub < 4) && !mod_ui_held_g && mod_ui_hold_n > 24 && (mod_ui_hold_n % 4) == 0)\n"
     "                  mod_ui_press(ub);\n"
     "            }\n"
     "            return;\n"
@@ -389,6 +396,7 @@ WID = "gfx/gfx_widgets.c"
 DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
    {
       extern int input_overlay_editor_ui(int *r, const char **lab, int max);
+      extern bool input_overlay_editor_grid_open(void);
       int         ur[18 * 4];
       const char *ulab[18];
       int         un = input_overlay_editor_ui(ur, ulab, 18);
@@ -422,6 +430,69 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                      video_info->dims, fill, NULL);
             }
             gfx_display_blend_end(dispctx, userdata);
+            /* miniaturas da grade de botoes */
+            {
+               extern bool image_texture_load(struct texture_image *img, const char *path);
+               static char      mod_tex_path[16][1024];
+               static uintptr_t mod_tex_id[16];
+               extern const char *input_overlay_editor_ui_img(int idx);
+               int ti;
+               if (!input_overlay_editor_grid_open())
+               {
+                  for (ti = 0; ti < 16; ti++)
+                     if (mod_tex_id[ti])
+                     {
+                        video_driver_texture_unload(&mod_tex_id[ti]);
+                        mod_tex_id[ti]      = 0;
+                        mod_tex_path[ti][0] = '\0';
+                     }
+               }
+               else
+               for (ui = 0; ui < un && ui < 12; ui++)
+               {
+                  const char *ip = input_overlay_editor_ui_img(ui);
+                  int         sl, side;
+                  float       white[16] = {
+                     1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+                     1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+                  if (!ip || ur[ui * 4 + 2] <= 0)
+                     continue;
+                  for (sl = 0; sl < 16; sl++)
+                     if (mod_tex_id[sl] && !strcmp(mod_tex_path[sl], ip))
+                        break;
+                  if (sl == 16)
+                  {
+                     struct texture_image ti_img;
+                     for (sl = 0; sl < 16 && mod_tex_id[sl]; sl++) {}
+                     if (sl == 16)
+                        continue;
+                     memset(&ti_img, 0, sizeof(ti_img));
+                     ti_img.supports_rgba = (video_driver_get_disp_flags() & VIDEO_FLAG_USE_RGBA) ? true : false;
+                     if (image_texture_load(&ti_img, ip))
+                     {
+                        if (!video_driver_texture_load(&ti_img,
+                              TEXTURE_FILTER_MIPMAP_LINEAR, &mod_tex_id[sl]))
+                           mod_tex_id[sl] = 0;
+                        image_texture_free(&ti_img);
+                     }
+                     strlcpy(mod_tex_path[sl], ip, sizeof(mod_tex_path[sl]));
+                     if (!mod_tex_id[sl])
+                        mod_tex_path[sl][0] = '\0';
+                  }
+                  if (sl < 16 && mod_tex_id[sl])
+                  {
+                     int bx2 = ur[ui * 4 + 0] * lay_w / out_w;
+                     int by2 = ur[ui * 4 + 1] * lay_h / out_h;
+                     int bw2 = ur[ui * 4 + 2] * lay_w / out_w;
+                     int bh2 = ur[ui * 4 + 3] * lay_h / out_h;
+                     side = (bw2 < bh2 * 70 / 100) ? bw2 : bh2 * 70 / 100;
+                     gfx_widgets_draw_icon(userdata, p_disp, video_info->dims,
+                           VIDEO_SCALE_PACK(side, side), mod_tex_id[sl],
+                           (float)(bx2 + (bw2 - side) / 2), (float)(by2 + bh2 * 4 / 100),
+                           0.0f, 1.0f, 0.0f, white);
+                  }
+               }
+            }
             for (ui = 0; ui < un; ui++)
             {
                int bx = ur[ui * 4 + 0] * lay_w / out_w;
@@ -433,7 +504,7 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                gfx_display_draw_text(
                      p_dispwidget->gfx_widget_fonts.regular.font,
                      ulab[ui],
-                     (float)(bx + bw / 2), (float)(by + bh * 65 / 100),
+                     (float)(bx + bw / 2), (float)(by + bh * ((input_overlay_editor_grid_open() && ui < 12) ? 92 : 65) / 100),
                      video_info->dims,
                      0xFFFFFFFF, TEXT_ALIGN_CENTER,
                      1.0f, false, 0.0f, false);
@@ -452,7 +523,7 @@ trocar(
     DESENHO + "#ifdef HAVE_TRANSLATE\n   /* AI Service overlay */\n",
 )
 
-# 4b: declaracoes do "remover", copia do grupo ao selecionar, checagem do recarregamento
+# 4b: declaracoes, selecao (toque triplo remove), checagem do recarregamento
 trocar(
     INPUT,
     "static float mod_grp_py = 0.0f;\n",
@@ -460,21 +531,68 @@ trocar(
     "static int   mod_rm_grp[MOD_MAX_GRP];\n"
     "static int   mod_rm_n       = 0;\n"
     "static int   mod_rm_page    = -1;\n"
-    "static bool  mod_rm_confirm = false;\n",
+    "static bool  mod_rm_confirm = false;\n"
+    "static int   mod_tap_n      = 0;\n"
+    "static int   mod_tap_key    = -1;\n"
+    "static int   mod_tap_pg     = -1;\n"
+    "static unsigned mod_tap_fr  = 0;\n"
+    "static unsigned mod_tap_now = 0;\n"
+    "static float mod_tap_x      = 0.0f;\n"
+    "static float mod_tap_y      = 0.0f;\n"
+    "static bool  mod_tap_block  = false;\n",
+)
+trocar(
+    INPUT,
+    "      if (mod_editor_sel < 0 && !mod_editor_screen)\n      {\n         size_t i;\n",
+    "      if (mod_editor_sel < 0 && !mod_editor_screen && !mod_tap_block)\n      {\n         size_t i;\n",
 )
 trocar(
     INPUT,
     "         if (mod_editor_sel >= 0)\n            mod_build_group(ol->active, mod_editor_sel);\n",
-    "         if (mod_editor_sel >= 0)\n         {\n            mod_build_group(ol->active, mod_editor_sel);\n"
+    "         if (mod_editor_sel >= 0)\n         {\n            int gk, gmin = 1 << 30;\n"
+    "            mod_build_group(ol->active, mod_editor_sel);\n"
     "            memcpy(mod_rm_grp, mod_grp, sizeof(mod_rm_grp));\n"
     "            mod_rm_n       = mod_grp_n;\n"
     "            mod_rm_page    = (int)ol->index;\n"
-    "            mod_rm_confirm = false;\n         }\n",
+    "            for (gk = 0; gk < mod_grp_n; gk++)\n"
+    "               if (mod_grp[gk] < gmin)\n"
+    "                  gmin = mod_grp[gk];\n"
+    "            if (gmin == mod_tap_key && mod_rm_page == mod_tap_pg\n"
+    "                  && mod_tap_now - mod_tap_fr < 90)\n"
+    "               mod_tap_n++;\n"
+    "            else\n"
+    "               mod_tap_n = 1;\n"
+    "            mod_tap_key = gmin;\n"
+    "            mod_tap_pg  = mod_rm_page;\n"
+    "            mod_tap_fr  = mod_tap_now;\n"
+    "            mod_tap_x   = x;\n"
+    "            mod_tap_y   = y;\n"
+    "            if (mod_tap_n >= 3)\n"
+    "            {\n"
+    "               mod_tap_n      = 0;\n"
+    "               mod_tap_key    = -1;\n"
+    "               mod_tap_block  = true;\n"
+    "               mod_editor_sel = -1;\n"
+    "               mod_grp_n      = 0;\n"
+    "               mod_struct_op(2);\n"
+    "            }\n         }\n",
+)
+trocar(
+    INPUT,
+    "         float ddx = (x - mod_editor_grab_dx) - t->x_shift;\n",
+    "         float ddx = (x - mod_editor_grab_dx) - t->x_shift;\n"
+    "         if (fabsf(x - mod_tap_x) > 0.02f || fabsf(y - mod_tap_y) > 0.02f)\n"
+    "            mod_tap_n = 0;\n",
 )
 trocar(
     INPUT,
     "      const input_overlay_state_t *st)\n{\n   int kk;\n",
-    "      const input_overlay_state_t *st)\n{\n   int kk;\n   mod_reload_check(ol);\n",
+    "      const input_overlay_state_t *st)\n{\n   int kk;\n   mod_tap_now++;\n   mod_reload_check(ol);\n",
+)
+trocar(
+    INPUT,
+    "         if (mod_ui_held >= 0)\n            return;\n",
+    "         if (mod_ui_held >= 0 || mod_grid_open)\n            return;\n",
 )
 
 for arq, conteudo in arquivos.items():

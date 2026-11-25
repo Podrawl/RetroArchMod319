@@ -7,6 +7,7 @@ struct mod_reg_e
 {
    char     key[400];
    char     label[48];
+   char     img[96];
    uint64_t mask;                 /* paginas onde o grupo existe */
    int      pg;                   /* pagina de onde copiar */
    int      n;
@@ -18,7 +19,8 @@ static struct mod_reg_e *mod_reg = NULL;
 static int  mod_reg_n       = 0;
 static int  mod_reg_sel     = 0;
 static bool mod_reg_ok      = false;
-static int  mod_tab         = 0;       /* 0 = tela, 1 = botoes */
+static bool mod_grid_open   = false;   /* grade de botoes aberta */
+static int  mod_grid_scroll = 0;
 static char mod_reload_dst[PATH_MAX_LENGTH];
 static int  mod_reload_page = -1;
 static int  mod_reload_wait = 0;
@@ -269,6 +271,25 @@ static void mod_reg_build(input_overlay_t *ol)
                   }
                }
             strlcpy(r->label, nm ? nm : "imagem", sizeof(r->label));
+            for (g = 0; g < ng; g++)
+            {
+               struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
+               if (d->img[0] && strcmp(d->name, "nul") == 0)
+               {
+                  strlcpy(r->img, d->img, sizeof(r->img));
+                  break;
+               }
+            }
+            if (!r->img[0])
+               for (g = 0; g < ng; g++)
+               {
+                  struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
+                  if (d->img[0])
+                  {
+                     strlcpy(r->img, d->img, sizeof(r->img));
+                     break;
+                  }
+               }
          }
       }
       free(seen);
@@ -289,6 +310,45 @@ static int mod_reg_cand(input_overlay_t *ol, int *list, int cap)
       if (cur >= 64 || !((mod_reg[e].mask >> cur) & 1))
          list[n++] = e;
    return n;
+}
+
+/* Procura um canto livre da pagina para um grupo de meia-largura hx / meia-altura hy.
+ * Devolve o deslocamento (dx,dy) a somar nas posicoes do grupo (centro atual cx,cy). */
+static void mod_free_spot(float cx, float cy, float hx, float hy,
+      const struct overlay *pg, float *dx, float *dy)
+{
+   float best = 1e30f, bx = 0.5f, by = 0.5f, x, y;
+   float lox = hx, hix = 1.0f - hx, loy = hy, hiy = 1.0f - hy;
+   size_t i;
+   if (hix < lox) lox = hix = 0.5f;
+   if (hiy < loy) loy = hiy = 0.5f;
+   for (y = loy; y <= hiy + 1e-4f; y += 0.02f)
+      for (x = lox; x <= hix + 1e-4f; x += 0.02f)
+      {
+         float sc = 0.0f, ex, ey;
+         for (i = 0; i < pg->size; i++)
+         {
+            const struct overlay_desc *d = &pg->descs[i];
+            float ox, oy;
+            if (d->range_x * d->range_y > 0.2f || d->range_x <= 0.0f)
+               continue;
+            ox = (hx + d->range_x) - fabsf(x - d->x);
+            oy = (hy + d->range_y) - fabsf(y - d->y);
+            if (ox > 0.0f && oy > 0.0f)
+               sc += ox * oy;
+         }
+         ex = (x < 1.0f - x) ? x : 1.0f - x;
+         ey = (y < 1.0f - y) ? y : 1.0f - y;
+         sc += 0.002f * ((ex < ey) ? ex : ey);
+         if (sc < best)
+         {
+            best = sc;
+            bx   = x;
+            by   = y;
+         }
+      }
+   *dx = bx - cx;
+   *dy = by - cy;
 }
 
 /* ---------- edicao do texto ---------- */
@@ -325,7 +385,7 @@ static char *mod_cfg_add(input_overlay_t *ol, const char *buf, size_t len,
    struct mod_ob ob = { NULL, 0, 0, false }, ins = { NULL, 0, 0, false };
    const char *p = buf, *end = buf + len;
    unsigned cnt = (unsigned)ol->overlays[P].size;
-   float minx = 1e9f, maxx = -1e9f, miny = 1e9f, maxy = -1e9f, dx = 0.0f, dy = 0.0f;
+   float minx = 1e9f, maxx = -1e9f, miny = 1e9f, maxy = -1e9f, dx = 0.0f, dy = 0.0f, mrx = 0.0f, mry = 0.0f;
    bool  has_count;
    size_t at, pass;
    char   cntl[8];
@@ -377,6 +437,8 @@ static char *mod_cfg_add(input_overlay_t *ol, const char *buf, size_t len,
                         if (x > maxx) maxx = x;
                         if (y < miny) miny = y;
                         if (y > maxy) maxy = y;
+                        if ((float)atof(tk[4]) > mrx) mrx = (float)atof(tk[4]);
+                        if ((float)atof(tk[5]) > mry) mry = (float)atof(tk[5]);
                      }
                      else
                      {
@@ -410,8 +472,9 @@ static char *mod_cfg_add(input_overlay_t *ol, const char *buf, size_t len,
       {
          if (minx > maxx)
             return NULL;
-         dx = 0.5f - (minx + maxx) / 2.0f;
-         dy = 0.5f - (miny + maxy) / 2.0f;
+         mod_free_spot((minx + maxx) / 2.0f, (miny + maxy) / 2.0f,
+               (maxx - minx) / 2.0f + mrx, (maxy - miny) / 2.0f + mry,
+               &ol->overlays[P], &dx, &dy);
       }
    }
    if (ins.bad || !ins.n)
@@ -551,8 +614,6 @@ static void mod_reload_check(input_overlay_t *ol)
          ol->next_index = (unsigned)mod_reload_page;
          command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
       }
-      if (mod_tab == 1)
-         mod_reg_build(ol);
       return;
    }
    if (--mod_reload_wait == 0)
@@ -630,3 +691,34 @@ static void mod_struct_op(int op)
    free(edited);
 }
 
+
+/* usados pelo desenho dos widgets (miniaturas da grade) */
+bool input_overlay_editor_grid_open(void)
+{
+   return mod_grid_open && mod_editor_active;
+}
+
+const char *input_overlay_editor_ui_img(int idx)
+{
+   static char path[PATH_MAX_LENGTH];
+   input_overlay_t *ol = input_driver_st.overlay_ptr;
+   int cand[MOD_REG_MAX];
+   int nc, ci;
+   char *sl;
+   if (!mod_grid_open || !ol || idx < 0 || idx >= 12)
+      return NULL;
+   nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
+   ci = mod_grid_scroll * 12 + idx;
+   if (ci >= nc || !mod_reg[cand[ci]].img[0])
+      return NULL;
+   strlcpy(path, ol->path, sizeof(path));
+   sl = strrchr(path, '/');
+   if (!sl)
+      sl = strrchr(path, '\\');
+   if (sl)
+      sl[1] = '\0';
+   else
+      path[0] = '\0';
+   strlcat(path, mod_reg[cand[ci]].img, sizeof(path));
+   return path;
+}
