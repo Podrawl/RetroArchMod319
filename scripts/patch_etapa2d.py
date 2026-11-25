@@ -85,13 +85,11 @@ static int mod_ui_rects(int *r)
          r[(2 + k) * 4 + 2] = bxw - 2 * pad;
          r[(2 + k) * 4 + 3] = rh;
       }
-      for (k = 0; k < 3; k++)
-      {
-         r[(12 + k) * 4 + 0] = bx0 + pad + k * (nw + gap);
-         r[(12 + k) * 4 + 1] = by0 + pad + 7 * (rh + gap);
-         r[(12 + k) * 4 + 2] = nw;
-         r[(12 + k) * 4 + 3] = rh;
-      }
+      (void)nw;
+      r[13 * 4 + 0] = bx0 + pad;
+      r[13 * 4 + 1] = by0 + pad + 7 * (rh + gap);
+      r[13 * 4 + 2] = bxw - 2 * pad;
+      r[13 * 4 + 3] = rh;
       return 18;
    }
    MOD_R(7, 0, 0, 2);
@@ -121,6 +119,11 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
         NULL, NULL, NULL, NULL };
    static char cell_lab[6][48];
    int k, n;
+   if (!mod_editor_active)
+   {
+      mod_grid_open = false;
+      mod_grid_down = false;
+   }
    if (mod_editor_active && (mod_reload_wait > 0 || mod_apply_left > 0))
       mod_reload_check(input_driver_st.overlay_ptr);
    if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 18)
@@ -140,17 +143,20 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
          mod_cfg_system_name(ol, hdr, sizeof(hdr));
          lab[1] = hdr;
          for (k = 0; k < 6; k++)
-            if (mod_grid_scroll * 6 + k < nc)
+            if (mod_grid_scroll + k < nc)
             {
                snprintf(cell_lab[k], sizeof(cell_lab[k]), "%s",
-                     mod_reg[cand[mod_grid_scroll * 6 + k]].label);
+                     mod_reg[cand[mod_grid_scroll + k]].label);
                lab[2 + k] = cell_lab[k];
             }
          if (nc == 0)
             lab[2] = "Nada novo para adicionar";
-         lab[12] = "<";
          lab[13] = "Fechar";
-         lab[14] = ">";
+         if (nc > 6)
+         {
+            snprintf(hdr + strlen(hdr), sizeof(hdr) - strlen(hdr),
+                  "  (%d de %d) - arraste para rolar", mod_grid_scroll + 1, nc);
+         }
          return n;
       }
       if (ol && ol->active)
@@ -171,7 +177,7 @@ static int mod_ui_hit(float px, float py)
    if (mod_ui_timer <= 0)
       return -1;
    n = mod_ui_rects(r);
-   for (k = 0; k < n; k++)
+   for (k = n - 1; k >= 0; k--)
       if (   r[k * 4 + 2] > 0 && px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
           && py >= (float)r[k * 4 + 1] && py < (float)(r[k * 4 + 1] + r[k * 4 + 3]))
          return k;
@@ -234,20 +240,15 @@ static void mod_ui_press(int b)
       input_overlay_t *ol = input_driver_st.overlay_ptr;
       int cand[MOD_REG_MAX];
       int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-      int pages = (nc + 5) / 6;
       if (b >= 2 && b < 8)
       {
-         if (mod_grid_scroll * 6 + (b - 2) < nc)
+         if (mod_grid_scroll + (b - 2) < nc)
          {
-            mod_reg_sel   = mod_grid_scroll * 6 + (b - 2);
+            mod_reg_sel   = mod_grid_scroll + (b - 2);
             mod_grid_open = false;
             mod_struct_op(1);
          }
       }
-      else if (b == 12 && mod_grid_scroll > 0)
-         mod_grid_scroll--;
-      else if (b == 14 && mod_grid_scroll + 1 < pages)
-         mod_grid_scroll++;
       else if (b == 13)
          mod_grid_open = false;
       return;
@@ -257,6 +258,9 @@ static void mod_ui_press(int b)
       mod_reg_build(input_driver_st.overlay_ptr);
       mod_grid_scroll = 0;
       mod_grid_open   = true;
+      mod_grid_down   = true;
+      mod_grid_moved  = true;
+      mod_grid_b      = -1;
       return;
    }
    if (b == 10 || b == 11)
@@ -298,6 +302,56 @@ static void mod_ui_press(int b)
       default: return;
    }
    mod_vp_set(x, y, w, h);
+}
+
+static void mod_grid_touch(float px, float py)
+{
+   int r[72];
+   int rh, dy, nc, ns, maxs;
+   int cand[MOD_REG_MAX];
+   if (mod_ui_rects(r) <= 0)
+      return;
+   if (!mod_grid_down)
+   {
+      mod_grid_down  = true;
+      mod_grid_moved = false;
+      mod_grid_b     = mod_ui_hit(px, py);
+      mod_grid_sy    = (int)py;
+      mod_grid_s0    = mod_grid_scroll;
+      return;
+   }
+   rh = r[2 * 4 + 3];
+   if (rh <= 0)
+      return;
+   dy = (int)py - mod_grid_sy;
+   if (dy > rh * 3 / 10 || -dy > rh * 3 / 10)
+      mod_grid_moved = true;
+   if (mod_grid_moved)
+   {
+      nc   = mod_reg_cand(input_driver_st.overlay_ptr, cand, MOD_REG_MAX);
+      maxs = (nc > 6) ? nc - 6 : 0;
+      ns   = mod_grid_s0 - dy / rh;
+      if (ns < 0)
+         ns = 0;
+      if (ns > maxs)
+         ns = maxs;
+      mod_grid_scroll = ns;
+   }
+}
+
+static void mod_grid_release(void)
+{
+   if (!mod_grid_down)
+      return;
+   mod_grid_down = false;
+   if (!mod_grid_open || mod_grid_moved)
+      return;
+   if (mod_grid_b < 0)
+   {
+      mod_grid_open = false;
+      return;
+   }
+   mod_ui_press(mod_grid_b);
 }
 
 '''
@@ -350,7 +404,7 @@ trocar(
 trocar(
     INPUT,
     "      mod_editor_screen = false;\n      mod_grp_n         = 0;\n",
-    "      mod_editor_screen = false;\n      mod_ui_held       = -1;\n      mod_tap_block     = false;\n      mod_grp_n         = 0;\n",
+    "      mod_editor_screen = false;\n      mod_ui_held       = -1;\n      mod_tap_block     = false;\n      mod_grid_release();\n      mod_grp_n         = 0;\n",
 )
 
 # 3) toque do dedo 0: primeiro ve se pegou um botao do editor
@@ -364,6 +418,11 @@ trocar(
     "         float upx, upy;\n"
     "         int   ub;\n"
     "         mod_scr_finger(0, &upx, &upy);\n"
+    "         if (mod_grid_open)\n"
+    "         {\n"
+    "            mod_grid_touch(upx, upy);\n"
+    "            return;\n"
+    "         }\n"
     "         ub = mod_ui_hit(upx, upy);\n"
     "         if (ub >= 0 && (mod_ui_held < 0 || mod_ui_held == ub))\n"
     "         {\n"
@@ -424,8 +483,8 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
             0.05f, 0.05f, 0.10f, 0.78f,
          };
          float    fill_bg[16] = {
-            0.22f, 0.23f, 0.25f, 0.97f, 0.22f, 0.23f, 0.25f, 0.97f,
-            0.22f, 0.23f, 0.25f, 0.97f, 0.22f, 0.23f, 0.25f, 0.97f,
+            0.16f, 0.17f, 0.19f, 0.97f, 0.16f, 0.17f, 0.19f, 0.97f,
+            0.16f, 0.17f, 0.19f, 0.97f, 0.16f, 0.17f, 0.19f, 0.97f,
          };
          float    fill_row[16] = {
             0.32f, 0.33f, 0.36f, 1.0f, 0.32f, 0.33f, 0.36f, 1.0f,
@@ -441,7 +500,7 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                int by = ur[ui * 4 + 1] * lay_h / out_h;
                int bw = ur[ui * 4 + 2] * lay_w / out_w;
                int bh = ur[ui * 4 + 3] * lay_h / out_h;
-               if (bw <= 0)
+               if (bw <= 0 || (gmode && ui != 0))
                   continue;
                gfx_display_draw_quad(
                      p_disp, userdata, video_info->dims,

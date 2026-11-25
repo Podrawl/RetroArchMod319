@@ -21,6 +21,11 @@ static int  mod_reg_sel     = 0;
 static bool mod_reg_ok      = false;
 static bool mod_grid_open   = false;   /* grade de botoes aberta */
 static int  mod_grid_scroll = 0;
+static bool mod_grid_down   = false;
+static bool mod_grid_moved  = false;
+static int  mod_grid_b      = -1;
+static int  mod_grid_sy     = 0;
+static int  mod_grid_s0     = 0;
 static char mod_reload_dst[PATH_MAX_LENGTH];
 static int  mod_reload_page = -1;
 static int  mod_reload_wait = 0;
@@ -740,7 +745,7 @@ const char *input_overlay_editor_ui_img(int idx)
       return NULL;
    idx -= 2;
    nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-   ci = mod_grid_scroll * 6 + idx;
+   ci = mod_grid_scroll + idx;
    if (ci >= nc || !mod_reg[cand[ci]].img[0])
       return NULL;
    strlcpy(path, ol->path, sizeof(path));
