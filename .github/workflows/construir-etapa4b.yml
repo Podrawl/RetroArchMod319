@@ -1,4 +1,4 @@
-name: Etapa 4b - painel menor e sob toque
+name: Etapa 4b - adicionar e remover botoes
 
 on:
   workflow_dispatch:
