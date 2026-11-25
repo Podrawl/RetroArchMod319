@@ -24,6 +24,7 @@ static int  mod_grid_scroll = 0;
 static char mod_reload_dst[PATH_MAX_LENGTH];
 static int  mod_reload_page = -1;
 static int  mod_reload_wait = 0;
+static int  mod_apply_left  = 0;
 static input_overlay_t *mod_reload_old = NULL;
 
 static void mod_build_group(struct overlay *pg, int t);
@@ -584,6 +585,27 @@ static char *mod_cfg_remove(const char *buf, size_t len, unsigned P,
    return ob.b;
 }
 
+/* nome da aba: nome do .cfg sem extensao e sem -mod */
+static void mod_cfg_system_name(input_overlay_t *ol, char *o, size_t cap)
+{
+   const char *b = ol ? path_basename(ol->path) : "";
+   size_t l;
+   strlcpy(o, b, cap);
+   l = strlen(o);
+   if (l > 4 && !strcasecmp(o + l - 4, ".cfg"))
+      o[l -= 4] = '\0';
+   {
+      size_t q = l;
+      while (q > 0 && o[q - 1] >= '0' && o[q - 1] <= '9')
+         q--;
+      if (q >= 4 && !strncmp(o + q - 4, "-mod", 4))
+         o[q - 4] = '\0';
+   }
+   for (l = 0; o[l]; l++)
+      if (o[l] >= 'a' && o[l] <= 'z')
+         o[l] = (char)(o[l] - 32);
+}
+
 /* ---------- recarregar o overlay a partir da copia ---------- */
 static void mod_reload_start(const char *dst, int page)
 {
@@ -596,6 +618,12 @@ static void mod_reload_start(const char *dst, int page)
 
 static void mod_reload_check(input_overlay_t *ol)
 {
+   if (ol && mod_apply_left > 0)
+   {
+      mod_apply_left--;
+      if (ol->active)
+         mod_editor_apply(ol);
+   }
    if (mod_reload_wait <= 0 || !ol)
       return;
    if (ol != mod_reload_old && !strcmp(ol->path, mod_reload_dst))
@@ -614,6 +642,9 @@ static void mod_reload_check(input_overlay_t *ol)
          ol->next_index = (unsigned)mod_reload_page;
          command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
       }
+      mod_apply_left  = 4;
+      if (ol->active)
+         mod_editor_apply(ol);
       return;
    }
    if (--mod_reload_wait == 0)
@@ -705,10 +736,11 @@ const char *input_overlay_editor_ui_img(int idx)
    int cand[MOD_REG_MAX];
    int nc, ci;
    char *sl;
-   if (!mod_grid_open || !ol || idx < 0 || idx >= 12)
+   if (!mod_grid_open || !ol || idx < 2 || idx >= 8)
       return NULL;
+   idx -= 2;
    nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-   ci = mod_grid_scroll * 12 + idx;
+   ci = mod_grid_scroll * 6 + idx;
    if (ci >= nc || !mod_reg[cand[ci]].img[0])
       return NULL;
    strlcpy(path, ol->path, sizeof(path));

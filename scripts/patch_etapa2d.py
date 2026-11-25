@@ -62,31 +62,35 @@ static int mod_ui_rects(int *r)
    r[(i) * 4 + 3] = bh; } while (0)
    if (mod_grid_open)
    {
-      input_overlay_t *ol = input_driver_st.overlay_ptr;
-      int cand[MOD_REG_MAX];
-      int nc   = mod_reg_cand(ol, cand, MOD_REG_MAX);
-      int cols = (mod_win_w >= mod_win_h) ? 4 : 3;
-      int rows = 12 / cols;
-      int m    = ((mod_win_w < mod_win_h) ? mod_win_w : mod_win_h) * 5 / 100;
-      int cw   = (mod_win_w - 2 * m - (cols - 1) * gap) / cols;
-      int ch   = (mod_win_h - 2 * m - rows * gap) / (rows + 1);
-      int nw   = (mod_win_w - 2 * m - 2 * gap) / 3;
-      int first = mod_grid_scroll * 12;
-      for (k = 0; k < 12; k++)
+      /* caixa cinza: 0 fundo, 1 titulo (aba), 2-7 linhas da lista, 12 anterior, 13 fechar, 14 proxima */
+      int bxw = (mod_win_w >= mod_win_h) ? mod_win_w * 62 / 100 : mod_win_w * 92 / 100;
+      int bxh = (mod_win_w >= mod_win_h) ? mod_win_h * 90 / 100 : mod_win_h * 62 / 100;
+      int pad = gap * 2;
+      int rh  = (bxh - 2 * pad - 7 * gap) / 8;
+      int bx0 = mod_win_w / 2 - bxw / 2;
+      int by0 = mod_win_h / 2 - bxh / 2;
+      int nw  = (bxw - 2 * pad - 2 * gap) / 3;
+      r[0] = bx0;
+      r[1] = by0;
+      r[2] = bxw;
+      r[3] = bxh;
+      r[4] = bx0 + pad;
+      r[5] = by0 + pad;
+      r[6] = bxw - 2 * pad;
+      r[7] = rh;
+      for (k = 0; k < 6; k++)
       {
-         if (first + k >= nc)
-            continue;
-         r[k * 4 + 0] = m + (k % cols) * (cw + gap);
-         r[k * 4 + 1] = m + (k / cols) * (ch + gap);
-         r[k * 4 + 2] = cw;
-         r[k * 4 + 3] = ch;
+         r[(2 + k) * 4 + 0] = bx0 + pad;
+         r[(2 + k) * 4 + 1] = by0 + pad + (k + 1) * (rh + gap);
+         r[(2 + k) * 4 + 2] = bxw - 2 * pad;
+         r[(2 + k) * 4 + 3] = rh;
       }
       for (k = 0; k < 3; k++)
       {
-         r[(12 + k) * 4 + 0] = m + k * (nw + gap);
-         r[(12 + k) * 4 + 1] = m + rows * (ch + gap);
+         r[(12 + k) * 4 + 0] = bx0 + pad + k * (nw + gap);
+         r[(12 + k) * 4 + 1] = by0 + pad + 7 * (rh + gap);
          r[(12 + k) * 4 + 2] = nw;
-         r[(12 + k) * 4 + 3] = ch;
+         r[(12 + k) * 4 + 3] = rh;
       }
       return 18;
    }
@@ -115,8 +119,10 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
         "Pag <", "Pag >", NULL, "Centralizar", "Original",
         "Salvar novo", "Sobrescrever", "Botoes", NULL,
         NULL, NULL, NULL, NULL };
-   static char cell_lab[12][48];
+   static char cell_lab[6][48];
    int k, n;
+   if (mod_editor_active && (mod_reload_wait > 0 || mod_apply_left > 0))
+      mod_reload_check(input_driver_st.overlay_ptr);
    if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 18)
       return 0;
    n = mod_ui_rects(r);
@@ -128,18 +134,22 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
       {
          int cand[MOD_REG_MAX];
          int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-         for (k = 0; k < 12; k++)
-         {
+         static char hdr[96];
+         for (k = 0; k < 18; k++)
             lab[k] = NULL;
-            if (mod_grid_scroll * 12 + k < nc)
+         mod_cfg_system_name(ol, hdr, sizeof(hdr));
+         lab[1] = hdr;
+         for (k = 0; k < 6; k++)
+            if (mod_grid_scroll * 6 + k < nc)
             {
                snprintf(cell_lab[k], sizeof(cell_lab[k]), "%s",
-                     mod_reg[cand[mod_grid_scroll * 12 + k]].label);
-               lab[k] = cell_lab[k];
+                     mod_reg[cand[mod_grid_scroll * 6 + k]].label);
+               lab[2 + k] = cell_lab[k];
             }
-         }
+         if (nc == 0)
+            lab[2] = "Nada novo para adicionar";
          lab[12] = "<";
-         lab[13] = (nc > 0) ? "Fechar" : "Nada novo p/ adicionar - Fechar";
+         lab[13] = "Fechar";
          lab[14] = ">";
          return n;
       }
@@ -224,12 +234,12 @@ static void mod_ui_press(int b)
       input_overlay_t *ol = input_driver_st.overlay_ptr;
       int cand[MOD_REG_MAX];
       int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-      int pages = (nc + 11) / 12;
-      if (b < 12)
+      int pages = (nc + 5) / 6;
+      if (b >= 2 && b < 8)
       {
-         if (mod_grid_scroll * 12 + b < nc)
+         if (mod_grid_scroll * 6 + (b - 2) < nc)
          {
-            mod_reg_sel   = mod_grid_scroll * 12 + b;
+            mod_reg_sel   = mod_grid_scroll * 6 + (b - 2);
             mod_grid_open = false;
             mod_struct_op(1);
          }
@@ -413,6 +423,15 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
             0.05f, 0.05f, 0.10f, 0.78f,
             0.05f, 0.05f, 0.10f, 0.78f,
          };
+         float    fill_bg[16] = {
+            0.22f, 0.23f, 0.25f, 0.97f, 0.22f, 0.23f, 0.25f, 0.97f,
+            0.22f, 0.23f, 0.25f, 0.97f, 0.22f, 0.23f, 0.25f, 0.97f,
+         };
+         float    fill_row[16] = {
+            0.32f, 0.33f, 0.36f, 1.0f, 0.32f, 0.33f, 0.36f, 1.0f,
+            0.32f, 0.33f, 0.36f, 1.0f, 0.32f, 0.33f, 0.36f, 1.0f,
+         };
+         bool     gmode = input_overlay_editor_grid_open();
          if (out_w > 0 && out_h > 0)
          {
             gfx_display_blend_begin(dispctx, userdata);
@@ -427,7 +446,8 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                gfx_display_draw_quad(
                      p_disp, userdata, video_info->dims,
                      bx, by, VIDEO_SCALE_PACK(bw, bh),
-                     video_info->dims, fill, NULL);
+                     video_info->dims,
+                     (gmode && ui == 0) ? fill_bg : (gmode ? fill_row : fill), NULL);
             }
             gfx_display_blend_end(dispctx, userdata);
             /* miniaturas da grade de botoes */
@@ -448,7 +468,7 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                      }
                }
                else
-               for (ui = 0; ui < un && ui < 12; ui++)
+               for (ui = 2; ui < un && ui < 8; ui++)
                {
                   const char *ip = input_overlay_editor_ui_img(ui);
                   int         sl, side;
@@ -485,10 +505,10 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                      int by2 = ur[ui * 4 + 1] * lay_h / out_h;
                      int bw2 = ur[ui * 4 + 2] * lay_w / out_w;
                      int bh2 = ur[ui * 4 + 3] * lay_h / out_h;
-                     side = (bw2 < bh2 * 70 / 100) ? bw2 : bh2 * 70 / 100;
+                     side = bh2 * 80 / 100;
                      gfx_widgets_draw_icon(userdata, p_disp, video_info->dims,
                            VIDEO_SCALE_PACK(side, side), mod_tex_id[sl],
-                           (float)(bx2 + (bw2 - side) / 2), (float)(by2 + bh2 * 4 / 100),
+                           (float)(bx2 + bh2 * 10 / 100), (float)(by2 + bh2 * 10 / 100),
                            0.0f, 1.0f, 0.0f, white);
                   }
                }
@@ -504,9 +524,10 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                gfx_display_draw_text(
                      p_dispwidget->gfx_widget_fonts.regular.font,
                      ulab[ui],
-                     (float)(bx + bw / 2), (float)(by + bh * ((input_overlay_editor_grid_open() && ui < 12) ? 92 : 65) / 100),
+                     (float)((gmode && ui >= 2 && ui < 8) ? (bx + bh * 110 / 100) : (bx + bw / 2)),
+                     (float)(by + bh * 65 / 100),
                      video_info->dims,
-                     0xFFFFFFFF, TEXT_ALIGN_CENTER,
+                     0xFFFFFFFF, (gmode && ui >= 2 && ui < 8) ? TEXT_ALIGN_LEFT : TEXT_ALIGN_CENTER,
                      1.0f, false, 0.0f, false);
                p_dispwidget->gfx_widget_fonts.regular.usage_count++;
             }
