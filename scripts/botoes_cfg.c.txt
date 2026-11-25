@@ -1,0 +1,632 @@
+/* ===== 4b: botoes que existem em outras paginas do mesmo .cfg =====
+ * Lista (registro) de grupos de botoes do .cfg, adicionar na pagina atual,
+ * remover da pagina atual. Tudo e feito no TEXTO do .cfg (copia -mod) e o overlay
+ * e recarregado a partir da copia; o original nunca e tocado. */
+#define MOD_REG_MAX 96
+struct mod_reg_e
+{
+   char     key[400];
+   char     label[48];
+   uint64_t mask;                 /* paginas onde o grupo existe */
+   int      pg;                   /* pagina de onde copiar */
+   int      n;
+   int      idx[MOD_MAX_GRP];
+};
+struct mod_di { char name[40]; char img[96]; char tgt[40]; };
+
+static struct mod_reg_e *mod_reg = NULL;
+static int  mod_reg_n       = 0;
+static int  mod_reg_sel     = 0;
+static bool mod_reg_ok      = false;
+static int  mod_tab         = 0;       /* 0 = tela, 1 = botoes */
+static char mod_reload_dst[PATH_MAX_LENGTH];
+static int  mod_reload_page = -1;
+static int  mod_reload_wait = 0;
+static input_overlay_t *mod_reload_old = NULL;
+
+static void mod_build_group(struct overlay *pg, int t);
+static bool mod_is_analog(const struct overlay_desc *d);
+static bool mod_is_dir(const struct overlay_desc *d);
+static void input_overlay_loaded(retro_task_t *task,
+      void *task_data, void *user_data, const char *err);
+
+struct mod_ob { char *b; size_t n, cap; bool bad; };
+
+static void mod_ob_put(struct mod_ob *o, const char *s, size_t l)
+{
+   if (o->bad)
+      return;
+   if (o->n + l + 1 > o->cap)
+   {
+      size_t nc = (o->cap + l + 1) * 2;
+      char  *nb = (char*)realloc(o->b, nc);
+      if (!nb)
+      {
+         o->bad = true;
+         return;
+      }
+      o->b   = nb;
+      o->cap = nc;
+   }
+   memcpy(o->b + o->n, s, l);
+   o->n += l;
+}
+
+/* linha "overlayP_descD..." : devolve P, D e onde comeca o resto (apos o numero D) */
+static bool mod_ln_desc(const char *t, size_t n, unsigned *P, unsigned *D, size_t *rest)
+{
+   char tmp[64];
+   int  nn = 0;
+   size_t m = n < sizeof(tmp) - 1 ? n : sizeof(tmp) - 1;
+   memcpy(tmp, t, m);
+   tmp[m] = '\0';
+   if (sscanf(tmp, "overlay%u_desc%u%n", P, D, &nn) == 2 && nn > 0
+         && (tmp[nn] == ' ' || tmp[nn] == '=' || tmp[nn] == '_'
+          || tmp[nn] == '\t' || tmp[nn] == '\r' || tmp[nn] == '\0'))
+   {
+      *rest = (size_t)nn;
+      return true;
+   }
+   return false;
+}
+
+/* linha "overlayP_descs = N" */
+static bool mod_ln_count(const char *t, size_t n, unsigned *P, unsigned *N)
+{
+   char tmp[128];
+   int  nn = 0;
+   size_t m = n < sizeof(tmp) - 1 ? n : sizeof(tmp) - 1;
+   memcpy(tmp, t, m);
+   tmp[m] = '\0';
+   if (sscanf(tmp, "overlay%u_descs%n", P, &nn) == 1 && nn > 0
+         && (tmp[nn] == ' ' || tmp[nn] == '=' || tmp[nn] == '\t'))
+   {
+      const char *e = strchr(tmp + nn, '=');
+      if (!e)
+         return false;
+      e++;
+      while (*e == ' ' || *e == '\t' || *e == '"')
+         e++;
+      *N = (unsigned)strtoul(e, NULL, 10);
+      return true;
+   }
+   return false;
+}
+
+/* valor depois do '=', sem aspas/espacos */
+static void mod_ln_value(const char *t, char *o, size_t cap)
+{
+   const char *e = strchr(t, '=');
+   size_t l;
+   o[0] = '\0';
+   if (!e)
+      return;
+   e++;
+   while (*e == ' ' || *e == '\t' || *e == '"')
+      e++;
+   strlcpy(o, e, cap);
+   l = strlen(o);
+   while (l > 0 && (o[l - 1] == ' ' || o[l - 1] == '\r' || o[l - 1] == '"' || o[l - 1] == '\t'))
+      o[--l] = '\0';
+}
+
+static size_t mod_pg_off(input_overlay_t *ol, unsigned pg)
+{
+   size_t off = 0, k;
+   for (k = 0; k < pg && k < ol->size; k++)
+      off += ol->overlays[k].size;
+   return off;
+}
+
+static struct mod_di *mod_info_load(input_overlay_t *ol, const char *buf, size_t len)
+{
+   size_t total = mod_pg_off(ol, (unsigned)ol->size);
+   struct mod_di *di = (struct mod_di*)calloc(total ? total : 1, sizeof(*di));
+   const char *p = buf, *end = buf + len;
+   if (!di)
+      return NULL;
+   while (p < end)
+   {
+      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
+      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
+      unsigned    P, D;
+      size_t      k;
+      if (mod_ln_desc(p, n, &P, &D, &k) && P < ol->size && D < ol->overlays[P].size
+            && n < 512)
+      {
+         char t[512], v[256];
+         struct mod_di *d = &di[mod_pg_off(ol, P) + D];
+         memcpy(t, p, n);
+         t[n] = '\0';
+         mod_ln_value(t, v, sizeof(v));
+         if (t[k] == ' ' || t[k] == '=' || t[k] == '\t')
+         {
+            char *c = strchr(v, ',');
+            if (c)
+               *c = '\0';
+            strlcpy(d->name, v, sizeof(d->name));
+         }
+         else if (!strncmp(t + k, "_overlay", 8) && (t[k + 8] == ' ' || t[k + 8] == '=' || t[k + 8] == '\t'))
+            strlcpy(d->img, v, sizeof(d->img));
+         else if (!strncmp(t + k, "_next_target", 12))
+            strlcpy(d->tgt, v, sizeof(d->tgt));
+      }
+      p += eol ? n + 1 : n;
+   }
+   return di;
+}
+
+static int mod_str_cmp(const void *a, const void *b)
+{
+   return strcmp((const char*)a, (const char*)b);
+}
+
+/* Monta o registro: grupos de todas as paginas, juntando os iguais */
+static void mod_reg_build(input_overlay_t *ol)
+{
+   void    *buf = NULL;
+   int64_t  len = 0;
+   struct mod_di *di;
+   int      sv_grp[MOD_MAX_GRP], sv_n;
+   size_t   p, i;
+   mod_reg_ok = true;
+   mod_reg_n  = 0;
+   if (!ol || !ol->overlays || !ol->path[0])
+      return;
+   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
+   {
+      free(buf);
+      return;
+   }
+   di = mod_info_load(ol, (const char*)buf, (size_t)len);
+   free(buf);
+   if (!di)
+      return;
+   if (!mod_reg)
+      mod_reg = (struct mod_reg_e*)calloc(MOD_REG_MAX, sizeof(*mod_reg));
+   if (!mod_reg)
+   {
+      free(di);
+      return;
+   }
+   memcpy(sv_grp, mod_grp, sizeof(sv_grp));
+   sv_n = mod_grp_n;
+   for (p = 0; p < ol->size; p++)
+   {
+      struct overlay *pg   = &ol->overlays[p];
+      bool           *seen = (bool*)calloc(pg->size ? pg->size : 1, sizeof(bool));
+      if (!seen)
+         continue;
+      for (i = 0; i < pg->size; i++)
+      {
+         char    ms[MOD_MAX_GRP][180];
+         char    key[400];
+         int     g, ng, e, srt[MOD_MAX_GRP];
+         if (seen[i])
+            continue;
+         mod_build_group(pg, (int)i);
+         if (mod_grp_n == 0)
+            mod_grp[mod_grp_n++] = (int)i;
+         ng = mod_grp_n;
+         for (g = 0; g < ng; g++)
+         {
+            struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)mod_grp[g]];
+            srt[g]                      = mod_grp[g];
+            seen[mod_grp[g]]            = true;
+            snprintf(ms[g], sizeof(ms[g]), "%s|%s|%s", d->name, d->img, d->tgt);
+         }
+         seen[i] = true;
+         qsort(ms, (size_t)ng, sizeof(ms[0]), mod_str_cmp);
+         key[0] = '\0';
+         for (g = 0; g < ng; g++)
+         {
+            strlcat(key, ms[g], sizeof(key));
+            strlcat(key, ";", sizeof(key));
+         }
+         for (e = 0; e < mod_reg_n; e++)
+            if (!strcmp(mod_reg[e].key, key))
+               break;
+         if (e < mod_reg_n)
+         {
+            if (p < 64)
+               mod_reg[e].mask |= ((uint64_t)1 << p);
+         }
+         else if (mod_reg_n < MOD_REG_MAX)
+         {
+            struct mod_reg_e *r = &mod_reg[mod_reg_n++];
+            const char *nm = NULL;
+            memset(r, 0, sizeof(*r));
+            strlcpy(r->key, key, sizeof(r->key));
+            r->pg   = (int)p;
+            r->n    = ng;
+            r->mask = (p < 64) ? ((uint64_t)1 << p) : 0;
+            for (g = 0; g < ng; g++)
+               r->idx[g] = srt[g];
+            for (g = 0; g < ng; g++)
+            {
+               struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
+               if (mod_is_analog(&pg->descs[srt[g]]))
+               {
+                  nm = d->name;
+                  break;
+               }
+            }
+            if (!nm)
+               for (g = 0; g < ng; g++)
+                  if (mod_is_dir(&pg->descs[srt[g]]))
+                  {
+                     nm = "direcional";
+                     break;
+                  }
+            if (!nm)
+               for (g = 0; g < ng; g++)
+               {
+                  struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
+                  if (strcmp(d->name, "nul"))
+                  {
+                     nm = d->name;
+                     break;
+                  }
+               }
+            strlcpy(r->label, nm ? nm : "imagem", sizeof(r->label));
+         }
+      }
+      free(seen);
+   }
+   memcpy(mod_grp, sv_grp, sizeof(sv_grp));
+   mod_grp_n = sv_n;
+   free(di);
+}
+
+/* candidatos: grupos que ainda nao estao na pagina atual */
+static int mod_reg_cand(input_overlay_t *ol, int *list, int cap)
+{
+   int e, n = 0;
+   unsigned cur = ol ? (unsigned)ol->index : 0;
+   if (!mod_reg_ok)
+      return 0;
+   for (e = 0; e < mod_reg_n && n < cap; e++)
+      if (cur >= 64 || !((mod_reg[e].mask >> cur) & 1))
+         list[n++] = e;
+   return n;
+}
+
+/* ---------- edicao do texto ---------- */
+
+/* acha onde inserir os botoes novos da pagina P (depois da ultima linha overlayP_desc<N>) */
+static size_t mod_find_ins(const char *buf, size_t len, unsigned P, bool *has_count)
+{
+   const char *p = buf, *end = buf + len;
+   size_t at = (size_t)-1, cnt_at = (size_t)-1;
+   *has_count = false;
+   while (p < end)
+   {
+      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
+      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
+      size_t      adv = eol ? n + 1 : n;
+      unsigned    a, b, c;
+      size_t      k;
+      if (mod_ln_desc(p, n, &a, &b, &k) && a == P)
+         at = (size_t)(p - buf) + adv;
+      else if (mod_ln_count(p, n, &a, &c) && a == P)
+      {
+         cnt_at      = (size_t)(p - buf) + adv;
+         *has_count  = true;
+      }
+      p += adv;
+   }
+   return at != (size_t)-1 ? at : cnt_at;
+}
+
+/* Copia o grupo e (de outra pagina) para a pagina P. Devolve texto novo (free) */
+static char *mod_cfg_add(input_overlay_t *ol, const char *buf, size_t len,
+      unsigned P, const struct mod_reg_e *e, size_t *olen)
+{
+   struct mod_ob ob = { NULL, 0, 0, false }, ins = { NULL, 0, 0, false };
+   const char *p = buf, *end = buf + len;
+   unsigned cnt = (unsigned)ol->overlays[P].size;
+   float minx = 1e9f, maxx = -1e9f, miny = 1e9f, maxy = -1e9f, dx = 0.0f, dy = 0.0f;
+   bool  has_count;
+   size_t at, pass;
+   char   cntl[8];
+   (void)cntl;
+   at = mod_find_ins(buf, len, P, &has_count);
+   if (at == (size_t)-1 || !has_count)
+      return NULL;
+   /* passo 1: caixa do grupo (so das linhas base) */
+   for (pass = 0; pass < 2; pass++)
+   {
+      p = buf;
+      while (p < end)
+      {
+         const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
+         size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
+         size_t      adv = eol ? n + 1 : n;
+         unsigned    a, b;
+         size_t      k;
+         if (mod_ln_desc(p, n, &a, &b, &k) && a == (unsigned)e->pg && n < 900)
+         {
+            int m;
+            for (m = 0; m < e->n; m++)
+               if ((unsigned)e->idx[m] == b)
+                  break;
+            if (m < e->n)
+            {
+               char t[1024];
+               memcpy(t, p, n);
+               t[n] = '\0';
+               if (t[k] == ' ' || t[k] == '=' || t[k] == '\t')
+               {
+                  char v[512], *tk[8];
+                  int  nt = 0;
+                  char *c;
+                  mod_ln_value(t, v, sizeof(v));
+                  c = v;
+                  tk[nt++] = c;
+                  while (nt < 8 && (c = strchr(c, ',')))
+                  {
+                     *c++ = '\0';
+                     tk[nt++] = c;
+                  }
+                  if (nt == 6)
+                  {
+                     float x = (float)atof(tk[1]), y = (float)atof(tk[2]);
+                     if (pass == 0)
+                     {
+                        if (x < minx) minx = x;
+                        if (x > maxx) maxx = x;
+                        if (y < miny) miny = y;
+                        if (y > maxy) maxy = y;
+                     }
+                     else
+                     {
+                        char o[1024];
+                        int  w = snprintf(o, sizeof(o), "overlay%u_desc%u = \"%s,%.5f,%.5f,%s,%s,%s\"",
+                              P, cnt + (unsigned)m, tk[0], x + dx, y + dy, tk[3], tk[4], tk[5]);
+                        if (w > 0 && (size_t)w < sizeof(o))
+                        {
+                           /* mantem o fim de linha (\r) se havia */
+                           mod_ob_put(&ins, o, (size_t)w);
+                           if (n > 0 && p[n - 1] == '\r')
+                              mod_ob_put(&ins, "\r", 1);
+                           mod_ob_put(&ins, "\n", 1);
+                        }
+                     }
+                  }
+               }
+               else if (pass == 1)
+               {
+                  char o[1100];
+                  int  w = snprintf(o, sizeof(o), "overlay%u_desc%u", P, cnt + (unsigned)m);
+                  mod_ob_put(&ins, o, (size_t)w);
+                  mod_ob_put(&ins, p + k, n - k);
+                  mod_ob_put(&ins, "\n", 1);
+               }
+            }
+         }
+         p += adv;
+      }
+      if (pass == 0)
+      {
+         if (minx > maxx)
+            return NULL;
+         dx = 0.5f - (minx + maxx) / 2.0f;
+         dy = 0.5f - (miny + maxy) / 2.0f;
+      }
+   }
+   if (ins.bad || !ins.n)
+   {
+      free(ins.b);
+      return NULL;
+   }
+   /* monta a saida */
+   p = buf;
+   while (p < end)
+   {
+      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
+      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
+      size_t      adv = eol ? n + 1 : n;
+      unsigned    a, c;
+      if ((size_t)(p - buf) == at)
+      {
+         mod_ob_put(&ob, ins.b, ins.n);
+         at = (size_t)-1;
+      }
+      if (mod_ln_count(p, n, &a, &c) && a == P)
+      {
+         char o[64];
+         const char *eq = (const char*)memchr(p, '=', n);
+         int  w = snprintf(o, sizeof(o), " %u", c + (unsigned)e->n);
+         mod_ob_put(&ob, p, (size_t)(eq - p) + 1);
+         mod_ob_put(&ob, o, (size_t)w);
+         if (n > 0 && p[n - 1] == '\r')
+            mod_ob_put(&ob, "\r", 1);
+         if (eol)
+            mod_ob_put(&ob, "\n", 1);
+      }
+      else
+         mod_ob_put(&ob, p, adv);
+      p += adv;
+   }
+   if (at == (size_t)len)
+   {
+      if (len > 0 && buf[len - 1] != '\n')
+         mod_ob_put(&ob, "\n", 1);
+      mod_ob_put(&ob, ins.b, ins.n);
+   }
+   free(ins.b);
+   if (ob.bad)
+   {
+      free(ob.b);
+      return NULL;
+   }
+   *olen = ob.n;
+   return ob.b;
+}
+
+/* Tira da pagina P os botoes (indices em idx[n]) e renumera os seguintes */
+static char *mod_cfg_remove(const char *buf, size_t len, unsigned P,
+      const int *idx, int n, size_t *olen)
+{
+   struct mod_ob ob = { NULL, 0, 0, false };
+   const char *p = buf, *end = buf + len;
+   while (p < end)
+   {
+      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
+      size_t      ln  = eol ? (size_t)(eol - p) : (size_t)(end - p);
+      size_t      adv = eol ? ln + 1 : ln;
+      unsigned    a, b, c;
+      size_t      k;
+      if (mod_ln_desc(p, ln, &a, &b, &k) && a == P)
+      {
+         int m, below = 0;
+         bool rm = false;
+         for (m = 0; m < n; m++)
+         {
+            if ((unsigned)idx[m] == b)
+               rm = true;
+            else if ((unsigned)idx[m] < b)
+               below++;
+         }
+         if (!rm)
+         {
+            char o[64];
+            int  w = snprintf(o, sizeof(o), "overlay%u_desc%u", P, b - (unsigned)below);
+            mod_ob_put(&ob, o, (size_t)w);
+            mod_ob_put(&ob, p + k, adv - k);
+         }
+      }
+      else if (mod_ln_count(p, ln, &a, &c) && a == P)
+      {
+         char o[64];
+         const char *eq = (const char*)memchr(p, '=', ln);
+         int  w = snprintf(o, sizeof(o), " %u", c >= (unsigned)n ? c - (unsigned)n : 0);
+         mod_ob_put(&ob, p, (size_t)(eq - p) + 1);
+         mod_ob_put(&ob, o, (size_t)w);
+         if (ln > 0 && p[ln - 1] == '\r')
+            mod_ob_put(&ob, "\r", 1);
+         if (eol)
+            mod_ob_put(&ob, "\n", 1);
+      }
+      else
+         mod_ob_put(&ob, p, adv);
+      p += adv;
+   }
+   if (ob.bad)
+   {
+      free(ob.b);
+      return NULL;
+   }
+   *olen = ob.n;
+   return ob.b;
+}
+
+/* ---------- recarregar o overlay a partir da copia ---------- */
+static void mod_reload_start(const char *dst, int page)
+{
+   strlcpy(mod_reload_dst, dst, sizeof(mod_reload_dst));
+   mod_reload_page = page;
+   mod_reload_old  = input_driver_st.overlay_ptr;
+   mod_reload_wait = 900;
+   task_push_overlay_load_default(input_overlay_loaded, dst, false, NULL);
+}
+
+static void mod_reload_check(input_overlay_t *ol)
+{
+   if (mod_reload_wait <= 0 || !ol)
+      return;
+   if (ol != mod_reload_old && !strcmp(ol->path, mod_reload_dst))
+   {
+      bool tmp = false;
+      mod_reload_wait = 0;
+      mod_snap_take(ol);
+      mod_reg_ok      = false;
+      mod_rm_n        = 0;
+      mod_rm_confirm  = false;
+      mod_editor_sel  = -1;
+      mod_grp_n       = 0;
+      if (mod_reload_page > 0 && (size_t)mod_reload_page < ol->size
+            && (unsigned)mod_reload_page != (unsigned)ol->index)
+      {
+         ol->next_index = (unsigned)mod_reload_page;
+         command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
+      }
+      if (mod_tab == 1)
+         mod_reg_build(ol);
+      return;
+   }
+   if (--mod_reload_wait == 0)
+      mod_toast("Recarregar o overlay demorou demais. Confira o arquivo salvo.");
+}
+
+/* op 1 = adicionar o candidato escolhido, op 2 = remover o grupo selecionado */
+static void mod_struct_op(int op)
+{
+   input_overlay_t *ol = input_driver_st.overlay_ptr;
+   void    *buf = NULL;
+   int64_t  len = 0;
+   char    *moved = NULL, *edited = NULL;
+   size_t   mlen = 0, changed = 0, elen = 0;
+   char     dst[PATH_MAX_LENGTH], msg[PATH_MAX_LENGTH + 64];
+   unsigned page;
+   if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
+   {
+      mod_toast("Overlay nao carregado.");
+      return;
+   }
+   if (mod_reload_wait > 0)
+   {
+      mod_toast("Aguarde: recarregando o overlay.");
+      return;
+   }
+   page = (unsigned)ol->index;
+   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
+   {
+      mod_toast("Nao consegui ler o .cfg do overlay.");
+      free(buf);
+      return;
+   }
+   moved = mod_apply_moves(ol, (const char*)buf, (size_t)len, &mlen, &changed, NULL, 0);
+   free(buf);
+   if (!moved)
+      return;
+   if (op == 1)
+   {
+      int cand[MOD_REG_MAX];
+      int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
+      if (nc <= 0)
+      {
+         mod_toast("Nao ha botao novo para adicionar nesta pagina.");
+         free(moved);
+         return;
+      }
+      if (mod_reg_sel >= nc)
+         mod_reg_sel = 0;
+      edited = mod_cfg_add(ol, moved, mlen, page, &mod_reg[cand[mod_reg_sel]], &elen);
+   }
+   else
+      edited = mod_cfg_remove(moved, mlen, page, mod_rm_grp, mod_rm_n, &elen);
+   free(moved);
+   if (!edited)
+   {
+      mod_toast("Nao consegui alterar o .cfg (formato inesperado).");
+      return;
+   }
+   if (mod_cfg_is_mod(ol->path))
+      strlcpy(dst, ol->path, sizeof(dst));
+   else
+      mod_new_dst(ol->path, dst, sizeof(dst));
+   if (filestream_write_file(dst, edited, (int64_t)elen))
+   {
+      strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
+      snprintf(msg, sizeof(msg), "%s: %s salvo em %s. Recarregando...",
+            op == 1 ? "Botao adicionado" : "Botao removido",
+            path_basename(ol->path), path_basename(dst));
+      mod_toast(msg);
+      mod_reload_start(dst, (int)page);
+   }
+   else
+      mod_toast("Falhou ao gravar o arquivo.");
+   free(edited);
+}
+

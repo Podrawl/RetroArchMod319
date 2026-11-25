@@ -56,88 +56,56 @@ static bool mod_cfg_is_mod(const char *path)
    return r;
 }
 
-static void mod_save_cfg(bool overwrite)
+/* nome novo para uma copia: <base>-mod.cfg, -mod2.cfg, ... (primeiro que nao existe) */
+static void mod_new_dst(const char *src, char *dst, size_t cap)
 {
-   input_overlay_t *ol = input_driver_st.overlay_ptr;
-   char     dst[PATH_MAX_LENGTH];
-   char     msg[PATH_MAX_LENGTH + 96];
-   void    *buf  = NULL;
-   int64_t  len  = 0;
-   char    *out;
-   size_t   cap, olen = 0, i, nl = 1, changed = 0;
-   char     ex[128];
-   const char *p, *end;
-   bool     has_mark;
-   if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
+   char     base[PATH_MAX_LENGTH];
+   size_t   bl;
+   unsigned n;
+   strlcpy(base, src, sizeof(base));
+   bl = strlen(base);
+   if (bl > 4 && !strcasecmp(base + bl - 4, ".cfg"))
+      base[bl - 4] = '\0';
+   bl = strlen(base);
    {
-      mod_toast("Salvar: overlay nao carregado.");
-      return;
+      /* tira um "-mod" ou "-modN" do final, para nao acumular */
+      size_t q = bl;
+      while (q > 0 && base[q - 1] >= '0' && base[q - 1] <= '9')
+         q--;
+      if (q >= 4 && !strncmp(base + q - 4, "-mod", 4))
+         base[q - 4] = '\0';
    }
-   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
+   for (n = 1; n < 1000; n++)
    {
-      mod_toast("Salvar: nao consegui ler o .cfg do overlay.");
-      free(buf);
-      return;
-   }
-   /* destino */
-   dst[0] = '\0';
-   if (overwrite)
-   {
-      if (mod_cfg_is_mod(ol->path))
-         strlcpy(dst, ol->path, sizeof(dst));
-      else if (mod_last_saved[0] && mod_cfg_is_mod(mod_last_saved))
-         strlcpy(dst, mod_last_saved, sizeof(dst));
+      if (n == 1)
+         snprintf(dst, cap, "%s-mod.cfg", base);
       else
-      {
-         mod_toast("Sobrescrever so vale para copia criada pelo app. Use Salvar novo.");
-         free(buf);
-         return;
-      }
+         snprintf(dst, cap, "%s-mod%u.cfg", base, n);
+      if (!path_is_valid(dst))
+         break;
    }
-   else
-   {
-      char base[PATH_MAX_LENGTH];
-      size_t bl;
-      unsigned n;
-      strlcpy(base, ol->path, sizeof(base));
-      bl = strlen(base);
-      if (bl > 4 && !strcasecmp(base + bl - 4, ".cfg"))
-         base[bl - 4] = '\0';
-      bl = strlen(base);
-      {
-         /* tira um "-mod" ou "-modN" do final, para nao acumular */
-         size_t q = bl;
-         while (q > 0 && base[q - 1] >= '0' && base[q - 1] <= '9')
-            q--;
-         if (q >= 4 && !strncmp(base + q - 4, "-mod", 4))
-            base[q - 4] = '\0';
-      }
-      for (n = 1; n < 1000; n++)
-      {
-         if (n == 1)
-            snprintf(dst, sizeof(dst), "%s-mod.cfg", base);
-         else
-            snprintf(dst, sizeof(dst), "%s-mod%u.cfg", base, n);
-         if (!path_is_valid(dst))
-            break;
-      }
-   }
-   /* monta o texto novo: o arquivo de origem com so as linhas alteradas trocadas */
-   p        = (const char*)buf;
-   end      = p + len;
-   ex[0]    = '\0';
-   has_mark = (len >= (int64_t)strlen(MOD_CFG_MARCA)
+}
+
+/* Texto do .cfg com as linhas dos botoes movidos/redimensionados trocadas
+ * (comparando com os valores do momento da carga) e a marca do app no inicio.
+ * Devolve memoria alocada (free) ou NULL. */
+static char *mod_apply_moves(input_overlay_t *ol, const char *buf, size_t len,
+      size_t *olen_out, size_t *changed_out, char *ex, size_t excap)
+{
+   const char *p = buf, *end = buf + len;
+   char   *out;
+   size_t  cap, olen = 0, i, nl = 1, changed = 0;
+   bool    has_mark = (len >= strlen(MOD_CFG_MARCA)
          && !strncmp(p, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
-   for (i = 0; i < (size_t)len; i++)
+   for (i = 0; i < len; i++)
       if (p[i] == '\n')
          nl++;
-   cap = (size_t)len + 80 * nl + 256;
+   cap = len + 80 * nl + 256;
    out = (char*)malloc(cap);
    if (!out)
-   {
-      free(buf);
-      return;
-   }
+      return NULL;
+   if (ex)
+      ex[0] = '\0';
    if (!has_mark)
       olen += (size_t)snprintf(out + olen, cap - olen, "%s\n", MOD_CFG_MARCA);
    while (p < end)
@@ -203,8 +171,8 @@ static void mod_save_cfg(bool overwrite)
                         olen += n - (size_t)(q2 - t);
                         if (eol)
                            out[olen++] = '\n';
-                        if (!ex[0])
-                           snprintf(ex, sizeof(ex), "; ex.: pag %u botao %u x %.3f>%.3f y %.3f>%.3f",
+                        if (ex && !ex[0])
+                           snprintf(ex, excap, "; ex.: pag %u botao %u x %.3f>%.3f y %.3f>%.3f",
                                  o, d, sv[0], dd->x, sv[1], dd->y);
                         changed++;
                         done = true;
@@ -220,6 +188,54 @@ static void mod_save_cfg(bool overwrite)
          olen += adv;
       }
       p += adv;
+   }
+   *olen_out    = olen;
+   *changed_out = changed;
+   return out;
+}
+
+static void mod_save_cfg(bool overwrite)
+{
+   input_overlay_t *ol = input_driver_st.overlay_ptr;
+   char     dst[PATH_MAX_LENGTH];
+   char     msg[PATH_MAX_LENGTH + 96];
+   void    *buf  = NULL;
+   int64_t  len  = 0;
+   char    *out;
+   size_t   olen = 0, changed = 0;
+   char     ex[128];
+   if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
+   {
+      mod_toast("Salvar: overlay nao carregado.");
+      return;
+   }
+   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
+   {
+      mod_toast("Salvar: nao consegui ler o .cfg do overlay.");
+      free(buf);
+      return;
+   }
+   dst[0] = '\0';
+   if (overwrite)
+   {
+      if (mod_cfg_is_mod(ol->path))
+         strlcpy(dst, ol->path, sizeof(dst));
+      else if (mod_last_saved[0] && mod_cfg_is_mod(mod_last_saved))
+         strlcpy(dst, mod_last_saved, sizeof(dst));
+      else
+      {
+         mod_toast("Sobrescrever so vale para copia criada pelo app. Use Salvar novo.");
+         free(buf);
+         return;
+      }
+   }
+   else
+      mod_new_dst(ol->path, dst, sizeof(dst));
+   out = mod_apply_moves(ol, (const char*)buf, (size_t)len, &olen, &changed, ex, sizeof(ex));
+   if (!out)
+   {
+      free(buf);
+      return;
    }
    if (filestream_write_file(dst, out, (int64_t)olen))
    {

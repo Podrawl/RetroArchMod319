@@ -28,15 +28,17 @@ def trocar(arq, antigo, novo):
 
 INPUT = "input/input_driver.c"
 
-UI = r'''SALVAR_PLACEHOLDER/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
+UI = r'''SALVAR_PLACEHOLDERBOTOES_PLACEHOLDER/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
 static int  mod_ui_held   = -1;
 static char mod_ui_title[96];
 static int mod_ui_hold_n = 0;
 static int mod_ui_timer  = 0;   /* quadros restantes com o painel visivel */
 static int mod_main_page = 0;   /* pagina marcada como principal (so memoria por enquanto) */
 
-/* 10 retangulos (x, y, largura, altura) em pixels da janela:
- * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (toque = marcar como principal), 8 centralizar, 9 original */
+/* 18 retangulos (x, y, largura, altura) em pixels; w=0 = escondido.
+ * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (toque = marcar como principal),
+ * 8 centralizar, 9 original, 10 salvar novo, 11 sobrescrever, 12 ir para aba Botoes, 13 voltar para aba Tela,
+ * 14-15 candidato anterior/proximo, 16 candidato (toque = adicionar), 17 remover botao */
 static int mod_ui_rects(int *r)
 {
    int bw, bh, gap, x0, y0, k;
@@ -50,56 +52,54 @@ static int mod_ui_rects(int *r)
    gap = bh / 5;
    x0  = mod_win_w / 2 - bw - gap / 2;
    y0  = mod_win_h / 2 - (7 * bh + 6 * gap) / 2;
-   for (k = 0; k < 4; k++)
+   for (k = 0; k < 72; k++)
+      r[k] = 0;
+#define MOD_R(i, row, col, span) do { \
+   r[(i) * 4 + 0] = x0 + (col) * (bw + gap); \
+   r[(i) * 4 + 1] = y0 + (row) * (bh + gap); \
+   r[(i) * 4 + 2] = (span) * bw + ((span) - 1) * gap; \
+   r[(i) * 4 + 3] = bh; } while (0)
+   MOD_R(7, 0, 0, 2);
+   MOD_R(5, 1, 0, 1);
+   MOD_R(6, 1, 1, 1);
+   MOD_R(10, 5, 0, 1);
+   MOD_R(11, 5, 1, 1);
+   if (mod_tab == 0)
    {
-      r[k * 4 + 0] = x0 + (k % 2) * (bw + gap);
-      r[k * 4 + 1] = y0 + (2 + k / 2) * (bh + gap);
-      r[k * 4 + 2] = bw;
-      r[k * 4 + 3] = bh;
+      MOD_R(0, 2, 0, 1);
+      MOD_R(1, 2, 1, 1);
+      MOD_R(2, 3, 0, 1);
+      MOD_R(3, 3, 1, 1);
+      MOD_R(8, 4, 0, 1);
+      MOD_R(9, 4, 1, 1);
+      MOD_R(12, 6, 0, 1);
+      MOD_R(4, 6, 1, 1);
    }
-   r[16] = x0;                      /* Fechar: ultima fileira, largura toda */
-   r[17] = y0 + 6 * (bh + gap);
-   r[18] = 2 * bw + gap;
-   r[19] = bh;
-   r[32] = x0;                      /* Centralizar: metade esquerda */
-   r[33] = y0 + 4 * (bh + gap);
-   r[34] = bw;
-   r[35] = bh;
-   r[36] = x0 + bw + gap;           /* Original: metade direita */
-   r[37] = y0 + 4 * (bh + gap);
-   r[38] = bw;
-   r[39] = bh;
-   r[40] = x0;                      /* Salvar novo */
-   r[41] = y0 + 5 * (bh + gap);
-   r[42] = bw;
-   r[43] = bh;
-   r[44] = x0 + bw + gap;           /* Sobrescrever */
-   r[45] = y0 + 5 * (bh + gap);
-   r[46] = bw;
-   r[47] = bh;
-   for (k = 0; k < 2; k++)
+   else
    {
-      r[20 + k * 4 + 0] = x0 + k * (bw + gap);
-      r[20 + k * 4 + 1] = y0 + (bh + gap);
-      r[20 + k * 4 + 2] = bw;
-      r[20 + k * 4 + 3] = bh;
+      MOD_R(14, 2, 0, 1);
+      MOD_R(15, 2, 1, 1);
+      MOD_R(16, 3, 0, 2);
+      MOD_R(17, 4, 0, 2);
+      MOD_R(13, 6, 0, 1);
+      MOD_R(4, 6, 1, 1);
    }
-   r[28] = x0;
-   r[29] = y0;
-   r[30] = 2 * bw + gap;
-   r[31] = bh;
-   return 12;
+#undef MOD_R
+   return 18;
 }
 
 /* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
 int input_overlay_editor_ui(int *r, const char **lab, int max)
 {
-   static const char *nomes[12] =
+   static const char *nomes[18] =
       { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar",
         "Pag <", "Pag >", NULL, "Centralizar", "Original",
-        "Salvar novo", "Sobrescrever" };
+        "Salvar novo", "Sobrescrever", "Botoes >", "< Tela",
+        "Botao <", "Botao >", NULL, NULL };
+   static char cand_lab[80];
+   static char rm_lab[48];
    int k, n;
-   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 12)
+   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 18)
       return 0;
    n = mod_ui_rects(r);
    for (k = 0; k < n; k++)
@@ -113,19 +113,41 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
       else
          snprintf(mod_ui_title, sizeof(mod_ui_title), "?");
       lab[7] = mod_ui_title;
+      if (mod_tab == 1 && ol)
+      {
+         int cand[MOD_REG_MAX];
+         int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
+         if (mod_reg_sel >= nc)
+            mod_reg_sel = 0;
+         if (nc > 0)
+            snprintf(cand_lab, sizeof(cand_lab), "+ %s (%d/%d)",
+                  mod_reg[cand[mod_reg_sel]].label, mod_reg_sel + 1, nc);
+         else
+            snprintf(cand_lab, sizeof(cand_lab), "(nada novo p/ adicionar)");
+         lab[16] = cand_lab;
+         if (mod_reload_wait > 0)
+            snprintf(rm_lab, sizeof(rm_lab), "Recarregando...");
+         else if (mod_rm_confirm)
+            snprintf(rm_lab, sizeof(rm_lab), "Toque de novo: remover");
+         else if (mod_rm_n > 0 && mod_rm_page == (int)ol->index)
+            snprintf(rm_lab, sizeof(rm_lab), "Remover botao tocado");
+         else
+            snprintf(rm_lab, sizeof(rm_lab), "Remover (toque um botao antes)");
+         lab[17] = rm_lab;
+      }
    }
    return n;
 }
 
 static int mod_ui_hit(float px, float py)
 {
-   int r[48];
+   int r[72];
    int k, n;
    if (mod_ui_timer <= 0)
       return -1;
    n = mod_ui_rects(r);
    for (k = 0; k < n; k++)
-      if (   px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
+      if (   r[k * 4 + 2] > 0 && px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
           && py >= (float)r[k * 4 + 1] && py < (float)(r[k * 4 + 1] + r[k * 4 + 3]))
          return k;
    return -1;
@@ -182,6 +204,45 @@ static void mod_ui_press(int b)
       mod_page_goto(b == 6 ? 1 : -1);
       return;
    }
+   if (b == 12 || b == 13)
+   {
+      mod_tab         = (b == 12);
+      mod_rm_confirm  = false;
+      if (b == 12)
+         mod_reg_build(input_driver_st.overlay_ptr);
+      return;
+   }
+   if (b == 14 || b == 15)
+   {
+      input_overlay_t *ol = input_driver_st.overlay_ptr;
+      int cand[MOD_REG_MAX];
+      int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
+      if (nc > 0)
+         mod_reg_sel = (mod_reg_sel + (b == 15 ? 1 : nc - 1)) % nc;
+      return;
+   }
+   if (b == 16)
+   {
+      mod_struct_op(1);
+      return;
+   }
+   if (b == 17)
+   {
+      input_overlay_t *ol = input_driver_st.overlay_ptr;
+      if (!ol || mod_rm_n <= 0 || mod_rm_page != (int)ol->index)
+      {
+         mod_toast("Toque num botao do overlay (para seleciona-lo) e depois em Remover.");
+         return;
+      }
+      if (!mod_rm_confirm)
+      {
+         mod_rm_confirm = true;
+         return;
+      }
+      mod_rm_confirm = false;
+      mod_struct_op(2);
+      return;
+   }
    if (b == 10 || b == 11)
    {
       mod_save_cfg(b == 11);
@@ -226,6 +287,7 @@ static void mod_ui_press(int b)
 '''
 
 import os
+UI = UI.replace('BOTOES_PLACEHOLDER', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'botoes_cfg.c.txt'), encoding='utf-8').read())
 UI = UI.replace('SALVAR_PLACEHOLDER', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salvar_cfg.c.txt'), encoding='utf-8').read())
 
 # 0) 3 dedos tambem despausa; tamanho da janela atualizado a cada leitura (vertical/horizontal)
@@ -327,9 +389,9 @@ WID = "gfx/gfx_widgets.c"
 DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
    {
       extern int input_overlay_editor_ui(int *r, const char **lab, int max);
-      int         ur[12 * 4];
-      const char *ulab[12];
-      int         un = input_overlay_editor_ui(ur, ulab, 12);
+      int         ur[18 * 4];
+      const char *ulab[18];
+      int         un = input_overlay_editor_ui(ur, ulab, 18);
       if (un > 0)
       {
          int      ui;
@@ -352,6 +414,8 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                int by = ur[ui * 4 + 1] * lay_h / out_h;
                int bw = ur[ui * 4 + 2] * lay_w / out_w;
                int bh = ur[ui * 4 + 3] * lay_h / out_h;
+               if (bw <= 0)
+                  continue;
                gfx_display_draw_quad(
                      p_disp, userdata, video_info->dims,
                      bx, by, VIDEO_SCALE_PACK(bw, bh),
@@ -364,6 +428,8 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                int by = ur[ui * 4 + 1] * lay_h / out_h;
                int bw = ur[ui * 4 + 2] * lay_w / out_w;
                int bh = ur[ui * 4 + 3] * lay_h / out_h;
+               if (bw <= 0 || !ulab[ui])
+                  continue;
                gfx_display_draw_text(
                      p_dispwidget->gfx_widget_fonts.regular.font,
                      ulab[ui],
@@ -384,6 +450,31 @@ trocar(
     WID,
     "#ifdef HAVE_TRANSLATE\n   /* AI Service overlay */\n",
     DESENHO + "#ifdef HAVE_TRANSLATE\n   /* AI Service overlay */\n",
+)
+
+# 4b: declaracoes do "remover", copia do grupo ao selecionar, checagem do recarregamento
+trocar(
+    INPUT,
+    "static float mod_grp_py = 0.0f;\n",
+    "static float mod_grp_py = 0.0f;\n"
+    "static int   mod_rm_grp[MOD_MAX_GRP];\n"
+    "static int   mod_rm_n       = 0;\n"
+    "static int   mod_rm_page    = -1;\n"
+    "static bool  mod_rm_confirm = false;\n",
+)
+trocar(
+    INPUT,
+    "         if (mod_editor_sel >= 0)\n            mod_build_group(ol->active, mod_editor_sel);\n",
+    "         if (mod_editor_sel >= 0)\n         {\n            mod_build_group(ol->active, mod_editor_sel);\n"
+    "            memcpy(mod_rm_grp, mod_grp, sizeof(mod_rm_grp));\n"
+    "            mod_rm_n       = mod_grp_n;\n"
+    "            mod_rm_page    = (int)ol->index;\n"
+    "            mod_rm_confirm = false;\n         }\n",
+)
+trocar(
+    INPUT,
+    "      const input_overlay_state_t *st)\n{\n   int kk;\n",
+    "      const input_overlay_state_t *st)\n{\n   int kk;\n   mod_reload_check(ol);\n",
 )
 
 for arq, conteudo in arquivos.items():
