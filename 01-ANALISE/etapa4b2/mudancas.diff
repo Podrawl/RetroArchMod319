@@ -1,0 +1,2671 @@
+diff --git a/gfx/gfx_widgets.c b/gfx/gfx_widgets.c
+index 9cb26e2..621f2e9 100644
+--- a/gfx/gfx_widgets.c
++++ b/gfx/gfx_widgets.c
+@@ -2189,6 +2189,129 @@ static void gfx_widgets_frame_state(void *data)
+    p_dispwidget->gfx_widget_fonts.msg_queue.raster_block.carr.coords.vertices = 0;
+    p_dispwidget->gfx_widget_fonts.msg_queue.usage_count                       = 0;
+ 
++   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) */
++   {
++      extern int input_overlay_editor_ui(int *r, const char **lab, int max);
++      extern bool input_overlay_editor_grid_open(void);
++      int         ur[18 * 4];
++      const char *ulab[18];
++      int         un = input_overlay_editor_ui(ur, ulab, 18);
++      if (un > 0)
++      {
++         int      ui;
++         int      out_w = (int)VIDEO_SCALE_W(output_dims);
++         int      out_h = (int)VIDEO_SCALE_H(output_dims);
++         int      lay_w = (int)VIDEO_SCALE_W(video_info->dims);
++         int      lay_h = (int)VIDEO_SCALE_H(video_info->dims);
++         float    fill[16] = {
++            0.05f, 0.05f, 0.10f, 0.78f,
++            0.05f, 0.05f, 0.10f, 0.78f,
++            0.05f, 0.05f, 0.10f, 0.78f,
++            0.05f, 0.05f, 0.10f, 0.78f,
++         };
++         if (out_w > 0 && out_h > 0)
++         {
++            gfx_display_blend_begin(dispctx, userdata);
++            for (ui = 0; ui < un; ui++)
++            {
++               int bx = ur[ui * 4 + 0] * lay_w / out_w;
++               int by = ur[ui * 4 + 1] * lay_h / out_h;
++               int bw = ur[ui * 4 + 2] * lay_w / out_w;
++               int bh = ur[ui * 4 + 3] * lay_h / out_h;
++               if (bw <= 0)
++                  continue;
++               gfx_display_draw_quad(
++                     p_disp, userdata, video_info->dims,
++                     bx, by, VIDEO_SCALE_PACK(bw, bh),
++                     video_info->dims, fill, NULL);
++            }
++            gfx_display_blend_end(dispctx, userdata);
++            /* miniaturas da grade de botoes */
++            {
++               extern bool image_texture_load(struct texture_image *img, const char *path);
++               static char      mod_tex_path[16][1024];
++               static uintptr_t mod_tex_id[16];
++               extern const char *input_overlay_editor_ui_img(int idx);
++               int ti;
++               if (!input_overlay_editor_grid_open())
++               {
++                  for (ti = 0; ti < 16; ti++)
++                     if (mod_tex_id[ti])
++                     {
++                        video_driver_texture_unload(&mod_tex_id[ti]);
++                        mod_tex_id[ti]      = 0;
++                        mod_tex_path[ti][0] = '\0';
++                     }
++               }
++               else
++               for (ui = 0; ui < un && ui < 12; ui++)
++               {
++                  const char *ip = input_overlay_editor_ui_img(ui);
++                  int         sl, side;
++                  float       white[16] = {
++                     1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
++                     1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
++                  if (!ip || ur[ui * 4 + 2] <= 0)
++                     continue;
++                  for (sl = 0; sl < 16; sl++)
++                     if (mod_tex_id[sl] && !strcmp(mod_tex_path[sl], ip))
++                        break;
++                  if (sl == 16)
++                  {
++                     struct texture_image ti_img;
++                     for (sl = 0; sl < 16 && mod_tex_id[sl]; sl++) {}
++                     if (sl == 16)
++                        continue;
++                     memset(&ti_img, 0, sizeof(ti_img));
++                     ti_img.supports_rgba = (video_driver_get_disp_flags() & VIDEO_FLAG_USE_RGBA) ? true : false;
++                     if (image_texture_load(&ti_img, ip))
++                     {
++                        if (!video_driver_texture_load(&ti_img,
++                              TEXTURE_FILTER_MIPMAP_LINEAR, &mod_tex_id[sl]))
++                           mod_tex_id[sl] = 0;
++                        image_texture_free(&ti_img);
++                     }
++                     strlcpy(mod_tex_path[sl], ip, sizeof(mod_tex_path[sl]));
++                     if (!mod_tex_id[sl])
++                        mod_tex_path[sl][0] = '\0';
++                  }
++                  if (sl < 16 && mod_tex_id[sl])
++                  {
++                     int bx2 = ur[ui * 4 + 0] * lay_w / out_w;
++                     int by2 = ur[ui * 4 + 1] * lay_h / out_h;
++                     int bw2 = ur[ui * 4 + 2] * lay_w / out_w;
++                     int bh2 = ur[ui * 4 + 3] * lay_h / out_h;
++                     side = (bw2 < bh2 * 70 / 100) ? bw2 : bh2 * 70 / 100;
++                     gfx_widgets_draw_icon(userdata, p_disp, video_info->dims,
++                           VIDEO_SCALE_PACK(side, side), mod_tex_id[sl],
++                           (float)(bx2 + (bw2 - side) / 2), (float)(by2 + bh2 * 4 / 100),
++                           0.0f, 1.0f, 0.0f, white);
++                  }
++               }
++            }
++            for (ui = 0; ui < un; ui++)
++            {
++               int bx = ur[ui * 4 + 0] * lay_w / out_w;
++               int by = ur[ui * 4 + 1] * lay_h / out_h;
++               int bw = ur[ui * 4 + 2] * lay_w / out_w;
++               int bh = ur[ui * 4 + 3] * lay_h / out_h;
++               if (bw <= 0 || !ulab[ui])
++                  continue;
++               gfx_display_draw_text(
++                     p_dispwidget->gfx_widget_fonts.regular.font,
++                     ulab[ui],
++                     (float)(bx + bw / 2), (float)(by + bh * ((input_overlay_editor_grid_open() && ui < 12) ? 92 : 65) / 100),
++                     video_info->dims,
++                     0xFFFFFFFF, TEXT_ALIGN_CENTER,
++                     1.0f, false, 0.0f, false);
++               p_dispwidget->gfx_widget_fonts.regular.usage_count++;
++            }
++            gfx_widgets_flush_text(video_info->dims,
++                  &p_dispwidget->gfx_widget_fonts.regular);
++         }
++      }
++   }
++
+ #ifdef HAVE_TRANSLATE
+    /* AI Service overlay */
+    if (gfx_widgets_ai_service_overlay_get_state() > 0)
+diff --git a/input/drivers/android_input.c b/input/drivers/android_input.c
+index 63f9828..d993710 100644
+--- a/input/drivers/android_input.c
++++ b/input/drivers/android_input.c
+@@ -2021,6 +2021,31 @@ static INLINE void android_input_poll_event_type_key(int port,
+    int action  = key->action;
+    int keycode = key->keycode;
+ 
++   /* MOD: Voltar do sistema (botao ou gesto) abre o menu rapido do jogo.
++    * Cada tecla chega duas vezes (e uma vez por funcao que le o evento);
++    * event_time evita abrir e fechar na mesma tecla.
++    * Mascara: GAMEPAD e KEYBOARD compartilham bits; comparar o valor todo. */
++   if (     keycode == AKEYCODE_BACK
++         && action  == AKEY_EVENT_ACTION_DOWN
++         && (key->source & AINPUT_SOURCE_GAMEPAD)  != AINPUT_SOURCE_GAMEPAD
++         && (key->source & AINPUT_SOURCE_JOYSTICK) != AINPUT_SOURCE_JOYSTICK)
++   {
++      static int64_t mod_ultimo_voltar = -1;
++      if ((int64_t)key->event_time != mod_ultimo_voltar)
++      {
++         mod_ultimo_voltar = (int64_t)key->event_time;
++         if (   (runloop_get_flags() & RUNLOOP_FLAG_CORE_RUNNING)
++             && !(menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE))
++         {
++            extern void input_overlay_editor_exit(void);
++            input_overlay_editor_exit();
++            command_event(CMD_EVENT_MENU_TOGGLE, NULL);
++            *handled = 1;
++            return;
++         }
++      }
++   }
++
+    /* a row of keys for each pad slot, and the keyboard's at
+     * ANDROID_KEYBOARD_PORT */
+    if (port < 0 || port > ANDROID_KEYBOARD_PORT)
+diff --git a/input/input_driver.c b/input/input_driver.c
+index 27993ad..9238b43 100644
+--- a/input/input_driver.c
++++ b/input/input_driver.c
+@@ -6085,126 +6085,2042 @@ static void input_overlay_get_analog_state(
+    x_val_sat = x_val   / desc->analog_saturate_pct;
+    y_val_sat = y_val   / desc->analog_saturate_pct;
+ 
++   {
++      /* MOD: ganho de 1,1 (maximo um pouco antes da borda, como o DuckStation)
++       * e limite circular (mantem a direcao do dedo) */
++      float mod_mag;
++      x_val_sat *= 1.1f;
++      y_val_sat *= 1.1f;
++      mod_mag = sqrt(x_val_sat * x_val_sat + y_val_sat * y_val_sat);
++      if (mod_mag > 1.0f)
++      {
++         x_val_sat /= mod_mag;
++         y_val_sat /= mod_mag;
++      }
++   }
+    out->analog[base + 0] = clamp_float(x_val_sat, -1.0f, 1.0f) * 32767.0f;
+    out->analog[base + 1] = clamp_float(y_val_sat, -1.0f, 1.0f) * 32767.0f;
+ }
+ 
+-/**
+- * input_overlay_coords_inside_hitbox:
+- * @desc                  : Overlay descriptor handle.
+- * @x                     : X coordinate value.
+- * @y                     : Y coordinate value.
+- * @use_range_mod         : Set true to use range_mod hitbox
+- *
+- * Check whether the given @x and @y coordinates of the overlay
+- * descriptor @desc is inside the overlay descriptor's hitbox.
+- *
+- * Returns: true (1) if X, Y coordinates are inside a hitbox,
+- * otherwise false (0).
+- **/
+-static bool input_overlay_coords_inside_hitbox(const struct overlay_desc *desc,
+-      float x, float y, bool use_range_mod)
++/**
++ * input_overlay_coords_inside_hitbox:
++ * @desc                  : Overlay descriptor handle.
++ * @x                     : X coordinate value.
++ * @y                     : Y coordinate value.
++ * @use_range_mod         : Set true to use range_mod hitbox
++ *
++ * Check whether the given @x and @y coordinates of the overlay
++ * descriptor @desc is inside the overlay descriptor's hitbox.
++ *
++ * Returns: true (1) if X, Y coordinates are inside a hitbox,
++ * otherwise false (0).
++ **/
++static bool input_overlay_coords_inside_hitbox(const struct overlay_desc *desc,
++      float x, float y, bool use_range_mod)
++{
++   float range_x, range_y;
++
++   if (use_range_mod)
++   {
++      range_x = desc->range_x_mod;
++      range_y = desc->range_y_mod;
++   }
++   else
++   {
++      range_x = desc->range_x_hitbox;
++      range_y = desc->range_y_hitbox;
++   }
++
++   switch (desc->hitbox)
++   {
++      case OVERLAY_HITBOX_RADIAL:
++      {
++         /* Ellipse. */
++         float x_dist  = (x - desc->x_hitbox) / range_x;
++         float y_dist  = (y - desc->y_hitbox) / range_y;
++         float sq_dist = x_dist * x_dist + y_dist * y_dist;
++         return (sq_dist <= 1.0f);
++      }
++      case OVERLAY_HITBOX_RECT:
++         return
++               (fabs(x - desc->x_hitbox) <= range_x)
++            && (fabs(y - desc->y_hitbox) <= range_y);
++      case OVERLAY_HITBOX_NONE:
++         break;
++   }
++   return false;
++}
++
++/**
++ * input_overlay_poll:
++ * @out                   : Polled output data.
++ * @touch_idx             : Touch pointer index.
++ * @old_touch_idx         : Touch pointer index from previous poll, or -1.
++ * @norm_x                : Normalized X coordinate.
++ * @norm_y                : Normalized Y coordinate.
++ * @touch_scale           : Overlay scale.
++ *
++ * Polls input overlay for a single touch pointer.
++ *
++ * @norm_x and @norm_y are the result of
++ * video_driver_translate_coord_viewport().
++ *
++ * @return true if touch pointer is inside any hitbox
++ **/
++/* The ways a finger's contact covers on a D-pad or face-button area
++ * (common/overlay_contact.h), from the contact the driver published
++ * for touch @touch_idx; with none, the way its centre lies */
++static void input_overlay_get_eightway_contact(const input_overlay_t *ol,
++      const struct overlay_desc *desc, overlay_eightway_config_t *eightway,
++      input_bits_t *out, int touch_idx, float x_dist, float y_dist,
++      float touch_scale, unsigned contact_scale)
++{
++   video_viewport_t vp;
++   unsigned dirs;
++   unsigned major = 0;
++   unsigned minor = 0;
++   float angle    = 0.0f;
++   float w        = 0.0f;
++   float h        = 0.0f;
++
++   vp.pos         = 0;
++   vp.dims        = 0;
++   vp.full_dims   = 0;
++   if (     touch_idx >= 0
++         && (unsigned)touch_idx < input_touch_contact_count
++         && input_driver_poll_viewport(&vp))
++   {
++      /* the pointer's space: the window for a full-screen overlay, as
++       * its touches are read, else the drawn area */
++      unsigned dims = ((ol->active->flags & OVERLAY_FULL_SCREEN)
++            || video_driver_get_views_layout()) ? vp.full_dims : vp.dims;
++      w     = (float)VIDEO_SCALE_W(dims) * ol->active->mod_w * desc->range_x;
++      h     = (float)VIDEO_SCALE_H(dims) * ol->active->mod_h * desc->range_y;
++      if (w > 0.0f && h > 0.0f)
++      {
++         major = OVERLAY_CONTACT_MAJOR(input_touch_contacts[touch_idx]);
++         minor = OVERLAY_CONTACT_MINOR(input_touch_contacts[touch_idx]);
++         angle = OVERLAY_CONTACT_ANGLE(input_touch_angles[touch_idx]);
++      }
++   }
++
++   dirs = overlay_contact_dirs(x_dist / desc->range_x, y_dist / desc->range_y,
++         major, minor, angle,
++         major ? touch_scale / w : 0.0f, major ? touch_scale / h : 0.0f,
++         (float)contact_scale / 100.0f);
++
++   if (dirs & OVERLAY_CONTACT_UP)
++      bits_or_bits(out->data, eightway->up.data, ARRAY_SIZE(out->data));
++   if (dirs & OVERLAY_CONTACT_DOWN)
++      bits_or_bits(out->data, eightway->down.data, ARRAY_SIZE(out->data));
++   if (dirs & OVERLAY_CONTACT_LEFT)
++      bits_or_bits(out->data, eightway->left.data, ARRAY_SIZE(out->data));
++   if (dirs & OVERLAY_CONTACT_RIGHT)
++      bits_or_bits(out->data, eightway->right.data, ARRAY_SIZE(out->data));
++}
++
++
++/* ===== MOD: editor de overlay (etapa 2) =====
++ * Arrastar/redimensionar botoes do overlay ativo, so em memoria. */
++#define MOD_MAX_LAYOUTS 64
++static overlay_layout_t mod_layouts[MOD_MAX_LAYOUTS];
++static bool mod_layout_ok[MOD_MAX_LAYOUTS];
++
++static bool  mod_editor_active     = false;
++static bool  mod_editor_wait_close = false;
++static int   mod_editor_sel        = -1;
++static float mod_editor_grab_dx    = 0.0f;
++static float mod_editor_grab_dy    = 0.0f;
++static int   mod_editor_fingers    = 0;
++static bool  mod_editor_pinch      = false;
++static float mod_editor_pinch_d0   = 1.0f;
++static float mod_editor_x0         = 0.0f;
++static float mod_editor_y0         = 0.0f;
++
++/* Grupo movido/redimensionado junto (direcional inteiro, analogico + circulo) */
++#define MOD_MAX_GRP 64
++static int   mod_grp[MOD_MAX_GRP];
++static int   mod_grp_n = 0;
++static float mod_grp_x0[MOD_MAX_GRP];
++static float mod_grp_y0[MOD_MAX_GRP];
++static float mod_grp_rx0[MOD_MAX_GRP];
++static float mod_grp_ry0[MOD_MAX_GRP];
++static float mod_grp_px = 0.0f;
++static float mod_grp_py = 0.0f;
++static int   mod_rm_grp[MOD_MAX_GRP];
++static int   mod_rm_n       = 0;
++static int   mod_rm_page    = -1;
++static bool  mod_rm_confirm = false;
++static int   mod_tap_n      = 0;
++static int   mod_tap_key    = -1;
++static int   mod_tap_pg     = -1;
++static unsigned mod_tap_fr  = 0;
++static unsigned mod_tap_now = 0;
++static float mod_tap_x      = 0.0f;
++static float mod_tap_y      = 0.0f;
++static bool  mod_tap_block  = false;
++
++static void input_overlay_scale(struct overlay *ol,
++      const overlay_layout_t *layout);
++static void input_overlay_set_vertex_geom(input_overlay_t *ol);
++
++static void mod_editor_apply(input_overlay_t *ol)
++{
++   size_t pi = (size_t)(ol->active - ol->overlays);
++   if (pi >= MOD_MAX_LAYOUTS || !mod_layout_ok[pi])
++      return;
++   input_overlay_scale(ol->active, &mod_layouts[pi]);
++   input_overlay_set_vertex_geom(ol);
++}
++
++/* ----- tela do jogo = proporcao personalizada (x, y, largura, altura) ----- */
++#define MOD_VP_Y_SINAL 1   /* se arrastar para cima mover a imagem para baixo, trocar para -1 */
++static bool  mod_editor_screen = false;
++static float mod_raw_x[2];
++static float mod_raw_y[2];
++static int   mod_win_w = 0;
++static int   mod_win_h = 0;
++static float mod_scr_px0 = 0.0f;
++static float mod_scr_py0 = 0.0f;
++static int   mod_scr_x0 = 0, mod_scr_y0 = 0, mod_scr_w0 = 1, mod_scr_h0 = 1;
++static float mod_scr_d0 = 1.0f;
++
++static void mod_vp_get(int *x, int *y, int *w, int *h)
++{
++   settings_t *st = config_get_ptr();
++   *x = VIDEO_POS_X(st->video_vp_custom.pos);
++   *y = VIDEO_POS_Y(st->video_vp_custom.pos);
++   *w = (int)VIDEO_SCALE_W(st->video_vp_custom.dims);
++   *h = (int)VIDEO_SCALE_H(st->video_vp_custom.dims);
++}
++
++static void mod_vp_set(int x, int y, int w, int h)
++{
++   settings_t *st = config_get_ptr();
++   if (w < 16)    w = 16;
++   if (h < 16)    h = 16;
++   if (w > 9999)  w = 9999;
++   if (h > 9999)  h = 9999;
++   if (x < -9999) x = -9999;
++   if (x > 9999)  x = 9999;
++   if (y < -9999) y = -9999;
++   if (y > 9999)  y = 9999;
++   st->video_vp_custom.pos  = VIDEO_POS_PACK(x, y);
++   st->video_vp_custom.dims = VIDEO_SCALE_PACK(w, h);
++   command_event(CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, NULL);
++}
++
++/* Liga o modo Personalizado partindo da posicao atual da imagem. */
++static void mod_editor_seed_screen(void)
++{
++   settings_t *st = config_get_ptr();
++   struct video_viewport vp;
++   memset(&vp, 0, sizeof(vp));
++   if (video_driver_get_viewport_info(&vp))
++   {
++      mod_win_w = (int)VIDEO_SCALE_W(vp.full_dims);
++      mod_win_h = (int)VIDEO_SCALE_H(vp.full_dims);
++      if (   st->uints.video_aspect_ratio_idx != ASPECT_RATIO_CUSTOM
++          || !VIDEO_SCALE_W(st->video_vp_custom.dims)
++          || !VIDEO_SCALE_H(st->video_vp_custom.dims))
++      {
++         /* x,y personalizados sao DESLOCAMENTO a partir da ancora (centro por padrao);
++          * 0,0 mantem a imagem exatamente onde esta. */
++         st->video_vp_custom.pos  = VIDEO_POS_PACK(0, 0);
++         st->video_vp_custom.dims = vp.dims;
++      }
++   }
++   if (st->uints.video_aspect_ratio_idx != ASPECT_RATIO_CUSTOM)
++   {
++      st->uints.video_aspect_ratio_idx = ASPECT_RATIO_CUSTOM;
++      command_event(CMD_EVENT_VIDEO_SET_ASPECT_RATIO, NULL);
++   }
++   command_event(CMD_EVENT_VIDEO_APPLY_STATE_CHANGES, NULL);
++}
++
++/* Dedo 0 em pixels da janela. */
++static void mod_scr_finger(int k, float *px, float *py)
++{
++   *px = ((mod_raw_x[k] + 32767.0f) / 65535.0f) * (float)mod_win_w;
++   *py = ((mod_raw_y[k] + 32767.0f) / 65535.0f) * (float)mod_win_h;
++}
++
++static void mod_screen_begin(void)
++{
++   if (mod_win_w <= 0 || mod_win_h <= 0)
++      return;
++   mod_scr_finger(0, &mod_scr_px0, &mod_scr_py0);
++   mod_vp_get(&mod_scr_x0, &mod_scr_y0, &mod_scr_w0, &mod_scr_h0);
++   if (mod_scr_w0 < 1) mod_scr_w0 = 1;
++   if (mod_scr_h0 < 1) mod_scr_h0 = 1;
++   mod_editor_screen = true;
++}
++
++static void mod_screen_move(void)
++{
++   float px, py;
++   mod_scr_finger(0, &px, &py);
++   mod_vp_set(mod_scr_x0 + (int)(px - mod_scr_px0),
++              mod_scr_y0 + MOD_VP_Y_SINAL * (int)(py - mod_scr_py0),
++              mod_scr_w0, mod_scr_h0);
++}
++
++/* 2 dedos: muda o tamanho mantendo a proporcao, em volta do centro da imagem. */
++static void mod_screen_pinch(bool primeira)
++{
++   float ax, ay, bx, by, dx, dy, dist, f;
++   int w, h, cx, cy;
++   mod_scr_finger(0, &ax, &ay);
++   mod_scr_finger(1, &bx, &by);
++   dx   = bx - ax;
++   dy   = by - ay;
++   dist = sqrtf(dx * dx + dy * dy);
++   if (primeira)
++   {
++      mod_scr_d0 = (dist > 20.0f) ? dist : 20.0f;
++      mod_vp_get(&mod_scr_x0, &mod_scr_y0, &mod_scr_w0, &mod_scr_h0);
++      if (mod_scr_w0 < 1) mod_scr_w0 = 1;
++      if (mod_scr_h0 < 1) mod_scr_h0 = 1;
++      return;
++   }
++   f = dist / mod_scr_d0;
++   if (f < 0.2f) f = 0.2f;
++   if (f > 5.0f) f = 5.0f;
++   w  = (int)((float)mod_scr_w0 * f);
++   h  = (int)((float)mod_scr_h0 * f);
++   cx = mod_scr_x0 + mod_scr_w0 / 2;
++   cy = mod_scr_y0 + mod_scr_h0 / 2;
++   mod_vp_set(cx - w / 2, cy - h / 2, w, h);
++}
++
++/* ----- salvar uma copia do .cfg com as posicoes/tamanhos ajustados ----- */
++#include <streams/file_stream.h>
++#define MOD_CFG_MARCA "# criado pelo RetroArch Mod (editor de overlay)"
++static float      *mod_snap    = NULL;   /* 4 floats por botao (x, y, range_x, range_y) do momento da carga */
++static size_t      mod_snap_n  = 0;
++static const void *mod_snap_id = NULL;
++static char        mod_snap_path[PATH_MAX_LENGTH];
++static char        mod_last_saved[PATH_MAX_LENGTH];
++
++static void mod_toast(const char *m)
++{
++   runloop_msg_queue_push(m, strlen(m), 1, 480, true, NULL,
++         MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++}
++
++/* Guarda os valores originais de todas as paginas (uma vez por overlay carregado). */
++static void mod_snap_take(input_overlay_t *ol)
++{
++   size_t i, j, k = 0, n = 0;
++   if (!ol || !ol->overlays)
++      return;
++   for (i = 0; i < ol->size; i++)
++      n += ol->overlays[i].size;
++   if (   mod_snap && mod_snap_id == (const void*)ol->overlays
++       && mod_snap_n == n && !strcmp(mod_snap_path, ol->path))
++      return;
++   free(mod_snap);
++   mod_snap   = (float*)malloc((n ? n : 1) * 4 * sizeof(float));
++   mod_snap_n = 0;
++   if (!mod_snap)
++      return;
++   for (i = 0; i < ol->size; i++)
++      for (j = 0; j < ol->overlays[i].size; j++, k++)
++      {
++         const struct overlay_desc *d = &ol->overlays[i].descs[j];
++         mod_snap[k * 4 + 0] = d->x;
++         mod_snap[k * 4 + 1] = d->y;
++         mod_snap[k * 4 + 2] = d->range_x;
++         mod_snap[k * 4 + 3] = d->range_y;
++      }
++   mod_snap_n  = n;
++   mod_snap_id = ol->overlays;
++   strlcpy(mod_snap_path, ol->path, sizeof(mod_snap_path));
++}
++
++static bool mod_cfg_is_mod(const char *path)
++{
++   void   *b   = NULL;
++   int64_t len = 0;
++   bool    r;
++   if (!path || !path[0] || !filestream_read_file(path, &b, &len) || !b)
++      return false;
++   r = (len >= (int64_t)strlen(MOD_CFG_MARCA)
++         && !strncmp((const char*)b, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
++   free(b);
++   return r;
++}
++
++/* nome novo para uma copia: <base>-mod.cfg, -mod2.cfg, ... (primeiro que nao existe) */
++static void mod_new_dst(const char *src, char *dst, size_t cap)
++{
++   char     base[PATH_MAX_LENGTH];
++   size_t   bl;
++   unsigned n;
++   strlcpy(base, src, sizeof(base));
++   bl = strlen(base);
++   if (bl > 4 && !strcasecmp(base + bl - 4, ".cfg"))
++      base[bl - 4] = '\0';
++   bl = strlen(base);
++   {
++      /* tira um "-mod" ou "-modN" do final, para nao acumular */
++      size_t q = bl;
++      while (q > 0 && base[q - 1] >= '0' && base[q - 1] <= '9')
++         q--;
++      if (q >= 4 && !strncmp(base + q - 4, "-mod", 4))
++         base[q - 4] = '\0';
++   }
++   for (n = 1; n < 1000; n++)
++   {
++      if (n == 1)
++         snprintf(dst, cap, "%s-mod.cfg", base);
++      else
++         snprintf(dst, cap, "%s-mod%u.cfg", base, n);
++      if (!path_is_valid(dst))
++         break;
++   }
++}
++
++/* Texto do .cfg com as linhas dos botoes movidos/redimensionados trocadas
++ * (comparando com os valores do momento da carga) e a marca do app no inicio.
++ * Devolve memoria alocada (free) ou NULL. */
++static char *mod_apply_moves(input_overlay_t *ol, const char *buf, size_t len,
++      size_t *olen_out, size_t *changed_out, char *ex, size_t excap)
++{
++   const char *p = buf, *end = buf + len;
++   char   *out;
++   size_t  cap, olen = 0, i, nl = 1, changed = 0;
++   bool    has_mark = (len >= strlen(MOD_CFG_MARCA)
++         && !strncmp(p, MOD_CFG_MARCA, strlen(MOD_CFG_MARCA)));
++   for (i = 0; i < len; i++)
++      if (p[i] == '\n')
++         nl++;
++   cap = len + 80 * nl + 256;
++   out = (char*)malloc(cap);
++   if (!out)
++      return NULL;
++   if (ex)
++      ex[0] = '\0';
++   if (!has_mark)
++      olen += (size_t)snprintf(out + olen, cap - olen, "%s\n", MOD_CFG_MARCA);
++   while (p < end)
++   {
++      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
++      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
++      size_t      adv = eol ? n + 1 : n;
++      bool        done = false;
++      char        t[1024];
++      unsigned    o, d;
++      int         nn = 0;
++      if (n > 0 && n < sizeof(t))
++      {
++         memcpy(t, p, n);
++         t[n] = '\0';
++         if (sscanf(t, "overlay%u_desc%u%n", &o, &d, &nn) == 2 && nn > 0)
++         {
++            char *q1, *q2;
++            size_t k = (size_t)nn;
++            while (t[k] == ' ' || t[k] == '\t')
++               k++;
++            if (   t[k] == '=' && (q1 = strchr(t + k, '"'))
++                && (q2 = strchr(q1 + 1, '"'))
++                && o < ol->size && d < ol->overlays[o].size)
++            {
++               char   v[512];
++               char  *tok[8];
++               int    nt = 0;
++               char  *c;
++               size_t vl = (size_t)(q2 - (q1 + 1));
++               if (vl < sizeof(v))
++               {
++                  memcpy(v, q1 + 1, vl);
++                  v[vl] = '\0';
++                  c = v;
++                  tok[nt++] = c;
++                  while (nt < 8 && (c = strchr(c, ',')))
++                  {
++                     *c++ = '\0';
++                     tok[nt++] = c;
++                  }
++                  if (nt == 6)
++                  {
++                     size_t off = 0, pg;
++                     const struct overlay_desc *dd = &ol->overlays[o].descs[d];
++                     const float *sv;
++                     for (pg = 0; pg < o; pg++)
++                        off += ol->overlays[pg].size;
++                     sv = &mod_snap[(off + d) * 4];
++                     if (   fabsf(dd->x - sv[0]) > 1e-6f
++                         || fabsf(dd->y - sv[1]) > 1e-6f
++                         || fabsf(dd->range_x - sv[2]) > 1e-6f
++                         || fabsf(dd->range_y - sv[3]) > 1e-6f)
++                     {
++                        size_t pre = (size_t)(q1 + 1 - t);
++                        memcpy(out + olen, t, pre);
++                        olen += pre;
++                        olen += (size_t)snprintf(out + olen, cap - olen,
++                              "%s,%.5f,%.5f,%s,%.6f,%.6f",
++                              tok[0], dd->x, dd->y, tok[3],
++                              dd->range_x, dd->range_y);
++                        memcpy(out + olen, q2, n - (size_t)(q2 - t));
++                        olen += n - (size_t)(q2 - t);
++                        if (eol)
++                           out[olen++] = '\n';
++                        if (ex && !ex[0])
++                           snprintf(ex, excap, "; ex.: pag %u botao %u x %.3f>%.3f y %.3f>%.3f",
++                                 o, d, sv[0], dd->x, sv[1], dd->y);
++                        changed++;
++                        done = true;
++                     }
++                  }
++               }
++            }
++         }
++      }
++      if (!done)
++      {
++         memcpy(out + olen, p, adv);
++         olen += adv;
++      }
++      p += adv;
++   }
++   *olen_out    = olen;
++   *changed_out = changed;
++   return out;
++}
++
++static void mod_save_cfg(bool overwrite)
++{
++   input_overlay_t *ol = input_driver_st.overlay_ptr;
++   char     dst[PATH_MAX_LENGTH];
++   char     msg[PATH_MAX_LENGTH + 96];
++   void    *buf  = NULL;
++   int64_t  len  = 0;
++   char    *out;
++   size_t   olen = 0, changed = 0;
++   char     ex[128];
++   if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
++   {
++      mod_toast("Salvar: overlay nao carregado.");
++      return;
++   }
++   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
++   {
++      mod_toast("Salvar: nao consegui ler o .cfg do overlay.");
++      free(buf);
++      return;
++   }
++   dst[0] = '\0';
++   if (overwrite)
++   {
++      if (mod_cfg_is_mod(ol->path))
++         strlcpy(dst, ol->path, sizeof(dst));
++      else if (mod_last_saved[0] && mod_cfg_is_mod(mod_last_saved))
++         strlcpy(dst, mod_last_saved, sizeof(dst));
++      else
++      {
++         mod_toast("Sobrescrever so vale para copia criada pelo app. Use Salvar novo.");
++         free(buf);
++         return;
++      }
++   }
++   else
++      mod_new_dst(ol->path, dst, sizeof(dst));
++   out = mod_apply_moves(ol, (const char*)buf, (size_t)len, &olen, &changed, ex, sizeof(ex));
++   if (!out)
++   {
++      free(buf);
++      return;
++   }
++   if (filestream_write_file(dst, out, (int64_t)olen))
++   {
++      void   *chk  = NULL;
++      int64_t clen = 0;
++      bool    ok   = filestream_read_file(dst, &chk, &clen) && chk
++            && (size_t)clen == olen && !memcmp(chk, out, olen);
++      free(chk);
++      strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
++      snprintf(msg, sizeof(msg), "Salvo: %s a partir de %s (%u botoes alterados%s)%s",
++            path_basename(dst), path_basename(ol->path), (unsigned)changed, ex,
++            ok ? "" : " [conferencia do arquivo FALHOU]");
++   }
++   else
++      snprintf(msg, sizeof(msg), "Salvar: falhou ao gravar %s", path_basename(dst));
++   mod_toast(msg);
++   free(out);
++   free(buf);
++}
++
++/* ----- gerenciar copias criadas pelo app: renomear e apagar (chamado pelo menu) ----- */
++void input_overlay_mod_toast(const char *m)
++{
++   mod_toast(m);
++}
++
++bool input_overlay_mod_is_copy(const char *path)
++{
++   return mod_cfg_is_mod(path);
++}
++
++/* true se o arquivo e o overlay carregado agora ou o escolhido nas configuracoes */
++bool input_overlay_mod_in_use(const char *path)
++{
++   input_overlay_t *ol = input_driver_st.overlay_ptr;
++   settings_t *st      = config_get_ptr();
++   return (ol && ol->path[0] && !strcmp(ol->path, path))
++       || (st && st->paths.path_overlay[0] && !strcmp(st->paths.path_overlay, path));
++}
++
++bool input_overlay_mod_delete(const char *path)
++{
++   char msg[PATH_MAX_LENGTH + 64];
++   if (!mod_cfg_is_mod(path))
++   {
++      mod_toast("So da para apagar copias criadas pelo app.");
++      return false;
++   }
++   if (input_overlay_mod_in_use(path))
++   {
++      mod_toast("Esta copia esta em uso. Escolha outro overlay antes de apagar.");
++      return false;
++   }
++   if (filestream_delete(path) != 0)
++   {
++      mod_toast("Nao consegui apagar o arquivo.");
++      return false;
++   }
++   if (!strcmp(mod_last_saved, path))
++      mod_last_saved[0] = '\0';
++   snprintf(msg, sizeof(msg), "Apagado: %s", path_basename(path));
++   mod_toast(msg);
++   return true;
++}
++
++bool input_overlay_mod_rename(const char *path, const char *novo)
++{
++   char   nome[64];
++   char   dst[PATH_MAX_LENGTH];
++   char   msg[PATH_MAX_LENGTH + 64];
++   size_t n = 0;
++   const char *p;
++   const char *barra;
++   if (!novo)
++      return false;
++   if (!mod_cfg_is_mod(path))
++   {
++      mod_toast("So da para renomear copias criadas pelo app.");
++      return false;
++   }
++   if (input_overlay_mod_in_use(path))
++   {
++      mod_toast("Esta copia esta em uso. Escolha outro overlay antes de renomear.");
++      return false;
++   }
++   for (p = novo; *p == ' '; p++) { }
++   for (; *p && n < sizeof(nome) - 1; p++)
++   {
++      char c = *p;
++      if (c == ' ')
++         c = '-';
++      if (   (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
++          || (c >= '0' && c <= '9') || c == '-' || c == '_')
++         nome[n++] = c;
++      else if (c == '.' && !strcasecmp(p, ".cfg"))
++         break;
++      else
++      {
++         mod_toast("Nome invalido: use so letras, numeros, - e _");
++         return false;
++      }
++   }
++   while (n > 0 && nome[n - 1] == '-')
++      n--;
++   nome[n] = '\0';
++   if (n == 0)
++   {
++      mod_toast("Nome vazio.");
++      return false;
++   }
++   barra = strrchr(path, '/');
++   if (!barra)
++      return false;
++   snprintf(dst, sizeof(dst), "%.*s/%s.cfg", (int)(barra - path), path, nome);
++   if (!strcmp(dst, path))
++      return false;
++   if (path_is_valid(dst))
++   {
++      mod_toast("Ja existe um arquivo com esse nome.");
++      return false;
++   }
++   if (filestream_rename(path, dst) != 0)
++   {
++      mod_toast("Nao consegui renomear o arquivo.");
++      return false;
++   }
++   if (!strcmp(mod_last_saved, path))
++      strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
++   snprintf(msg, sizeof(msg), "Renomeado para: %s", path_basename(dst));
++   mod_toast(msg);
++   return true;
++}
++
++/* ===== 4b: botoes que existem em outras paginas do mesmo .cfg =====
++ * Lista (registro) de grupos de botoes do .cfg, adicionar na pagina atual,
++ * remover da pagina atual. Tudo e feito no TEXTO do .cfg (copia -mod) e o overlay
++ * e recarregado a partir da copia; o original nunca e tocado. */
++#define MOD_REG_MAX 96
++struct mod_reg_e
++{
++   char     key[400];
++   char     label[48];
++   char     img[96];
++   uint64_t mask;                 /* paginas onde o grupo existe */
++   int      pg;                   /* pagina de onde copiar */
++   int      n;
++   int      idx[MOD_MAX_GRP];
++};
++struct mod_di { char name[40]; char img[96]; char tgt[40]; };
++
++static struct mod_reg_e *mod_reg = NULL;
++static int  mod_reg_n       = 0;
++static int  mod_reg_sel     = 0;
++static bool mod_reg_ok      = false;
++static bool mod_grid_open   = false;   /* grade de botoes aberta */
++static int  mod_grid_scroll = 0;
++static char mod_reload_dst[PATH_MAX_LENGTH];
++static int  mod_reload_page = -1;
++static int  mod_reload_wait = 0;
++static input_overlay_t *mod_reload_old = NULL;
++
++static void mod_build_group(struct overlay *pg, int t);
++static bool mod_is_analog(const struct overlay_desc *d);
++static bool mod_is_dir(const struct overlay_desc *d);
++static void input_overlay_loaded(retro_task_t *task,
++      void *task_data, void *user_data, const char *err);
++
++struct mod_ob { char *b; size_t n, cap; bool bad; };
++
++static void mod_ob_put(struct mod_ob *o, const char *s, size_t l)
++{
++   if (o->bad)
++      return;
++   if (o->n + l + 1 > o->cap)
++   {
++      size_t nc = (o->cap + l + 1) * 2;
++      char  *nb = (char*)realloc(o->b, nc);
++      if (!nb)
++      {
++         o->bad = true;
++         return;
++      }
++      o->b   = nb;
++      o->cap = nc;
++   }
++   memcpy(o->b + o->n, s, l);
++   o->n += l;
++}
++
++/* linha "overlayP_descD..." : devolve P, D e onde comeca o resto (apos o numero D) */
++static bool mod_ln_desc(const char *t, size_t n, unsigned *P, unsigned *D, size_t *rest)
++{
++   char tmp[64];
++   int  nn = 0;
++   size_t m = n < sizeof(tmp) - 1 ? n : sizeof(tmp) - 1;
++   memcpy(tmp, t, m);
++   tmp[m] = '\0';
++   if (sscanf(tmp, "overlay%u_desc%u%n", P, D, &nn) == 2 && nn > 0
++         && (tmp[nn] == ' ' || tmp[nn] == '=' || tmp[nn] == '_'
++          || tmp[nn] == '\t' || tmp[nn] == '\r' || tmp[nn] == '\0'))
++   {
++      *rest = (size_t)nn;
++      return true;
++   }
++   return false;
++}
++
++/* linha "overlayP_descs = N" */
++static bool mod_ln_count(const char *t, size_t n, unsigned *P, unsigned *N)
++{
++   char tmp[128];
++   int  nn = 0;
++   size_t m = n < sizeof(tmp) - 1 ? n : sizeof(tmp) - 1;
++   memcpy(tmp, t, m);
++   tmp[m] = '\0';
++   if (sscanf(tmp, "overlay%u_descs%n", P, &nn) == 1 && nn > 0
++         && (tmp[nn] == ' ' || tmp[nn] == '=' || tmp[nn] == '\t'))
++   {
++      const char *e = strchr(tmp + nn, '=');
++      if (!e)
++         return false;
++      e++;
++      while (*e == ' ' || *e == '\t' || *e == '"')
++         e++;
++      *N = (unsigned)strtoul(e, NULL, 10);
++      return true;
++   }
++   return false;
++}
++
++/* valor depois do '=', sem aspas/espacos */
++static void mod_ln_value(const char *t, char *o, size_t cap)
++{
++   const char *e = strchr(t, '=');
++   size_t l;
++   o[0] = '\0';
++   if (!e)
++      return;
++   e++;
++   while (*e == ' ' || *e == '\t' || *e == '"')
++      e++;
++   strlcpy(o, e, cap);
++   l = strlen(o);
++   while (l > 0 && (o[l - 1] == ' ' || o[l - 1] == '\r' || o[l - 1] == '"' || o[l - 1] == '\t'))
++      o[--l] = '\0';
++}
++
++static size_t mod_pg_off(input_overlay_t *ol, unsigned pg)
++{
++   size_t off = 0, k;
++   for (k = 0; k < pg && k < ol->size; k++)
++      off += ol->overlays[k].size;
++   return off;
++}
++
++static struct mod_di *mod_info_load(input_overlay_t *ol, const char *buf, size_t len)
++{
++   size_t total = mod_pg_off(ol, (unsigned)ol->size);
++   struct mod_di *di = (struct mod_di*)calloc(total ? total : 1, sizeof(*di));
++   const char *p = buf, *end = buf + len;
++   if (!di)
++      return NULL;
++   while (p < end)
++   {
++      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
++      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
++      unsigned    P, D;
++      size_t      k;
++      if (mod_ln_desc(p, n, &P, &D, &k) && P < ol->size && D < ol->overlays[P].size
++            && n < 512)
++      {
++         char t[512], v[256];
++         struct mod_di *d = &di[mod_pg_off(ol, P) + D];
++         memcpy(t, p, n);
++         t[n] = '\0';
++         mod_ln_value(t, v, sizeof(v));
++         if (t[k] == ' ' || t[k] == '=' || t[k] == '\t')
++         {
++            char *c = strchr(v, ',');
++            if (c)
++               *c = '\0';
++            strlcpy(d->name, v, sizeof(d->name));
++         }
++         else if (!strncmp(t + k, "_overlay", 8) && (t[k + 8] == ' ' || t[k + 8] == '=' || t[k + 8] == '\t'))
++            strlcpy(d->img, v, sizeof(d->img));
++         else if (!strncmp(t + k, "_next_target", 12))
++            strlcpy(d->tgt, v, sizeof(d->tgt));
++      }
++      p += eol ? n + 1 : n;
++   }
++   return di;
++}
++
++static int mod_str_cmp(const void *a, const void *b)
++{
++   return strcmp((const char*)a, (const char*)b);
++}
++
++/* Monta o registro: grupos de todas as paginas, juntando os iguais */
++static void mod_reg_build(input_overlay_t *ol)
++{
++   void    *buf = NULL;
++   int64_t  len = 0;
++   struct mod_di *di;
++   int      sv_grp[MOD_MAX_GRP], sv_n;
++   size_t   p, i;
++   mod_reg_ok = true;
++   mod_reg_n  = 0;
++   if (!ol || !ol->overlays || !ol->path[0])
++      return;
++   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
++   {
++      free(buf);
++      return;
++   }
++   di = mod_info_load(ol, (const char*)buf, (size_t)len);
++   free(buf);
++   if (!di)
++      return;
++   if (!mod_reg)
++      mod_reg = (struct mod_reg_e*)calloc(MOD_REG_MAX, sizeof(*mod_reg));
++   if (!mod_reg)
++   {
++      free(di);
++      return;
++   }
++   memcpy(sv_grp, mod_grp, sizeof(sv_grp));
++   sv_n = mod_grp_n;
++   for (p = 0; p < ol->size; p++)
++   {
++      struct overlay *pg   = &ol->overlays[p];
++      bool           *seen = (bool*)calloc(pg->size ? pg->size : 1, sizeof(bool));
++      if (!seen)
++         continue;
++      for (i = 0; i < pg->size; i++)
++      {
++         char    ms[MOD_MAX_GRP][180];
++         char    key[400];
++         int     g, ng, e, srt[MOD_MAX_GRP];
++         if (seen[i])
++            continue;
++         mod_build_group(pg, (int)i);
++         if (mod_grp_n == 0)
++            mod_grp[mod_grp_n++] = (int)i;
++         ng = mod_grp_n;
++         for (g = 0; g < ng; g++)
++         {
++            struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)mod_grp[g]];
++            srt[g]                      = mod_grp[g];
++            seen[mod_grp[g]]            = true;
++            snprintf(ms[g], sizeof(ms[g]), "%s|%s|%s", d->name, d->img, d->tgt);
++         }
++         seen[i] = true;
++         qsort(ms, (size_t)ng, sizeof(ms[0]), mod_str_cmp);
++         key[0] = '\0';
++         for (g = 0; g < ng; g++)
++         {
++            strlcat(key, ms[g], sizeof(key));
++            strlcat(key, ";", sizeof(key));
++         }
++         for (e = 0; e < mod_reg_n; e++)
++            if (!strcmp(mod_reg[e].key, key))
++               break;
++         if (e < mod_reg_n)
++         {
++            if (p < 64)
++               mod_reg[e].mask |= ((uint64_t)1 << p);
++         }
++         else if (mod_reg_n < MOD_REG_MAX)
++         {
++            struct mod_reg_e *r = &mod_reg[mod_reg_n++];
++            const char *nm = NULL;
++            memset(r, 0, sizeof(*r));
++            strlcpy(r->key, key, sizeof(r->key));
++            r->pg   = (int)p;
++            r->n    = ng;
++            r->mask = (p < 64) ? ((uint64_t)1 << p) : 0;
++            for (g = 0; g < ng; g++)
++               r->idx[g] = srt[g];
++            for (g = 0; g < ng; g++)
++            {
++               struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
++               if (mod_is_analog(&pg->descs[srt[g]]))
++               {
++                  nm = d->name;
++                  break;
++               }
++            }
++            if (!nm)
++               for (g = 0; g < ng; g++)
++                  if (mod_is_dir(&pg->descs[srt[g]]))
++                  {
++                     nm = "direcional";
++                     break;
++                  }
++            if (!nm)
++               for (g = 0; g < ng; g++)
++               {
++                  struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
++                  if (strcmp(d->name, "nul"))
++                  {
++                     nm = d->name;
++                     break;
++                  }
++               }
++            strlcpy(r->label, nm ? nm : "imagem", sizeof(r->label));
++            for (g = 0; g < ng; g++)
++            {
++               struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
++               if (d->img[0] && strcmp(d->name, "nul") == 0)
++               {
++                  strlcpy(r->img, d->img, sizeof(r->img));
++                  break;
++               }
++            }
++            if (!r->img[0])
++               for (g = 0; g < ng; g++)
++               {
++                  struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
++                  if (d->img[0])
++                  {
++                     strlcpy(r->img, d->img, sizeof(r->img));
++                     break;
++                  }
++               }
++         }
++      }
++      free(seen);
++   }
++   memcpy(mod_grp, sv_grp, sizeof(sv_grp));
++   mod_grp_n = sv_n;
++   free(di);
++}
++
++/* candidatos: grupos que ainda nao estao na pagina atual */
++static int mod_reg_cand(input_overlay_t *ol, int *list, int cap)
++{
++   int e, n = 0;
++   unsigned cur = ol ? (unsigned)ol->index : 0;
++   if (!mod_reg_ok)
++      return 0;
++   for (e = 0; e < mod_reg_n && n < cap; e++)
++      if (cur >= 64 || !((mod_reg[e].mask >> cur) & 1))
++         list[n++] = e;
++   return n;
++}
++
++/* Procura um canto livre da pagina para um grupo de meia-largura hx / meia-altura hy.
++ * Devolve o deslocamento (dx,dy) a somar nas posicoes do grupo (centro atual cx,cy). */
++static void mod_free_spot(float cx, float cy, float hx, float hy,
++      const struct overlay *pg, float *dx, float *dy)
++{
++   float best = 1e30f, bx = 0.5f, by = 0.5f, x, y;
++   float lox = hx, hix = 1.0f - hx, loy = hy, hiy = 1.0f - hy;
++   size_t i;
++   if (hix < lox) lox = hix = 0.5f;
++   if (hiy < loy) loy = hiy = 0.5f;
++   for (y = loy; y <= hiy + 1e-4f; y += 0.02f)
++      for (x = lox; x <= hix + 1e-4f; x += 0.02f)
++      {
++         float sc = 0.0f, ex, ey;
++         for (i = 0; i < pg->size; i++)
++         {
++            const struct overlay_desc *d = &pg->descs[i];
++            float ox, oy;
++            if (d->range_x * d->range_y > 0.2f || d->range_x <= 0.0f)
++               continue;
++            ox = (hx + d->range_x) - fabsf(x - d->x);
++            oy = (hy + d->range_y) - fabsf(y - d->y);
++            if (ox > 0.0f && oy > 0.0f)
++               sc += ox * oy;
++         }
++         ex = (x < 1.0f - x) ? x : 1.0f - x;
++         ey = (y < 1.0f - y) ? y : 1.0f - y;
++         sc += 0.002f * ((ex < ey) ? ex : ey);
++         if (sc < best)
++         {
++            best = sc;
++            bx   = x;
++            by   = y;
++         }
++      }
++   *dx = bx - cx;
++   *dy = by - cy;
++}
++
++/* ---------- edicao do texto ---------- */
++
++/* acha onde inserir os botoes novos da pagina P (depois da ultima linha overlayP_desc<N>) */
++static size_t mod_find_ins(const char *buf, size_t len, unsigned P, bool *has_count)
++{
++   const char *p = buf, *end = buf + len;
++   size_t at = (size_t)-1, cnt_at = (size_t)-1;
++   *has_count = false;
++   while (p < end)
++   {
++      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
++      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
++      size_t      adv = eol ? n + 1 : n;
++      unsigned    a, b, c;
++      size_t      k;
++      if (mod_ln_desc(p, n, &a, &b, &k) && a == P)
++         at = (size_t)(p - buf) + adv;
++      else if (mod_ln_count(p, n, &a, &c) && a == P)
++      {
++         cnt_at      = (size_t)(p - buf) + adv;
++         *has_count  = true;
++      }
++      p += adv;
++   }
++   return at != (size_t)-1 ? at : cnt_at;
++}
++
++/* Copia o grupo e (de outra pagina) para a pagina P. Devolve texto novo (free) */
++static char *mod_cfg_add(input_overlay_t *ol, const char *buf, size_t len,
++      unsigned P, const struct mod_reg_e *e, size_t *olen)
++{
++   struct mod_ob ob = { NULL, 0, 0, false }, ins = { NULL, 0, 0, false };
++   const char *p = buf, *end = buf + len;
++   unsigned cnt = (unsigned)ol->overlays[P].size;
++   float minx = 1e9f, maxx = -1e9f, miny = 1e9f, maxy = -1e9f, dx = 0.0f, dy = 0.0f, mrx = 0.0f, mry = 0.0f;
++   bool  has_count;
++   size_t at, pass;
++   char   cntl[8];
++   (void)cntl;
++   at = mod_find_ins(buf, len, P, &has_count);
++   if (at == (size_t)-1 || !has_count)
++      return NULL;
++   /* passo 1: caixa do grupo (so das linhas base) */
++   for (pass = 0; pass < 2; pass++)
++   {
++      p = buf;
++      while (p < end)
++      {
++         const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
++         size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
++         size_t      adv = eol ? n + 1 : n;
++         unsigned    a, b;
++         size_t      k;
++         if (mod_ln_desc(p, n, &a, &b, &k) && a == (unsigned)e->pg && n < 900)
++         {
++            int m;
++            for (m = 0; m < e->n; m++)
++               if ((unsigned)e->idx[m] == b)
++                  break;
++            if (m < e->n)
++            {
++               char t[1024];
++               memcpy(t, p, n);
++               t[n] = '\0';
++               if (t[k] == ' ' || t[k] == '=' || t[k] == '\t')
++               {
++                  char v[512], *tk[8];
++                  int  nt = 0;
++                  char *c;
++                  mod_ln_value(t, v, sizeof(v));
++                  c = v;
++                  tk[nt++] = c;
++                  while (nt < 8 && (c = strchr(c, ',')))
++                  {
++                     *c++ = '\0';
++                     tk[nt++] = c;
++                  }
++                  if (nt == 6)
++                  {
++                     float x = (float)atof(tk[1]), y = (float)atof(tk[2]);
++                     if (pass == 0)
++                     {
++                        if (x < minx) minx = x;
++                        if (x > maxx) maxx = x;
++                        if (y < miny) miny = y;
++                        if (y > maxy) maxy = y;
++                        if ((float)atof(tk[4]) > mrx) mrx = (float)atof(tk[4]);
++                        if ((float)atof(tk[5]) > mry) mry = (float)atof(tk[5]);
++                     }
++                     else
++                     {
++                        char o[1024];
++                        int  w = snprintf(o, sizeof(o), "overlay%u_desc%u = \"%s,%.5f,%.5f,%s,%s,%s\"",
++                              P, cnt + (unsigned)m, tk[0], x + dx, y + dy, tk[3], tk[4], tk[5]);
++                        if (w > 0 && (size_t)w < sizeof(o))
++                        {
++                           /* mantem o fim de linha (\r) se havia */
++                           mod_ob_put(&ins, o, (size_t)w);
++                           if (n > 0 && p[n - 1] == '\r')
++                              mod_ob_put(&ins, "\r", 1);
++                           mod_ob_put(&ins, "\n", 1);
++                        }
++                     }
++                  }
++               }
++               else if (pass == 1)
++               {
++                  char o[1100];
++                  int  w = snprintf(o, sizeof(o), "overlay%u_desc%u", P, cnt + (unsigned)m);
++                  mod_ob_put(&ins, o, (size_t)w);
++                  mod_ob_put(&ins, p + k, n - k);
++                  mod_ob_put(&ins, "\n", 1);
++               }
++            }
++         }
++         p += adv;
++      }
++      if (pass == 0)
++      {
++         if (minx > maxx)
++            return NULL;
++         mod_free_spot((minx + maxx) / 2.0f, (miny + maxy) / 2.0f,
++               (maxx - minx) / 2.0f + mrx, (maxy - miny) / 2.0f + mry,
++               &ol->overlays[P], &dx, &dy);
++      }
++   }
++   if (ins.bad || !ins.n)
++   {
++      free(ins.b);
++      return NULL;
++   }
++   /* monta a saida */
++   p = buf;
++   while (p < end)
++   {
++      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
++      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
++      size_t      adv = eol ? n + 1 : n;
++      unsigned    a, c;
++      if ((size_t)(p - buf) == at)
++      {
++         mod_ob_put(&ob, ins.b, ins.n);
++         at = (size_t)-1;
++      }
++      if (mod_ln_count(p, n, &a, &c) && a == P)
++      {
++         char o[64];
++         const char *eq = (const char*)memchr(p, '=', n);
++         int  w = snprintf(o, sizeof(o), " %u", c + (unsigned)e->n);
++         mod_ob_put(&ob, p, (size_t)(eq - p) + 1);
++         mod_ob_put(&ob, o, (size_t)w);
++         if (n > 0 && p[n - 1] == '\r')
++            mod_ob_put(&ob, "\r", 1);
++         if (eol)
++            mod_ob_put(&ob, "\n", 1);
++      }
++      else
++         mod_ob_put(&ob, p, adv);
++      p += adv;
++   }
++   if (at == (size_t)len)
++   {
++      if (len > 0 && buf[len - 1] != '\n')
++         mod_ob_put(&ob, "\n", 1);
++      mod_ob_put(&ob, ins.b, ins.n);
++   }
++   free(ins.b);
++   if (ob.bad)
++   {
++      free(ob.b);
++      return NULL;
++   }
++   *olen = ob.n;
++   return ob.b;
++}
++
++/* Tira da pagina P os botoes (indices em idx[n]) e renumera os seguintes */
++static char *mod_cfg_remove(const char *buf, size_t len, unsigned P,
++      const int *idx, int n, size_t *olen)
++{
++   struct mod_ob ob = { NULL, 0, 0, false };
++   const char *p = buf, *end = buf + len;
++   while (p < end)
++   {
++      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
++      size_t      ln  = eol ? (size_t)(eol - p) : (size_t)(end - p);
++      size_t      adv = eol ? ln + 1 : ln;
++      unsigned    a, b, c;
++      size_t      k;
++      if (mod_ln_desc(p, ln, &a, &b, &k) && a == P)
++      {
++         int m, below = 0;
++         bool rm = false;
++         for (m = 0; m < n; m++)
++         {
++            if ((unsigned)idx[m] == b)
++               rm = true;
++            else if ((unsigned)idx[m] < b)
++               below++;
++         }
++         if (!rm)
++         {
++            char o[64];
++            int  w = snprintf(o, sizeof(o), "overlay%u_desc%u", P, b - (unsigned)below);
++            mod_ob_put(&ob, o, (size_t)w);
++            mod_ob_put(&ob, p + k, adv - k);
++         }
++      }
++      else if (mod_ln_count(p, ln, &a, &c) && a == P)
++      {
++         char o[64];
++         const char *eq = (const char*)memchr(p, '=', ln);
++         int  w = snprintf(o, sizeof(o), " %u", c >= (unsigned)n ? c - (unsigned)n : 0);
++         mod_ob_put(&ob, p, (size_t)(eq - p) + 1);
++         mod_ob_put(&ob, o, (size_t)w);
++         if (ln > 0 && p[ln - 1] == '\r')
++            mod_ob_put(&ob, "\r", 1);
++         if (eol)
++            mod_ob_put(&ob, "\n", 1);
++      }
++      else
++         mod_ob_put(&ob, p, adv);
++      p += adv;
++   }
++   if (ob.bad)
++   {
++      free(ob.b);
++      return NULL;
++   }
++   *olen = ob.n;
++   return ob.b;
++}
++
++/* ---------- recarregar o overlay a partir da copia ---------- */
++static void mod_reload_start(const char *dst, int page)
++{
++   strlcpy(mod_reload_dst, dst, sizeof(mod_reload_dst));
++   mod_reload_page = page;
++   mod_reload_old  = input_driver_st.overlay_ptr;
++   mod_reload_wait = 900;
++   task_push_overlay_load_default(input_overlay_loaded, dst, false, NULL);
++}
++
++static void mod_reload_check(input_overlay_t *ol)
++{
++   if (mod_reload_wait <= 0 || !ol)
++      return;
++   if (ol != mod_reload_old && !strcmp(ol->path, mod_reload_dst))
++   {
++      bool tmp = false;
++      mod_reload_wait = 0;
++      mod_snap_take(ol);
++      mod_reg_ok      = false;
++      mod_rm_n        = 0;
++      mod_rm_confirm  = false;
++      mod_editor_sel  = -1;
++      mod_grp_n       = 0;
++      if (mod_reload_page > 0 && (size_t)mod_reload_page < ol->size
++            && (unsigned)mod_reload_page != (unsigned)ol->index)
++      {
++         ol->next_index = (unsigned)mod_reload_page;
++         command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
++      }
++      return;
++   }
++   if (--mod_reload_wait == 0)
++      mod_toast("Recarregar o overlay demorou demais. Confira o arquivo salvo.");
++}
++
++/* op 1 = adicionar o candidato escolhido, op 2 = remover o grupo selecionado */
++static void mod_struct_op(int op)
++{
++   input_overlay_t *ol = input_driver_st.overlay_ptr;
++   void    *buf = NULL;
++   int64_t  len = 0;
++   char    *moved = NULL, *edited = NULL;
++   size_t   mlen = 0, changed = 0, elen = 0;
++   char     dst[PATH_MAX_LENGTH], msg[PATH_MAX_LENGTH + 64];
++   unsigned page;
++   if (!ol || !ol->overlays || !mod_snap || !ol->path[0])
++   {
++      mod_toast("Overlay nao carregado.");
++      return;
++   }
++   if (mod_reload_wait > 0)
++   {
++      mod_toast("Aguarde: recarregando o overlay.");
++      return;
++   }
++   page = (unsigned)ol->index;
++   if (!filestream_read_file(ol->path, &buf, &len) || !buf || len <= 0)
++   {
++      mod_toast("Nao consegui ler o .cfg do overlay.");
++      free(buf);
++      return;
++   }
++   moved = mod_apply_moves(ol, (const char*)buf, (size_t)len, &mlen, &changed, NULL, 0);
++   free(buf);
++   if (!moved)
++      return;
++   if (op == 1)
++   {
++      int cand[MOD_REG_MAX];
++      int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
++      if (nc <= 0)
++      {
++         mod_toast("Nao ha botao novo para adicionar nesta pagina.");
++         free(moved);
++         return;
++      }
++      if (mod_reg_sel >= nc)
++         mod_reg_sel = 0;
++      edited = mod_cfg_add(ol, moved, mlen, page, &mod_reg[cand[mod_reg_sel]], &elen);
++   }
++   else
++      edited = mod_cfg_remove(moved, mlen, page, mod_rm_grp, mod_rm_n, &elen);
++   free(moved);
++   if (!edited)
++   {
++      mod_toast("Nao consegui alterar o .cfg (formato inesperado).");
++      return;
++   }
++   if (mod_cfg_is_mod(ol->path))
++      strlcpy(dst, ol->path, sizeof(dst));
++   else
++      mod_new_dst(ol->path, dst, sizeof(dst));
++   if (filestream_write_file(dst, edited, (int64_t)elen))
++   {
++      strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
++      snprintf(msg, sizeof(msg), "%s: %s salvo em %s. Recarregando...",
++            op == 1 ? "Botao adicionado" : "Botao removido",
++            path_basename(ol->path), path_basename(dst));
++      mod_toast(msg);
++      mod_reload_start(dst, (int)page);
++   }
++   else
++      mod_toast("Falhou ao gravar o arquivo.");
++   free(edited);
++}
++
++
++/* usados pelo desenho dos widgets (miniaturas da grade) */
++bool input_overlay_editor_grid_open(void)
++{
++   return mod_grid_open && mod_editor_active;
++}
++
++const char *input_overlay_editor_ui_img(int idx)
++{
++   static char path[PATH_MAX_LENGTH];
++   input_overlay_t *ol = input_driver_st.overlay_ptr;
++   int cand[MOD_REG_MAX];
++   int nc, ci;
++   char *sl;
++   if (!mod_grid_open || !ol || idx < 0 || idx >= 12)
++      return NULL;
++   nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
++   ci = mod_grid_scroll * 12 + idx;
++   if (ci >= nc || !mod_reg[cand[ci]].img[0])
++      return NULL;
++   strlcpy(path, ol->path, sizeof(path));
++   sl = strrchr(path, '/');
++   if (!sl)
++      sl = strrchr(path, '\\');
++   if (sl)
++      sl[1] = '\0';
++   else
++      path[0] = '\0';
++   strlcat(path, mod_reg[cand[ci]].img, sizeof(path));
++   return path;
++}
++/* ----- botoes do editor: tamanho da tela do jogo, simetrico em volta do centro ----- */
++static int  mod_ui_held   = -1;
++static bool mod_ui_held_g = false;
++static char mod_ui_title[96];
++static int mod_ui_hold_n = 0;
++static int mod_ui_timer  = 0;   /* quadros restantes com o painel visivel */
++static int mod_main_page = 0;   /* pagina marcada como principal (so memoria por enquanto) */
++
++/* 18 retangulos (x, y, largura, altura) em pixels; w=0 = escondido.
++ * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (toque = marcar como principal),
++ * 8 centralizar, 9 original, 10 salvar novo, 11 sobrescrever, 12 ir para aba Botoes, 13 voltar para aba Tela,
++ * 14-15 candidato anterior/proximo, 16 candidato (toque = adicionar), 17 remover botao */
++static int mod_ui_rects(int *r)
++{
++   int bw, bh, gap, x0, y0, k;
++   if (mod_win_w <= 0 || mod_win_h <= 0)
++      return 0;
++   {
++      int un = (mod_win_w < mod_win_h) ? mod_win_w : mod_win_h;
++      bh  = un * 8 / 100;
++      bw  = un * 22 / 100;
++   }
++   gap = bh / 5;
++   x0  = mod_win_w / 2 - bw - gap / 2;
++   y0  = mod_win_h / 2 - (7 * bh + 6 * gap) / 2;
++   for (k = 0; k < 72; k++)
++      r[k] = 0;
++#define MOD_R(i, row, col, span) do { \
++   r[(i) * 4 + 0] = x0 + (col) * (bw + gap); \
++   r[(i) * 4 + 1] = y0 + (row) * (bh + gap); \
++   r[(i) * 4 + 2] = (span) * bw + ((span) - 1) * gap; \
++   r[(i) * 4 + 3] = bh; } while (0)
++   if (mod_grid_open)
++   {
++      input_overlay_t *ol = input_driver_st.overlay_ptr;
++      int cand[MOD_REG_MAX];
++      int nc   = mod_reg_cand(ol, cand, MOD_REG_MAX);
++      int cols = (mod_win_w >= mod_win_h) ? 4 : 3;
++      int rows = 12 / cols;
++      int m    = ((mod_win_w < mod_win_h) ? mod_win_w : mod_win_h) * 5 / 100;
++      int cw   = (mod_win_w - 2 * m - (cols - 1) * gap) / cols;
++      int ch   = (mod_win_h - 2 * m - rows * gap) / (rows + 1);
++      int nw   = (mod_win_w - 2 * m - 2 * gap) / 3;
++      int first = mod_grid_scroll * 12;
++      for (k = 0; k < 12; k++)
++      {
++         if (first + k >= nc)
++            continue;
++         r[k * 4 + 0] = m + (k % cols) * (cw + gap);
++         r[k * 4 + 1] = m + (k / cols) * (ch + gap);
++         r[k * 4 + 2] = cw;
++         r[k * 4 + 3] = ch;
++      }
++      for (k = 0; k < 3; k++)
++      {
++         r[(12 + k) * 4 + 0] = m + k * (nw + gap);
++         r[(12 + k) * 4 + 1] = m + rows * (ch + gap);
++         r[(12 + k) * 4 + 2] = nw;
++         r[(12 + k) * 4 + 3] = ch;
++      }
++      return 18;
++   }
++   MOD_R(7, 0, 0, 2);
++   MOD_R(5, 1, 0, 1);
++   MOD_R(6, 1, 1, 1);
++   MOD_R(10, 5, 0, 1);
++   MOD_R(11, 5, 1, 1);
++   MOD_R(0, 2, 0, 1);
++   MOD_R(1, 2, 1, 1);
++   MOD_R(2, 3, 0, 1);
++   MOD_R(3, 3, 1, 1);
++   MOD_R(8, 4, 0, 1);
++   MOD_R(9, 4, 1, 1);
++   MOD_R(12, 6, 0, 1);
++   MOD_R(4, 6, 1, 1);
++#undef MOD_R
++   return 18;
++}
++
++/* Chamado pelo desenho dos widgets: devolve quantos botoes ha (0 = editor fechado). */
++int input_overlay_editor_ui(int *r, const char **lab, int max)
++{
++   static const char *nomes[18] =
++      { "Altura -", "Altura +", "Largura -", "Largura +", "Fechar",
++        "Pag <", "Pag >", NULL, "Centralizar", "Original",
++        "Salvar novo", "Sobrescrever", "Botoes", NULL,
++        NULL, NULL, NULL, NULL };
++   static char cell_lab[12][48];
++   int k, n;
++   if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 18)
++      return 0;
++   n = mod_ui_rects(r);
++   for (k = 0; k < n; k++)
++      lab[k] = nomes[k];
++   {
++      input_overlay_t *ol = input_driver_st.overlay_ptr;
++      if (mod_grid_open)
++      {
++         int cand[MOD_REG_MAX];
++         int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
++         for (k = 0; k < 12; k++)
++         {
++            lab[k] = NULL;
++            if (mod_grid_scroll * 12 + k < nc)
++            {
++               snprintf(cell_lab[k], sizeof(cell_lab[k]), "%s",
++                     mod_reg[cand[mod_grid_scroll * 12 + k]].label);
++               lab[k] = cell_lab[k];
++            }
++         }
++         lab[12] = "<";
++         lab[13] = (nc > 0) ? "Fechar" : "Nada novo p/ adicionar - Fechar";
++         lab[14] = ">";
++         return n;
++      }
++      if (ol && ol->active)
++         snprintf(mod_ui_title, sizeof(mod_ui_title), "%s%s (%u de %u)",
++               ((unsigned)ol->index == (unsigned)mod_main_page) ? "* " : "",
++               ol->active->name, (unsigned)ol->index + 1, (unsigned)ol->size);
++      else
++         snprintf(mod_ui_title, sizeof(mod_ui_title), "?");
++      lab[7] = mod_ui_title;
++   }
++   return n;
++}
++
++static int mod_ui_hit(float px, float py)
++{
++   int r[72];
++   int k, n;
++   if (mod_ui_timer <= 0)
++      return -1;
++   n = mod_ui_rects(r);
++   for (k = 0; k < n; k++)
++      if (   r[k * 4 + 2] > 0 && px >= (float)r[k * 4 + 0] && px < (float)(r[k * 4 + 0] + r[k * 4 + 2])
++          && py >= (float)r[k * 4 + 1] && py < (float)(r[k * 4 + 1] + r[k * 4 + 3]))
++         return k;
++   return -1;
++}
++
++/* Vai para a pagina anterior/proxima (pula as de nome "hidden..."). */
++static void mod_page_goto(int dir)
++{
++   input_overlay_t *ol = input_driver_st.overlay_ptr;
++   size_t   tries;
++   unsigned idx;
++   bool     tmp = false;
++   if (!ol || ol->size < 2)
++      return;
++   idx = (unsigned)ol->index;
++   for (tries = 0; tries < ol->size; tries++)
++   {
++      idx = (unsigned)((idx + (dir > 0 ? 1 : ol->size - 1)) % ol->size);
++      if (strncmp(ol->overlays[idx].name, "hidden", 6) != 0)
++         break;
++   }
++   if (idx == (unsigned)ol->index
++         || strncmp(ol->overlays[idx].name, "hidden", 6) == 0)
++      return;
++   ol->next_index   = idx;
++   command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
++   mod_editor_sel   = -1;
++   mod_grp_n        = 0;
++}
++
++static void mod_ui_press(int b)
++{
++   int x, y, w, h;
++   if (b == 4)
++   {
++      static const char msg[] = "Editor de overlay encerrado.";
++      mod_editor_active = false;
++      mod_editor_sel    = -1;
++      mod_editor_pinch  = false;
++      command_event(CMD_EVENT_UNPAUSE, NULL);
++      runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,
++            MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++      return;
++   }
++   if (b == 7)
++   {
++      input_overlay_t *ol = input_driver_st.overlay_ptr;
++      if (ol)
++         mod_main_page = (int)ol->index;
++      return;
++   }
++   if (b == 5 || b == 6)
++   {
++      mod_page_goto(b == 6 ? 1 : -1);
++      return;
++   }
++   if (mod_grid_open)
++   {
++      input_overlay_t *ol = input_driver_st.overlay_ptr;
++      int cand[MOD_REG_MAX];
++      int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
++      int pages = (nc + 11) / 12;
++      if (b < 12)
++      {
++         if (mod_grid_scroll * 12 + b < nc)
++         {
++            mod_reg_sel   = mod_grid_scroll * 12 + b;
++            mod_grid_open = false;
++            mod_struct_op(1);
++         }
++      }
++      else if (b == 12 && mod_grid_scroll > 0)
++         mod_grid_scroll--;
++      else if (b == 14 && mod_grid_scroll + 1 < pages)
++         mod_grid_scroll++;
++      else if (b == 13)
++         mod_grid_open = false;
++      return;
++   }
++   if (b == 12)
++   {
++      mod_reg_build(input_driver_st.overlay_ptr);
++      mod_grid_scroll = 0;
++      mod_grid_open   = true;
++      return;
++   }
++   if (b == 10 || b == 11)
++   {
++      mod_save_cfg(b == 11);
++      return;
++   }
++   mod_vp_get(&x, &y, &w, &h);
++   switch (b)
++   {
++      /* x,y sao deslocamento da ancora (centro): ao mudar w/h a imagem ja cresce
++       * para os dois lados sozinha, entao x,y NAO mudam. */
++      case 0: h -= 4; break;
++      case 1: h += 4; break;
++      case 2: w -= 4; break;
++      case 3: w += 4; break;
++      case 8: x = 0; y = 0; break;
++      case 9:
++      {
++         /* proporcao original do jogo (a do nucleo), a maior que cabe na tela, centralizada */
++         video_driver_state_t *vs = video_state_get_ptr();
++         float asp = vs->av_info.geometry.aspect_ratio;
++         if (asp <= 0.0f && vs->av_info.geometry.base_height)
++            asp = (float)vs->av_info.geometry.base_width
++                / (float)vs->av_info.geometry.base_height;
++         if (asp <= 0.0f || mod_win_w <= 0 || mod_win_h <= 0)
++            return;
++         w = mod_win_w;
++         h = (int)((float)w / asp);
++         if (h > mod_win_h)
++         {
++            h = mod_win_h;
++            w = (int)((float)h * asp);
++         }
++         x = 0;
++         y = 0;
++         break;
++      }
++      default: return;
++   }
++   mod_vp_set(x, y, w, h);
++}
++
++/* Uma vez por leitura de toques; count = dedos na tela. */
++static void mod_editor_frame(input_overlay_t *ol, int count,
++      const input_overlay_state_t *st)
+ {
+-   float range_x, range_y;
++   int kk;
++   mod_tap_now++;
++   mod_reload_check(ol);
++   bool menu_alive = (menu_state_get_ptr()->flags & MENU_ST_FLAG_ALIVE) != 0;
+ 
+-   if (use_range_mod)
++   for (kk = 0; kk < 2 && kk < count; kk++)
+    {
+-      range_x = desc->range_x_mod;
+-      range_y = desc->range_y_mod;
++      mod_raw_x[kk] = (float)VIDEO_POS_X(st->touch[kk]);
++      mod_raw_y[kk] = (float)VIDEO_POS_Y(st->touch[kk]);
+    }
+-   else
++   if (count > 0 || mod_grid_open)
++      mod_ui_timer = 300;
++   else if (mod_ui_timer > 0)
++      mod_ui_timer--;
+    {
+-      range_x = desc->range_x_hitbox;
+-      range_y = desc->range_y_hitbox;
++      struct video_viewport vp2;
++      memset(&vp2, 0, sizeof(vp2));
++      if (video_driver_get_viewport_info(&vp2))
++      {
++         mod_win_w = (int)VIDEO_SCALE_W(vp2.full_dims);
++         mod_win_h = (int)VIDEO_SCALE_H(vp2.full_dims);
++      }
+    }
+ 
+-   switch (desc->hitbox)
++   /* So considera "menu aberto" depois de ter visto o menu fechado uma vez */
++   if (mod_editor_wait_close)
+    {
+-      case OVERLAY_HITBOX_RADIAL:
++      if (!menu_alive)
+       {
+-         /* Ellipse. */
+-         float x_dist  = (x - desc->x_hitbox) / range_x;
+-         float y_dist  = (y - desc->y_hitbox) / range_y;
+-         float sq_dist = x_dist * x_dist + y_dist * y_dist;
+-         return (sq_dist <= 1.0f);
++         mod_editor_wait_close = false;
++         mod_editor_seed_screen();
++         mod_ui_timer = 300;
++         mod_snap_take(input_driver_st.overlay_ptr);
+       }
+-      case OVERLAY_HITBOX_RECT:
+-         return
+-               (fabs(x - desc->x_hitbox) <= range_x)
+-            && (fabs(y - desc->y_hitbox) <= range_y);
+-      case OVERLAY_HITBOX_NONE:
+-         break;
+    }
+-   return false;
++   else if (menu_alive)
++   {
++      mod_editor_active = false;
++      return;
++   }
++
++   mod_editor_fingers = count;
++   if (count == 0)
++   {
++      mod_editor_sel    = -1;
++      mod_editor_pinch  = false;
++      mod_editor_screen = false;
++      mod_ui_held       = -1;
++      mod_tap_block     = false;
++      mod_grp_n         = 0;
++   }
++   else if (count >= 3)
++   {
++      static const char msg[] = "Editor de overlay encerrado.";
++      mod_editor_active = false;
++      mod_editor_sel    = -1;
++      mod_editor_pinch  = false;
++      command_event(CMD_EVENT_UNPAUSE, NULL);
++      runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 120, true, NULL,
++            MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++   }
+ }
+ 
+-/**
+- * input_overlay_poll:
+- * @out                   : Polled output data.
+- * @touch_idx             : Touch pointer index.
+- * @old_touch_idx         : Touch pointer index from previous poll, or -1.
+- * @norm_x                : Normalized X coordinate.
+- * @norm_y                : Normalized Y coordinate.
+- * @touch_scale           : Overlay scale.
+- *
+- * Polls input overlay for a single touch pointer.
+- *
+- * @norm_x and @norm_y are the result of
+- * video_driver_translate_coord_viewport().
+- *
+- * @return true if touch pointer is inside any hitbox
+- **/
+-/* The ways a finger's contact covers on a D-pad or face-button area
+- * (common/overlay_contact.h), from the contact the driver published
+- * for touch @touch_idx; with none, the way its centre lies */
+-static void input_overlay_get_eightway_contact(const input_overlay_t *ol,
+-      const struct overlay_desc *desc, overlay_eightway_config_t *eightway,
+-      input_bits_t *out, int touch_idx, float x_dist, float y_dist,
+-      float touch_scale, unsigned contact_scale)
++static bool mod_mask_empty(const struct overlay_desc *d)
+ {
+-   video_viewport_t vp;
+-   unsigned dirs;
+-   unsigned major = 0;
+-   unsigned minor = 0;
+-   float angle    = 0.0f;
+-   float w        = 0.0f;
+-   float h        = 0.0f;
++   size_t k;
++   for (k = 0; k < ARRAY_SIZE(d->button_mask.data); k++)
++      if (d->button_mask.data[k])
++         return false;
++   return true;
++}
+ 
+-   vp.pos         = 0;
+-   vp.dims        = 0;
+-   vp.full_dims   = 0;
+-   if (     touch_idx >= 0
+-         && (unsigned)touch_idx < input_touch_contact_count
+-         && input_driver_poll_viewport(&vp))
++/* Botao so de direcao (cima/baixo/esquerda/direita e diagonais) ou area de dpad */
++static bool mod_is_dir(const struct overlay_desc *d)
++{
++   unsigned k;
++   bool any = false;
++   if (d->type == OVERLAY_TYPE_DPAD_AREA)
++      return true;
++   if (d->type != OVERLAY_TYPE_BUTTONS)
++      return false;
++   for (k = 0; k < 256; k++)
+    {
+-      /* the pointer's space: the window for a full-screen overlay, as
+-       * its touches are read, else the drawn area */
+-      unsigned dims = ((ol->active->flags & OVERLAY_FULL_SCREEN)
+-            || video_driver_get_views_layout()) ? vp.full_dims : vp.dims;
+-      w     = (float)VIDEO_SCALE_W(dims) * ol->active->mod_w * desc->range_x;
+-      h     = (float)VIDEO_SCALE_H(dims) * ol->active->mod_h * desc->range_y;
+-      if (w > 0.0f && h > 0.0f)
++      if (!BIT256_GET(d->button_mask, k))
++         continue;
++      if (   k == RETRO_DEVICE_ID_JOYPAD_UP   || k == RETRO_DEVICE_ID_JOYPAD_DOWN
++          || k == RETRO_DEVICE_ID_JOYPAD_LEFT || k == RETRO_DEVICE_ID_JOYPAD_RIGHT)
++         any = true;
++      else
++         return false;
++   }
++   return any;
++}
++
++static bool mod_is_analog(const struct overlay_desc *d)
++{
++   return d->type == OVERLAY_TYPE_ANALOG_LEFT
++       || d->type == OVERLAY_TYPE_ANALOG_RIGHT;
++}
++
++static bool mod_is_nul(const struct overlay_desc *d)
++{
++   return d->type == OVERLAY_TYPE_BUTTONS && mod_mask_empty(d);
++}
++
++/* Dois botoes vizinhos (encostados ou quase) */
++static bool mod_adj(const struct overlay_desc *a, const struct overlay_desc *b)
++{
++   float dx = a->x - b->x, dy = a->y - b->y;
++   if (dx < 0.0f) dx = -dx;
++   if (dy < 0.0f) dy = -dy;
++   return dx <= (a->range_x + b->range_x) * 1.6f
++       && dy <= (a->range_y + b->range_y) * 1.6f;
++}
++
++static void mod_grp_add(int i)
++{
++   int k;
++   for (k = 0; k < mod_grp_n; k++)
++      if (mod_grp[k] == i)
++         return;
++   if (mod_grp_n < MOD_MAX_GRP)
++      mod_grp[mod_grp_n++] = i;
++}
++
++/* Monta o grupo do botao tocado t. */
++static void mod_build_group(struct overlay *pg, int t)
++{
++   struct overlay_desc *descs = pg->descs;
++   int n = (int)pg->size;
++   int i, seed = -1;
++
++   mod_grp_n = 0;
++
++   /* analogico: ele mais os "nul" no mesmo lugar (a imagem do circulo) */
++   {
++      int anchor = -1;
++      if (mod_is_analog(&descs[t]))
++         anchor = t;
++      else if (mod_is_nul(&descs[t]))
++         for (i = 0; i < n; i++)
++            if (mod_is_analog(&descs[i]))
++            {
++               float dx = descs[t].x - descs[i].x, dy = descs[t].y - descs[i].y;
++               if (dx < 0.0f) dx = -dx;
++               if (dy < 0.0f) dy = -dy;
++               if (dx <= 0.5f * descs[i].range_x && dy <= 0.5f * descs[i].range_y)
++               {
++                  anchor = i;
++                  break;
++               }
++            }
++      if (anchor >= 0)
+       {
+-         major = OVERLAY_CONTACT_MAJOR(input_touch_contacts[touch_idx]);
+-         minor = OVERLAY_CONTACT_MINOR(input_touch_contacts[touch_idx]);
+-         angle = OVERLAY_CONTACT_ANGLE(input_touch_angles[touch_idx]);
++         mod_grp_add(anchor);
++         for (i = 0; i < n; i++)
++         {
++            float dx, dy;
++            if (i == anchor || !mod_is_nul(&descs[i]))
++               continue;
++            dx = descs[i].x - descs[anchor].x;
++            dy = descs[i].y - descs[anchor].y;
++            if (dx < 0.0f) dx = -dx;
++            if (dy < 0.0f) dy = -dy;
++            if (dx <= 0.5f * descs[anchor].range_x && dy <= 0.5f * descs[anchor].range_y)
++               mod_grp_add(i);
++         }
++         return;
+       }
+    }
+ 
+-   dirs = overlay_contact_dirs(x_dist / desc->range_x, y_dist / desc->range_y,
+-         major, minor, angle,
+-         major ? touch_scale / w : 0.0f, major ? touch_scale / h : 0.0f,
+-         (float)contact_scale / 100.0f);
++   /* direcional: todos os botoes de direcao ligados entre si + "nul" do centro */
++   if (mod_is_dir(&descs[t]))
++      seed = t;
++   else if (mod_is_nul(&descs[t]))
++      for (i = 0; i < n; i++)
++         if (mod_is_dir(&descs[i]) && mod_adj(&descs[t], &descs[i]))
++         {
++            seed = i;
++            break;
++         }
+ 
+-   if (dirs & OVERLAY_CONTACT_UP)
+-      bits_or_bits(out->data, eightway->up.data, ARRAY_SIZE(out->data));
+-   if (dirs & OVERLAY_CONTACT_DOWN)
+-      bits_or_bits(out->data, eightway->down.data, ARRAY_SIZE(out->data));
+-   if (dirs & OVERLAY_CONTACT_LEFT)
+-      bits_or_bits(out->data, eightway->left.data, ARRAY_SIZE(out->data));
+-   if (dirs & OVERLAY_CONTACT_RIGHT)
+-      bits_or_bits(out->data, eightway->right.data, ARRAY_SIZE(out->data));
++   if (seed >= 0)
++   {
++      int k;
++      mod_grp_add(seed);
++      for (k = 0; k < mod_grp_n; k++)       /* varre ampliando o grupo */
++         for (i = 0; i < n; i++)
++            if (mod_is_dir(&descs[i]) && mod_adj(&descs[mod_grp[k]], &descs[i]))
++               mod_grp_add(i);
++      {
++         int dirs = mod_grp_n;
++         for (i = 0; i < n; i++)
++            if (mod_is_nul(&descs[i]))
++               for (k = 0; k < dirs; k++)
++                  if (mod_adj(&descs[mod_grp[k]], &descs[i]))
++                  {
++                     mod_grp_add(i);
++                     break;
++                  }
++      }
++      return;
++   }
++
++   mod_grp_add(t);
++}
++
++/* Um dedo (idx) em (x,y), no mesmo espaco dos botoes (x_shift/y_shift). */
++static void mod_editor_touch(input_overlay_t *ol, int idx, float x, float y)
++{
++   struct overlay_desc *descs = ol->active->descs;
++
++   if (idx == 0)
++   {
++      mod_editor_x0 = x;
++      mod_editor_y0 = y;
++
++      if (mod_editor_sel < 0 && !mod_editor_screen)
++      {
++         float upx, upy;
++         int   ub;
++         mod_scr_finger(0, &upx, &upy);
++         ub = mod_ui_hit(upx, upy);
++         if (ub >= 0 && (mod_ui_held < 0 || mod_ui_held == ub))
++         {
++            if (mod_ui_held != ub)
++            {
++               mod_ui_held   = ub;
++               mod_ui_held_g = mod_grid_open;
++               mod_ui_hold_n = 0;
++               mod_ui_press(ub);
++            }
++            else
++            {
++               mod_ui_hold_n++;
++               if ((ub < 4) && !mod_ui_held_g && mod_ui_hold_n > 24 && (mod_ui_hold_n % 4) == 0)
++                  mod_ui_press(ub);
++            }
++            return;
++         }
++         if (mod_ui_held >= 0 || mod_grid_open)
++            return;
++      }
++
++      if (mod_editor_sel < 0 && !mod_editor_screen && !mod_tap_block)
++      {
++         size_t i;
++         float  best = 1e9f;
++         for (i = 0; i < ol->active->size; i++)
++         {
++            struct overlay_desc *d = &descs[i];
++            float area = d->range_x * d->range_y;
++            if (area <= 0.0f)
++               continue;
++            if (!input_overlay_coords_inside_hitbox(d, x, y, false))
++               continue;
++            if (area < best)
++            {
++               best                = area;
++               mod_editor_sel      = (int)i;
++               mod_editor_grab_dx  = x - d->x_shift;
++               mod_editor_grab_dy  = y - d->y_shift;
++            }
++         }
++         if (mod_editor_sel >= 0)
++         {
++            int gk, gmin = 1 << 30;
++            mod_build_group(ol->active, mod_editor_sel);
++            memcpy(mod_rm_grp, mod_grp, sizeof(mod_rm_grp));
++            mod_rm_n       = mod_grp_n;
++            mod_rm_page    = (int)ol->index;
++            for (gk = 0; gk < mod_grp_n; gk++)
++               if (mod_grp[gk] < gmin)
++                  gmin = mod_grp[gk];
++            if (gmin == mod_tap_key && mod_rm_page == mod_tap_pg
++                  && mod_tap_now - mod_tap_fr < 90)
++               mod_tap_n++;
++            else
++               mod_tap_n = 1;
++            mod_tap_key = gmin;
++            mod_tap_pg  = mod_rm_page;
++            mod_tap_fr  = mod_tap_now;
++            mod_tap_x   = x;
++            mod_tap_y   = y;
++            if (mod_tap_n >= 3)
++            {
++               mod_tap_n      = 0;
++               mod_tap_key    = -1;
++               mod_tap_block  = true;
++               mod_editor_sel = -1;
++               mod_grp_n      = 0;
++               mod_struct_op(2);
++            }
++         }
++         else
++            mod_screen_begin();
++      }
++      else if (mod_editor_screen)
++      {
++         if (mod_editor_fingers < 2)
++            mod_screen_move();
++      }
++      else if (mod_editor_fingers < 2)
++      {
++         struct overlay_desc *t = &descs[mod_editor_sel];
++         float ddx = (x - mod_editor_grab_dx) - t->x_shift;
++         if (fabsf(x - mod_tap_x) > 0.02f || fabsf(y - mod_tap_y) > 0.02f)
++            mod_tap_n = 0;
++         float ddy = (y - mod_editor_grab_dy) - t->y_shift;
++         int k;
++         for (k = 0; k < mod_grp_n; k++)
++         {
++            descs[mod_grp[k]].x += ddx;
++            descs[mod_grp[k]].y += ddy;
++         }
++         mod_editor_apply(ol);
++      }
++   }
++   else if (idx == 1 && mod_editor_screen)
++   {
++      /* tamanho da tela: pelos botoes do editor */
++   }
++   else if (idx == 1 && mod_editor_sel >= 0)
++   {
++      float dx = x - mod_editor_x0;
++      float dy = y - mod_editor_y0;
++      float dist = sqrtf(dx * dx + dy * dy);
++      int k;
++
++      if (!mod_editor_pinch)
++      {
++         float minx = 1e9f, maxx = -1e9f, miny = 1e9f, maxy = -1e9f;
++         mod_editor_pinch    = true;
++         mod_editor_pinch_d0 = (dist > 0.01f) ? dist : 0.01f;
++         for (k = 0; k < mod_grp_n; k++)
++         {
++            struct overlay_desc *d = &descs[mod_grp[k]];
++            mod_grp_x0[k]  = d->x;
++            mod_grp_y0[k]  = d->y;
++            mod_grp_rx0[k] = d->range_x;
++            mod_grp_ry0[k] = d->range_y;
++            if (d->x < minx) minx = d->x;
++            if (d->x > maxx) maxx = d->x;
++            if (d->y < miny) miny = d->y;
++            if (d->y > maxy) maxy = d->y;
++         }
++         mod_grp_px = 0.5f * (minx + maxx);
++         mod_grp_py = 0.5f * (miny + maxy);
++      }
++      else
++      {
++         float f = dist / mod_editor_pinch_d0;
++         if (f < 0.3f) f = 0.3f;
++         if (f > 3.0f) f = 3.0f;
++         for (k = 0; k < mod_grp_n; k++)
++         {
++            struct overlay_desc *d = &descs[mod_grp[k]];
++            d->x       = mod_grp_px + (mod_grp_x0[k] - mod_grp_px) * f;
++            d->y       = mod_grp_py + (mod_grp_y0[k] - mod_grp_py) * f;
++            d->range_x = mod_grp_rx0[k] * f;
++            d->range_y = mod_grp_ry0[k] * f;
++         }
++         mod_editor_apply(ol);
++      }
++   }
+ }
++/* ===== fim MOD ===== */
+ 
+ static bool input_overlay_poll(
+       input_overlay_t *ol,
+@@ -6231,24 +8147,40 @@ static bool input_overlay_poll(
+    x *= touch_scale;
+    y *= touch_scale;
+ 
++   /* MOD: no modo editor, o toque nao aperta botao: edita */
++   if (mod_editor_active)
++   {
++      mod_editor_touch(ol, touch_idx, x, y);
++      return false;
++   }
++
+    for (i = 0; i < ol->active->size; i++)
+    {
+       float x_dist, y_dist;
+       unsigned int base         = 0;
+       unsigned int desc_prio    = 0;
+       struct overlay_desc *desc = &descs[i];
++      bool mod_analog_preso;
+ 
+       /* Use range_mod if this touch pointer contributed
+        * to desc's touch_mask in the previous poll */
+       use_range_mod = (old_touch_idx != -1)
+             && BIT32_GET(desc->old_touch_mask, old_touch_idx);
+ 
+-      if (!input_overlay_coords_inside_hitbox(desc, x, y, use_range_mod))
++      /* MOD: dedo que ja estava no analogico continua preso a ele */
++      mod_analog_preso = use_range_mod
++            && (desc->type == OVERLAY_TYPE_ANALOG_LEFT
++             || desc->type == OVERLAY_TYPE_ANALOG_RIGHT);
++
++      if (!mod_analog_preso
++            && !input_overlay_coords_inside_hitbox(desc, x, y, use_range_mod))
+          continue;
+ 
+       /* Check for exclusive hitbox, which blocks other input.
+        * range_mod_exclusive has priority over exclusive. */
+-      if (use_range_mod && (desc->flags & OVERLAY_DESC_RANGE_MOD_EXCLUSIVE))
++      if (mod_analog_preso)
++         desc_prio = 2;
++      else if (use_range_mod && (desc->flags & OVERLAY_DESC_RANGE_MOD_EXCLUSIVE))
+          desc_prio = 2;
+       else if (desc->flags & OVERLAY_DESC_EXCLUSIVE)
+          desc_prio = 1;
+@@ -6319,6 +8251,14 @@ static bool input_overlay_poll(
+ 
+       if (desc->flags & OVERLAY_DESC_MOVABLE)
+       {
++         float mod_nx = x_dist / desc->range_x;
++         float mod_ny = y_dist / desc->range_y;
++         float mod_r  = sqrt(mod_nx * mod_nx + mod_ny * mod_ny);
++         if (mod_r > 1.0f)
++         {
++            x_dist /= mod_r;
++            y_dist /= mod_r;
++         }
+          desc->delta_x = clamp_float(x_dist, -desc->range_x, desc->range_x)
+             * ol->active->mod_w;
+          desc->delta_y = clamp_float(y_dist, -desc->range_y, desc->range_y)
+@@ -6804,6 +8744,11 @@ void input_overlay_set_scale_factor(
+ 
+       input_overlay_parse_layout(current_overlay,
+             layout_desc, display_aspect_ratio, &overlay_layout);
++      if (i < MOD_MAX_LAYOUTS)
++      {
++         mod_layouts[i]   = overlay_layout;
++         mod_layout_ok[i] = true;
++      }
+       input_overlay_scale(current_overlay, &overlay_layout);
+    }
+ 
+@@ -7612,6 +9557,8 @@ INPUT_NOINLINE static void input_poll_overlay(
+          ol_state->touch[i] = pos;
+       }
+       ol_state->touch_count = i;
++      if (mod_editor_active)
++         mod_editor_frame(ol, (int)i, ol_state);
+ 
+       /* Update lookup table of new to old touch indexes */
+       input_overlay_track_touch_inputs(ol_state, old_ol_state);
+@@ -21617,3 +23564,32 @@ static void input_keyboard_event_now_act(bool down, unsigned code,
+       }
+    }
+ }
++
++#ifdef HAVE_OVERLAY
++/* MOD: editor de overlay (etapa 1). So entra no modo: fecha o menu,
++ * pausa o jogo e avisa. Mover/salvar vem nas proximas etapas. */
++void input_overlay_editor_enter(void)
++{
++   static const char msg[] =
++         "Editor: arraste botoes ou a tela do jogo. Botoes no centro mudam o tamanho. Voltar sai.";
++   mod_editor_active     = true;
++   mod_editor_wait_close = true;
++   mod_editor_sel        = -1;
++   mod_editor_pinch      = false;
++   mod_editor_screen     = false;
++   command_event(CMD_EVENT_RESUME, NULL);
++   command_event(CMD_EVENT_PAUSE, NULL);
++   runloop_msg_queue_push(msg, sizeof(msg) - 1, 1, 180, true, NULL,
++         MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
++}
++#endif
++
++#ifdef HAVE_OVERLAY
++/* MOD: sai do modo editor (chamado, por exemplo, pelo botao Voltar) */
++void input_overlay_editor_exit(void)
++{
++   mod_editor_active = false;
++   mod_editor_sel    = -1;
++   mod_editor_pinch  = false;
++}
++#endif
+diff --git a/menu/cbs/menu_cbs_ok.c b/menu/cbs/menu_cbs_ok.c
+index 2ba5a0e..f556db6 100644
+--- a/menu/cbs/menu_cbs_ok.c
++++ b/menu/cbs/menu_cbs_ok.c
+@@ -6729,6 +6729,16 @@ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_cheat_apply_changes,      CMD_EVENT_
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_save_new_config,          CMD_EVENT_MENU_SAVE_CONFIG)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_save_main_config,         CMD_EVENT_MENU_SAVE_MAIN_CONFIG)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_resume_content,           CMD_EVENT_RESUME)
++#ifdef HAVE_OVERLAY
++/* MOD: editor de overlay (etapa 1); definido em input/input_driver.c */
++void input_overlay_editor_enter(void);
++static int action_ok_overlay_editor(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   input_overlay_editor_enter();
++   return 0;
++}
++#endif
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_screenshot,               CMD_EVENT_TAKE_SCREENSHOT)
+ #if defined(HAVE_CG) || defined(HAVE_GLSL) || defined(HAVE_SLANG) || defined(HAVE_HLSL)
+ STATIC_DEFAULT_ACTION_OK_CMD_FUNC(action_ok_shader_apply_changes,     CMD_EVENT_SHADERS_APPLY_CHANGES)
+@@ -7463,7 +7473,129 @@ STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_shader_preset_append, ACTION_OK_DL_SHADE
+ STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_push_generic_list, ACTION_OK_DL_GENERIC)
+ STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_audio_dsp_plugin, ACTION_OK_DL_AUDIO_DSP_PLUGIN)
+ STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_video_filter, ACTION_OK_DL_VIDEO_FILTER)
+-STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_overlay_preset, ACTION_OK_DL_OVERLAY_PRESET)
++STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_overlay_preset_orig, ACTION_OK_DL_OVERLAY_PRESET)
++#ifdef HAVE_OVERLAY
++/* MOD: copias de overlay (renomear/apagar); definido em input/input_driver.c */
++bool input_overlay_mod_is_copy(const char *path);
++bool input_overlay_mod_delete(const char *path);
++bool input_overlay_mod_rename(const char *path, const char *novo);
++void input_overlay_mod_toast(const char *msg);
++
++static unsigned mod_copias_modo = 0;   /* 0 = escolher overlay normal, 1 = renomear, 2 = apagar */
++static char     mod_copia_alvo[PATH_MAX_LENGTH];
++static char     mod_copia_apagar[PATH_MAX_LENGTH];
++static char     mod_copia_nome[PATH_MAX_LENGTH];
++
++/* a entrada normal "Overlay Preset" volta ao comportamento de sempre */
++static int action_ok_overlay_preset(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   mod_copias_modo = 0;
++   return action_ok_overlay_preset_orig(path, label, type, idx, entry_idx);
++}
++
++static int action_ok_mod_copia_menu(unsigned modo, const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   mod_copias_modo     = modo;
++   mod_copia_apagar[0] = '\0';
++   input_overlay_mod_toast(modo == 1
++         ? "Escolha a copia (-mod) que quer renomear."
++         : "Escolha a copia (-mod) que quer apagar. Toque duas vezes.");
++   return action_ok_overlay_preset_orig(path, label, type, idx, entry_idx);
++}
++
++static int action_ok_overlay_copy_rename(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   return action_ok_mod_copia_menu(1, path, label, type, idx, entry_idx);
++}
++
++static int action_ok_overlay_copy_delete(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   return action_ok_mod_copia_menu(2, path, label, type, idx, entry_idx);
++}
++
++static void mod_copia_caminho(const char *path, char *dst, size_t len)
++{
++   const char *menu_path = NULL;
++   menu_entries_get_last_stack(&menu_path, NULL, NULL, NULL, NULL);
++   if (path && *path && menu_path)
++      fill_pathname_join_special(dst, menu_path, path, len);
++   else
++      strlcpy(dst, path ? path : "", len);
++}
++
++static void menu_input_st_string_cb_mod_renomear(void *userdata,
++      const char *str)
++{
++   if (str && *str)
++   {
++      const char *novo = menu_input_dialog_get_buffer();
++      if (novo && *novo && input_overlay_mod_rename(mod_copia_alvo, novo))
++         menu_state_get_ptr()->flags |= MENU_ST_FLAG_ENTRIES_NEED_REFRESH;
++   }
++   menu_input_dialog_end();
++}
++
++static int action_ok_mod_copia_renomear(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   menu_input_ctx_line_t line = {0};
++   const char *base;
++   mod_copia_caminho(path, mod_copia_alvo, sizeof(mod_copia_alvo));
++   if (!input_overlay_mod_is_copy(mod_copia_alvo))
++   {
++      input_overlay_mod_toast("So da para renomear copias criadas pelo app.");
++      return 0;
++   }
++   base = path_basename(mod_copia_alvo);
++   strlcpy(mod_copia_nome, base, sizeof(mod_copia_nome));
++   {
++      size_t l = strlen(mod_copia_nome);
++      if (l > 4 && !strcasecmp(mod_copia_nome + l - 4, ".cfg"))
++         mod_copia_nome[l - 4] = '\0';
++   }
++   line.label         = "New name (letters, numbers, - and _)";
++   line.label_setting = label;
++   line.type          = type;
++   line.idx           = (unsigned)entry_idx;
++   line.text_type     = MENU_INPUT_DIALOG_KB_TYPE_TEXT;
++   line.cb            = menu_input_st_string_cb_mod_renomear;
++   line.dialog_type   = MENU_INPUT_DIALOG_TYPE_EDIT;
++   line.initial_text  = mod_copia_nome;
++   if (!menu_input_dialog_start(&line))
++      return -1;
++   return 0;
++}
++
++static int action_ok_mod_copia_apagar(const char *path,
++      const char *label, unsigned type, size_t idx, size_t entry_idx)
++{
++   char alvo[PATH_MAX_LENGTH];
++   mod_copia_caminho(path, alvo, sizeof(alvo));
++   if (!input_overlay_mod_is_copy(alvo))
++   {
++      input_overlay_mod_toast("So da para apagar copias criadas pelo app.");
++      return 0;
++   }
++   if (strcmp(alvo, mod_copia_apagar))
++   {
++      char msg[PATH_MAX_LENGTH + 64];
++      strlcpy(mod_copia_apagar, alvo, sizeof(mod_copia_apagar));
++      snprintf(msg, sizeof(msg), "Toque de novo para APAGAR: %s", path_basename(alvo));
++      input_overlay_mod_toast(msg);
++      return 0;
++   }
++   mod_copia_apagar[0] = '\0';
++   if (input_overlay_mod_delete(alvo))
++      menu_state_get_ptr()->flags |= MENU_ST_FLAG_ENTRIES_NEED_REFRESH;
++   return 0;
++}
++#else
++#define action_ok_overlay_preset action_ok_overlay_preset_orig
++#endif
+ STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_osk_overlay_preset, ACTION_OK_DL_OSK_OVERLAY_PRESET)
+ STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_rpl_entry, ACTION_OK_DL_RPL_ENTRY)
+ STATIC_DEFAULT_ACTION_OK_FUNC(action_ok_open_archive, ACTION_OK_DL_OPEN_ARCHIVE)
+@@ -10265,6 +10397,11 @@ static int menu_cbs_init_bind_ok_compare_label(menu_file_list_cbs_t *cbs,
+          {MENU_ENUM_LABEL_PLAY_REPLAY,                         action_ok_play_replay},
+          {MENU_ENUM_LABEL_HALT_REPLAY,                         action_ok_halt_replay},
+          {MENU_ENUM_LABEL_RESUME_CONTENT,                      action_ok_resume_content},
++#ifdef HAVE_OVERLAY
++         {MENU_ENUM_LABEL_OVERLAY_EDITOR,                      action_ok_overlay_editor},
++         {MENU_ENUM_LABEL_OVERLAY_COPY_RENAME,                 action_ok_overlay_copy_rename},
++         {MENU_ENUM_LABEL_OVERLAY_COPY_DELETE,                 action_ok_overlay_copy_delete},
++#endif
+          {MENU_ENUM_LABEL_ADD_TO_FAVORITES_PLAYLIST,           action_ok_add_to_favorites_playlist},
+          {MENU_ENUM_LABEL_ADD_ENTRY_TO_PLAYLIST,               action_ok_add_entry_to_playlist},
+          {MENU_ENUM_LABEL_ADD_ENTRY_TO_PLAYLIST_QUICKMENU,     action_ok_add_entry_to_playlist_quickmenu},
+@@ -11023,6 +11160,18 @@ static int menu_cbs_init_bind_ok_compare_type(menu_file_list_cbs_t *cbs,
+             BIND_ACTION_OK(cbs, action_ok_set_path_video_font);
+             break;
+          case FILE_TYPE_OVERLAY:
++#ifdef HAVE_OVERLAY
++            if (mod_copias_modo == 1)
++            {
++               BIND_ACTION_OK(cbs, action_ok_mod_copia_renomear);
++               break;
++            }
++            if (mod_copias_modo == 2)
++            {
++               BIND_ACTION_OK(cbs, action_ok_mod_copia_apagar);
++               break;
++            }
++#endif
+             BIND_ACTION_OK(cbs, action_ok_set_path_overlay);
+             break;
+          case FILE_TYPE_OSK_OVERLAY:
+diff --git a/menu/menu_displaylist.c b/menu/menu_displaylist.c
+index de117aa..2b02a0c 100644
+--- a/menu/menu_displaylist.c
++++ b/menu/menu_displaylist.c
+@@ -13807,6 +13807,9 @@ unsigned menu_displaylist_build_list(
+                {MENU_ENUM_LABEL_INPUT_OVERLAY_POINTER_ENABLE,              PARSE_ONLY_BOOL,  false },
+                {MENU_ENUM_LABEL_OVERLAY_LIGHTGUN_SETTINGS,                 PARSE_ACTION,     false },
+                {MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS,                    PARSE_ACTION,     false },
++               {MENU_ENUM_LABEL_OVERLAY_EDITOR,                            PARSE_ACTION,     false },
++               {MENU_ENUM_LABEL_OVERLAY_COPY_RENAME,                       PARSE_ACTION,     false },
++               {MENU_ENUM_LABEL_OVERLAY_COPY_DELETE,                       PARSE_ACTION,     false },
+                {MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS,                      PARSE_ACTION,     false },
+             };
+ 
+@@ -13881,6 +13884,9 @@ unsigned menu_displaylist_build_list(
+                   case MENU_ENUM_LABEL_OVERLAY_MOUSE_SETTINGS:
+                      build_list[i].checked = input_overlay_enable && input_overlay_ptr_enable;
+                      break;
++                  case MENU_ENUM_LABEL_OVERLAY_COPY_RENAME:
++                  case MENU_ENUM_LABEL_OVERLAY_COPY_DELETE:
++                  case MENU_ENUM_LABEL_OVERLAY_EDITOR:
+                   case MENU_ENUM_LABEL_OSK_OVERLAY_SETTINGS:
+                      build_list[i].checked = input_overlay_enable;
+                      break;
+diff --git a/pkg/android/phoenix/build.gradle b/pkg/android/phoenix/build.gradle
+index 02ab0bf..374cd1e 100644
+--- a/pkg/android/phoenix/build.gradle
++++ b/pkg/android/phoenix/build.gradle
+@@ -68,8 +68,8 @@ android {
+       dimension "variant"
+     }
+     aarch64 {
+-      applicationIdSuffix '.aarch64'
+-      resValue "string", "app_name", "RetroArch (AArch64)"
++      applicationIdSuffix '.aarch64.mod'
++      resValue "string", "app_name", "RetroArch Mod"
+       buildConfigField "boolean", "PLAY_STORE_BUILD", "false"
+ 
+       dimension "variant"
+diff --git a/settings/settings_def_menu_main_lists_4.h b/settings/settings_def_menu_main_lists_4.h
+index 3077648..7852985 100644
+--- a/settings/settings_def_menu_main_lists_4.h
++++ b/settings/settings_def_menu_main_lists_4.h
+@@ -32,6 +32,21 @@ S_ACTION_EX(OVERLAY_MOUSE_SETTINGS,
+       "Overlay Mouse",
+       "Configure mouse input sent from the overlay. Note: 1-, 2-, and 3-finger taps send left, right, and middle button clicks.")
+ #endif
++/* MOD: editor de overlay (etapa 1) */
++#if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
++S_ACTION_EX(OVERLAY_EDITOR,
++      "overlay_editor", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
++      "Edit Overlay Layout",
++      "Move and resize the on-screen buttons and the game screen. Work in progress.")
++S_ACTION_EX(OVERLAY_COPY_RENAME,
++      "overlay_copy_rename", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
++      "Rename Overlay Copy",
++      "Rename an overlay copy created by the layout editor. Original overlays cannot be renamed.")
++S_ACTION_EX(OVERLAY_COPY_DELETE,
++      "overlay_copy_delete", SD_FLAG_LAKKA_ADVANCED, NULL, NULL, 0,
++      "Delete Overlay Copy",
++      "Delete an overlay copy created by the layout editor. Original overlays cannot be deleted.")
++#endif
+ /* Descriptor and configuration rows are #ifdef HAVE_OVERLAY; the string
+  * tables always carry this row via the strings pass. */
+ #if defined(HAVE_OVERLAY) || defined(SETTINGS_DEF_STRINGS_PASS)
