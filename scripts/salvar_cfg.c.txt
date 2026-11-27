@@ -9,6 +9,19 @@ static char        mod_last_saved[PATH_MAX_LENGTH];
 static char        mod_main_name[64];             /* pagina principal (nome); vai no .cfg como mod_main_page */
 static char        mod_origin[PATH_MAX_LENGTH];   /* .cfg de onde veio o arquivo temporario */
 
+static void input_overlay_free(input_overlay_t *ol);
+
+/* descarta o overlay guardado em cache se for o arquivo que acabamos de gravar (senao ele voltaria velho) */
+static void mod_drop_cache(const char *path)
+{
+   input_overlay_t *c = input_driver_st.overlay_cache_ptr;
+   if (c && c->path && !strcmp(c->path, path))
+   {
+      input_overlay_free(c);
+      input_driver_st.overlay_cache_ptr = NULL;
+   }
+}
+
 static bool mod_is_temp(const char *path)
 {
    const char *b = path_basename(path);
@@ -343,9 +356,11 @@ static void mod_save_cfg(bool overwrite)
             && (size_t)clen == olen && !memcmp(chk, out, olen);
       free(chk);
       strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
-      snprintf(msg, sizeof(msg), "Salvo: %s a partir de %s (%u botoes alterados%s)%s",
+      mod_drop_cache(dst);
+      snprintf(msg, sizeof(msg), "Salvo: %s a partir de %s (%u botoes alterados%s)%s%s",
             path_basename(dst), path_basename(mod_eff_path(ol->path)), (unsigned)changed, ex,
-            ok ? "" : " [conferencia do arquivo FALHOU]");
+            ok ? "" : " [conferencia do arquivo FALHOU]",
+            mod_main_name[0] ? " Pagina principal gravada." : "");
    }
    else
       snprintf(msg, sizeof(msg), "Salvar: falhou ao gravar %s", path_basename(dst));

@@ -759,6 +759,11 @@ trocar(
 )
 trocar(
     INPUT,
+    "   if (!want_hidden && overlay_cached)\n   {\n      input_overlay_swap_with_cached();\n      return;\n   }\n",
+    "   if (!want_hidden && overlay_cached)\n   {\n      input_overlay_swap_with_cached();\n      if (input_st->overlay_ptr && !(input_st->overlay_ptr->flags & INPUT_OVERLAY_IS_OSK))\n         mod_apply_main_page(input_st->overlay_ptr);\n      return;\n   }\n",
+)
+trocar(
+    INPUT,
     "      const input_overlay_state_t *st)\n{\n   int kk;\n",
     "      const input_overlay_state_t *st)\n{\n   int kk;\n   mod_tap_now++;\n   mod_reload_check(ol);\n",
 )
