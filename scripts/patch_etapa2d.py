@@ -62,14 +62,13 @@ static int mod_ui_rects(int *r)
    r[(i) * 4 + 3] = bh; } while (0)
    if (mod_grid_open)
    {
-      /* caixa cinza: 0 fundo, 1 titulo (aba), 2-7 linhas da lista, 12 anterior, 13 fechar, 14 proxima */
+      /* caixa: 0 fundo, 1 titulo, 2 area da lista (rolagem), 13 fechar */
       int bxw = (mod_win_w >= mod_win_h) ? mod_win_w * 62 / 100 : mod_win_w * 92 / 100;
       int bxh = (mod_win_w >= mod_win_h) ? mod_win_h * 90 / 100 : mod_win_h * 62 / 100;
       int pad = gap * 2;
       int rh  = (bxh - 2 * pad - 7 * gap) / 8;
       int bx0 = mod_win_w / 2 - bxw / 2;
       int by0 = mod_win_h / 2 - bxh / 2;
-      int nw  = (bxw - 2 * pad - 2 * gap) / 3;
       r[0] = bx0;
       r[1] = by0;
       r[2] = bxw;
@@ -78,18 +77,16 @@ static int mod_ui_rects(int *r)
       r[5] = by0 + pad;
       r[6] = bxw - 2 * pad;
       r[7] = rh;
-      for (k = 0; k < 6; k++)
-      {
-         r[(2 + k) * 4 + 0] = bx0 + pad;
-         r[(2 + k) * 4 + 1] = by0 + pad + (k + 1) * (rh + gap);
-         r[(2 + k) * 4 + 2] = bxw - 2 * pad;
-         r[(2 + k) * 4 + 3] = rh;
-      }
-      (void)nw;
+      r[8]  = bx0 + pad;
+      r[9]  = by0 + pad + (rh + gap);
+      r[10] = bxw - 2 * pad;
+      r[11] = 6 * rh + 5 * gap;
       r[13 * 4 + 0] = bx0 + pad;
       r[13 * 4 + 1] = by0 + pad + 7 * (rh + gap);
       r[13 * 4 + 2] = bxw - 2 * pad;
       r[13 * 4 + 3] = rh;
+      mod_grid_rh    = rh;
+      mod_grid_pitch = rh + gap;
       return 18;
    }
    MOD_R(7, 0, 0, 2);
@@ -117,8 +114,8 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
         "Pag <", "Pag >", NULL, "Centralizar", "Original",
         "Salvar novo", "Sobrescrever", "Botoes", NULL,
         NULL, NULL, NULL, NULL };
-   static char cell_lab[6][48];
    int k, n;
+   mod_grid_step();
    if (!mod_editor_active)
    {
       mod_grid_open = false;
@@ -135,28 +132,12 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
       input_overlay_t *ol = input_driver_st.overlay_ptr;
       if (mod_grid_open)
       {
-         int cand[MOD_REG_MAX];
-         int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
          static char hdr[96];
          for (k = 0; k < 18; k++)
             lab[k] = NULL;
          mod_cfg_system_name(ol, hdr, sizeof(hdr));
-         lab[1] = hdr;
-         for (k = 0; k < 6; k++)
-            if (mod_grid_scroll + k < nc)
-            {
-               snprintf(cell_lab[k], sizeof(cell_lab[k]), "%s",
-                     mod_reg[cand[mod_grid_scroll + k]].label);
-               lab[2 + k] = cell_lab[k];
-            }
-         if (nc == 0)
-            lab[2] = "Nada novo para adicionar";
+         lab[1]  = hdr;
          lab[13] = "Fechar";
-         if (nc > 6)
-         {
-            snprintf(hdr + strlen(hdr), sizeof(hdr) - strlen(hdr),
-                  "  (%d de %d) - arraste para rolar", mod_grid_scroll + 1, nc);
-         }
          return n;
       }
       if (ol && ol->active)
@@ -237,17 +218,11 @@ static void mod_ui_press(int b)
    }
    if (mod_grid_open)
    {
-      input_overlay_t *ol = input_driver_st.overlay_ptr;
-      int cand[MOD_REG_MAX];
-      int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-      if (b >= 2 && b < 8)
+      if (b == 2 && mod_grid_item >= 0)
       {
-         if (mod_grid_scroll + (b - 2) < nc)
-         {
-            mod_reg_sel   = mod_grid_scroll + (b - 2);
-            mod_grid_open = false;
-            mod_struct_op(1);
-         }
+         mod_reg_sel   = mod_grid_item;
+         mod_grid_open = false;
+         mod_struct_op(1);
       }
       else if (b == 13)
          mod_grid_open = false;
@@ -256,7 +231,8 @@ static void mod_ui_press(int b)
    if (b == 12)
    {
       mod_reg_build(input_driver_st.overlay_ptr);
-      mod_grid_scroll = 0;
+      mod_grid_off    = 0.0f;
+      mod_grid_vel    = 0.0f;
       mod_grid_open   = true;
       mod_grid_down   = true;
       mod_grid_moved  = true;
@@ -304,38 +280,82 @@ static void mod_ui_press(int b)
    mod_vp_set(x, y, w, h);
 }
 
+static int mod_grid_maxoff(void)
+{
+   int cand[MOD_REG_MAX];
+   int nc = mod_reg_cand(input_driver_st.overlay_ptr, cand, MOD_REG_MAX);
+   int mx = nc * mod_grid_pitch - (mod_grid_pitch - mod_grid_rh) - mod_grid_vh;
+   return (mx > 0) ? mx : 0;
+}
+
+/* inercia: chamado a cada quadro desenhado */
+static void mod_grid_step(void)
+{
+   if (!mod_grid_open || mod_grid_down)
+      return;
+   if (mod_grid_vel > 0.4f || mod_grid_vel < -0.4f)
+   {
+      int mx = mod_grid_maxoff();
+      mod_grid_off += mod_grid_vel;
+      mod_grid_vel *= 0.94f;
+      if (mod_grid_off < 0.0f)
+      {
+         mod_grid_off = 0.0f;
+         mod_grid_vel = 0.0f;
+      }
+      if (mod_grid_off > (float)mx)
+      {
+         mod_grid_off = (float)mx;
+         mod_grid_vel = 0.0f;
+      }
+   }
+   else
+      mod_grid_vel = 0.0f;
+}
+
 static void mod_grid_touch(float px, float py)
 {
    int r[72];
-   int rh, dy, nc, ns, maxs;
-   int cand[MOD_REG_MAX];
    if (mod_ui_rects(r) <= 0)
       return;
+   mod_grid_vh = r[11];
    if (!mod_grid_down)
    {
       mod_grid_down  = true;
       mod_grid_moved = false;
       mod_grid_b     = mod_ui_hit(px, py);
-      mod_grid_sy    = (int)py;
-      mod_grid_s0    = mod_grid_scroll;
+      mod_grid_item  = -1;
+      if (mod_grid_b == 2 && mod_grid_pitch > 0)
+      {
+         int cand[MOD_REG_MAX];
+         int nc = mod_reg_cand(input_driver_st.overlay_ptr, cand, MOD_REG_MAX);
+         int rel = (int)py - r[9] + (int)mod_grid_off;
+         int it  = rel / mod_grid_pitch;
+         if (rel >= 0 && it < nc && (rel % mod_grid_pitch) < mod_grid_rh)
+            mod_grid_item = it;
+      }
+      mod_grid_sy  = (int)py;
+      mod_grid_s0  = (int)mod_grid_off;
+      mod_grid_lpy = py;
+      mod_grid_vel = 0.0f;
       return;
    }
-   rh = r[2 * 4 + 3];
-   if (rh <= 0)
-      return;
-   dy = (int)py - mod_grid_sy;
-   if (dy > rh * 3 / 10 || -dy > rh * 3 / 10)
-      mod_grid_moved = true;
-   if (mod_grid_moved)
    {
-      nc   = mod_reg_cand(input_driver_st.overlay_ptr, cand, MOD_REG_MAX);
-      maxs = (nc > 6) ? nc - 6 : 0;
-      ns   = mod_grid_s0 - dy / rh;
-      if (ns < 0)
-         ns = 0;
-      if (ns > maxs)
-         ns = maxs;
-      mod_grid_scroll = ns;
+      float dy = py - (float)mod_grid_sy;
+      if (dy > 14.0f || dy < -14.0f)
+         mod_grid_moved = true;
+      if (mod_grid_moved)
+      {
+         int mx = mod_grid_maxoff();
+         float no = (float)mod_grid_s0 - dy;
+         if (no < 0.0f)
+            no = 0.0f;
+         if (no > (float)mx)
+            no = (float)mx;
+         mod_grid_off = no;
+         mod_grid_vel = 0.6f * mod_grid_vel + 0.4f * (mod_grid_lpy - py);
+      }
+      mod_grid_lpy = py;
    }
 }
 
@@ -509,14 +529,18 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                      (gmode && ui == 0) ? fill_bg : (gmode ? fill_row : fill), NULL);
             }
             gfx_display_blend_end(dispctx, userdata);
-            /* miniaturas da grade de botoes */
+            /* lista rolavel dos botoes (com recorte) */
             {
+               extern int  input_overlay_editor_item_count(void);
+               extern bool input_overlay_editor_item(int i, const char **lab, const char **img);
+               extern void input_overlay_editor_grid_metrics(int *rh, int *pitch, int *off);
                extern bool image_texture_load(struct texture_image *img, const char *path);
                static char      mod_tex_path[16][1024];
                static uintptr_t mod_tex_id[16];
-               extern const char *input_overlay_editor_ui_img(int idx);
+               static unsigned  mod_tex_age[16];
+               static unsigned  mod_tex_clk = 0;
                int ti;
-               if (!input_overlay_editor_grid_open())
+               if (!gmode)
                {
                   for (ti = 0; ti < 16; ti++)
                      if (mod_tex_id[ti])
@@ -527,49 +551,97 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                      }
                }
                else
-               for (ui = 2; ui < un && ui < 8; ui++)
                {
-                  const char *ip = input_overlay_editor_ui_img(ui);
-                  int         sl, side;
-                  float       white[16] = {
-                     1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
-                     1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-                  if (!ip || ur[ui * 4 + 2] <= 0)
-                     continue;
-                  for (sl = 0; sl < 16; sl++)
-                     if (mod_tex_id[sl] && !strcmp(mod_tex_path[sl], ip))
-                        break;
-                  if (sl == 16)
+                  int cnt = input_overlay_editor_item_count();
+                  int rh, pitch, off, i;
+                  int vx = ur[8]  * lay_w / out_w;
+                  int vy = ur[9]  * lay_h / out_h;
+                  int vw = ur[10] * lay_w / out_w;
+                  int vh = ur[11] * lay_h / out_h;
+                  input_overlay_editor_grid_metrics(&rh, &pitch, &off);
+                  rh    = rh    * lay_h / out_h;
+                  pitch = pitch * lay_h / out_h;
+                  off   = off   * lay_h / out_h;
+                  mod_tex_clk++;
+                  gfx_widgets_flush_text(video_info->dims,
+                        &p_dispwidget->gfx_widget_fonts.regular);
+                  gfx_display_scissor_begin(p_disp, userdata, video_info->dims,
+                        vx, vy, VIDEO_SCALE_PACK(vw, vh));
+                  if (cnt == 0)
                   {
-                     struct texture_image ti_img;
-                     for (sl = 0; sl < 16 && mod_tex_id[sl]; sl++) {}
-                     if (sl == 16)
+                     gfx_display_draw_text(
+                           p_dispwidget->gfx_widget_fonts.regular.font,
+                           "Nada novo para adicionar",
+                           (float)(vx + vw / 2), (float)(vy + rh * 65 / 100),
+                           video_info->dims, 0xFFFFFFFF, TEXT_ALIGN_CENTER,
+                           1.0f, false, 0.0f, false);
+                     p_dispwidget->gfx_widget_fonts.regular.usage_count++;
+                  }
+                  for (i = 0; i < cnt; i++)
+                  {
+                     const char *lb = NULL, *ip = NULL;
+                     int iy = vy + i * pitch - off;
+                     int sl;
+                     if (iy + rh < vy || iy > vy + vh)
                         continue;
-                     memset(&ti_img, 0, sizeof(ti_img));
-                     ti_img.supports_rgba = (video_driver_get_disp_flags() & VIDEO_FLAG_USE_RGBA) ? true : false;
-                     if (image_texture_load(&ti_img, ip))
+                     if (!input_overlay_editor_item(i, &lb, &ip))
+                        continue;
+                     if (ip)
                      {
-                        if (!video_driver_texture_load(&ti_img,
-                              TEXTURE_FILTER_MIPMAP_LINEAR, &mod_tex_id[sl]))
-                           mod_tex_id[sl] = 0;
-                        image_texture_free(&ti_img);
+                        for (sl = 0; sl < 16; sl++)
+                           if (mod_tex_id[sl] && !strcmp(mod_tex_path[sl], ip))
+                              break;
+                        if (sl == 16)
+                        {
+                           struct texture_image ti_img;
+                           int old = 0;
+                           for (sl = 0; sl < 16 && mod_tex_id[sl]; sl++)
+                              if (mod_tex_age[sl] < mod_tex_age[old])
+                                 old = sl;
+                           if (sl == 16)
+                           {
+                              sl = old;
+                              video_driver_texture_unload(&mod_tex_id[sl]);
+                              mod_tex_id[sl] = 0;
+                           }
+                           memset(&ti_img, 0, sizeof(ti_img));
+                           ti_img.supports_rgba = (video_driver_get_disp_flags() & VIDEO_FLAG_USE_RGBA) ? true : false;
+                           if (image_texture_load(&ti_img, ip))
+                           {
+                              if (!video_driver_texture_load(&ti_img,
+                                    TEXTURE_FILTER_MIPMAP_LINEAR, &mod_tex_id[sl]))
+                                 mod_tex_id[sl] = 0;
+                              image_texture_free(&ti_img);
+                           }
+                           strlcpy(mod_tex_path[sl], ip, sizeof(mod_tex_path[sl]));
+                           if (!mod_tex_id[sl])
+                              mod_tex_path[sl][0] = '\0';
+                        }
+                        if (sl < 16 && mod_tex_id[sl])
+                        {
+                           float white[16] = {
+                              1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+                              1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+                           int side = rh * 80 / 100;
+                           mod_tex_age[sl] = mod_tex_clk;
+                           gfx_widgets_draw_icon(userdata, p_disp, video_info->dims,
+                                 VIDEO_SCALE_PACK(side, side), mod_tex_id[sl],
+                                 (float)(vx + rh * 10 / 100), (float)(iy + rh * 10 / 100),
+                                 0.0f, 1.0f, 0.0f, white);
+                        }
                      }
-                     strlcpy(mod_tex_path[sl], ip, sizeof(mod_tex_path[sl]));
-                     if (!mod_tex_id[sl])
-                        mod_tex_path[sl][0] = '\0';
+                     gfx_display_draw_text(
+                           p_dispwidget->gfx_widget_fonts.regular.font, lb,
+                           (float)(vx + rh * 110 / 100), (float)(iy + rh * 65 / 100),
+                           video_info->dims, 0xFFFFFFFF, TEXT_ALIGN_LEFT,
+                           1.0f, false, 0.0f, false);
+                     p_dispwidget->gfx_widget_fonts.regular.usage_count++;
                   }
-                  if (sl < 16 && mod_tex_id[sl])
-                  {
-                     int bx2 = ur[ui * 4 + 0] * lay_w / out_w;
-                     int by2 = ur[ui * 4 + 1] * lay_h / out_h;
-                     int bw2 = ur[ui * 4 + 2] * lay_w / out_w;
-                     int bh2 = ur[ui * 4 + 3] * lay_h / out_h;
-                     side = bh2 * 80 / 100;
-                     gfx_widgets_draw_icon(userdata, p_disp, video_info->dims,
-                           VIDEO_SCALE_PACK(side, side), mod_tex_id[sl],
-                           (float)(bx2 + bh2 * 10 / 100), (float)(by2 + bh2 * 10 / 100),
-                           0.0f, 1.0f, 0.0f, white);
-                  }
+                  gfx_widgets_flush_text(video_info->dims,
+                        &p_dispwidget->gfx_widget_fonts.regular);
+                  if (dispctx && dispctx->scissor_end)
+                     dispctx->scissor_end(userdata,
+                           gfx_display_output_dims(p_disp, video_info->dims));
                }
             }
             for (ui = 0; ui < un; ui++)

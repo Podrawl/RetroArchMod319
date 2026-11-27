@@ -20,18 +20,26 @@ static int  mod_reg_n       = 0;
 static int  mod_reg_sel     = 0;
 static bool mod_reg_ok      = false;
 static bool mod_grid_open   = false;   /* grade de botoes aberta */
-static int  mod_grid_scroll = 0;
 static bool mod_grid_down   = false;
 static bool mod_grid_moved  = false;
 static int  mod_grid_b      = -1;
+static int  mod_grid_item   = -1;
 static int  mod_grid_sy     = 0;
 static int  mod_grid_s0     = 0;
+static int  mod_grid_rh     = 40;
+static int  mod_grid_pitch  = 48;
+static int  mod_grid_vh     = 240;
+static float mod_grid_off   = 0.0f;
+static float mod_grid_vel   = 0.0f;
+static float mod_grid_lpy   = 0.0f;
 static char mod_reload_dst[PATH_MAX_LENGTH];
 static int  mod_reload_page = -1;
 static int  mod_reload_wait = 0;
 static int  mod_apply_left  = 0;
 static input_overlay_t *mod_reload_old = NULL;
 
+static void mod_nice_label(char *lab, size_t cap, const char *tgt);
+static void mod_grid_step(void);
 static void mod_build_group(struct overlay *pg, int t);
 static bool mod_is_analog(const struct overlay_desc *d);
 static bool mod_is_dir(const struct overlay_desc *d);
@@ -277,6 +285,16 @@ static void mod_reg_build(input_overlay_t *ol)
                   }
                }
             strlcpy(r->label, nm ? nm : "imagem", sizeof(r->label));
+            {
+               const char *tg = NULL;
+               for (g = 0; g < ng; g++)
+               {
+                  struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
+                  if (d->tgt[0])
+                     tg = d->tgt;
+               }
+               mod_nice_label(r->label, sizeof(r->label), tg);
+            }
             for (g = 0; g < ng; g++)
             {
                struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)srt[g]];
@@ -303,6 +321,46 @@ static void mod_reg_build(input_overlay_t *ol)
    memcpy(mod_grp, sv_grp, sizeof(sv_grp));
    mod_grp_n = sv_n;
    free(di);
+   {
+      /* botoes de troca de overlay (overlay_next) vao para o fim da lista */
+      struct mod_reg_e *tmp = (struct mod_reg_e*)malloc((size_t)mod_reg_n * sizeof(*tmp));
+      int e, w = 0;
+      if (tmp)
+      {
+         for (e = 0; e < mod_reg_n; e++)
+            if (strncmp(mod_reg[e].key, "overlay_next|", 13))
+               tmp[w++] = mod_reg[e];
+         for (e = 0; e < mod_reg_n; e++)
+            if (!strncmp(mod_reg[e].key, "overlay_next|", 13))
+               tmp[w++] = mod_reg[e];
+         memcpy(mod_reg, tmp, (size_t)mod_reg_n * sizeof(*tmp));
+         free(tmp);
+      }
+   }
+}
+
+/* nome mais legivel para o botao */
+static void mod_nice_label(char *lab, size_t cap, const char *tgt)
+{
+   static const char *map[][2] = {
+      { "l", "L1" }, { "r", "R1" }, { "l2", "L2" }, { "r2", "R2" },
+      { "l3", "L3" }, { "r3", "R3" }, { "menu_toggle", "Menu" },
+      { "start", "Start" }, { "select", "Select" },
+      { "a", "A" }, { "b", "B" }, { "x", "X" }, { "y", "Y" },
+      { "fast_forward", "Avanco rapido" }, { "hold_fast_forward", "Avanco rapido (segurar)" },
+      { "load_state", "Carregar estado" }, { "save_state", "Salvar estado" },
+      { "screenshot", "Captura de tela" }, { "exit_emulation", "Sair" },
+      { "analog_left", "Analogico esquerdo" }, { "analog_right", "Analogico direito" },
+      { "nul", "Imagem" }, { "imagem", "Imagem" }
+   };
+   size_t k;
+   (void)tgt;
+   for (k = 0; k < sizeof(map) / sizeof(map[0]); k++)
+      if (!strcmp(lab, map[k][0]))
+      {
+         strlcpy(lab, map[k][1], cap);
+         return;
+      }
 }
 
 /* candidatos: grupos que ainda nao estao na pagina atual */
@@ -734,20 +792,36 @@ bool input_overlay_editor_grid_open(void)
    return mod_grid_open && mod_editor_active;
 }
 
-const char *input_overlay_editor_ui_img(int idx)
+int input_overlay_editor_item_count(void)
+{
+   int cand[MOD_REG_MAX];
+   return mod_grid_open ? mod_reg_cand(input_driver_st.overlay_ptr, cand, MOD_REG_MAX) : 0;
+}
+
+void input_overlay_editor_grid_metrics(int *rh, int *pitch, int *off)
+{
+   *rh    = mod_grid_rh;
+   *pitch = mod_grid_pitch;
+   *off   = (int)mod_grid_off;
+}
+
+bool input_overlay_editor_item(int i, const char **lab, const char **img)
 {
    static char path[PATH_MAX_LENGTH];
    input_overlay_t *ol = input_driver_st.overlay_ptr;
    int cand[MOD_REG_MAX];
-   int nc, ci;
+   int nc;
    char *sl;
-   if (!mod_grid_open || !ol || idx < 2 || idx >= 8)
-      return NULL;
-   idx -= 2;
+   *lab = NULL;
+   *img = NULL;
+   if (!mod_grid_open || !ol || i < 0)
+      return false;
    nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
-   ci = mod_grid_scroll + idx;
-   if (ci >= nc || !mod_reg[cand[ci]].img[0])
-      return NULL;
+   if (i >= nc)
+      return false;
+   *lab = mod_reg[cand[i]].label;
+   if (!mod_reg[cand[i]].img[0])
+      return true;
    strlcpy(path, ol->path, sizeof(path));
    sl = strrchr(path, '/');
    if (!sl)
@@ -756,6 +830,7 @@ const char *input_overlay_editor_ui_img(int idx)
       sl[1] = '\0';
    else
       path[0] = '\0';
-   strlcat(path, mod_reg[cand[ci]].img, sizeof(path));
-   return path;
+   strlcat(path, mod_reg[cand[i]].img, sizeof(path));
+   *img = path;
+   return true;
 }
