@@ -2,7 +2,7 @@
  * Lista (registro) de grupos de botoes do .cfg, adicionar na pagina atual,
  * remover da pagina atual. Tudo e feito no TEXTO do .cfg (copia -mod) e o overlay
  * e recarregado a partir da copia; o original nunca e tocado. */
-#define MOD_REG_MAX 96
+#define MOD_REG_MAX 256
 struct mod_reg_e
 {
    char     key[400];
@@ -367,12 +367,12 @@ static void mod_nice_label(char *lab, size_t cap, const char *tgt)
 static int mod_reg_cand(input_overlay_t *ol, int *list, int cap)
 {
    int e, n = 0;
-   unsigned cur = ol ? (unsigned)ol->index : 0;
+   (void)ol;
    if (!mod_reg_ok)
       return 0;
+   /* todos os botoes do .cfg (de qualquer pagina), mesmo os que ja estao nesta */
    for (e = 0; e < mod_reg_n && n < cap; e++)
-      if (cur >= 64 || !((mod_reg[e].mask >> cur) & 1))
-         list[n++] = e;
+      list[n++] = e;
    return n;
 }
 
@@ -751,7 +751,7 @@ static void mod_struct_op(int op)
       int nc = mod_reg_cand(ol, cand, MOD_REG_MAX);
       if (nc <= 0)
       {
-         mod_toast("Nao ha botao novo para adicionar nesta pagina.");
+         mod_toast("Nao ha botoes na lista.");
          free(moved);
          return;
       }

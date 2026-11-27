@@ -571,7 +571,7 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                   {
                      gfx_display_draw_text(
                            p_dispwidget->gfx_widget_fonts.regular.font,
-                           "Nada novo para adicionar",
+                           "Nenhum botao encontrado no .cfg",
                            (float)(vx + vw / 2), (float)(vy + rh * 65 / 100),
                            video_info->dims, 0xFFFFFFFF, TEXT_ALIGN_CENTER,
                            1.0f, false, 0.0f, false);
