@@ -34,7 +34,6 @@ static bool mod_ui_held_g = false;
 static char mod_ui_title[96];
 static int mod_ui_hold_n = 0;
 static int mod_ui_timer  = 0;   /* quadros restantes com o painel visivel */
-static int mod_main_page = 0;   /* pagina marcada como principal (so memoria por enquanto) */
 
 /* 18 retangulos (x, y, largura, altura) em pixels; w=0 = escondido.
  * 0-3 altura/largura, 4 fechar, 5-6 pagina anterior/proxima, 7 titulo (toque = marcar como principal),
@@ -142,9 +141,20 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
          return n;
       }
       if (ol && ol->active)
+      {
+         /* so conta as paginas usadas (as "hidden..." nao aparecem) */
+         unsigned vis = 0, pos = 0, pi;
+         for (pi = 0; pi < (unsigned)ol->size; pi++)
+            if (strncmp(ol->overlays[pi].name, "hidden", 6) != 0)
+            {
+               vis++;
+               if (pi <= (unsigned)ol->index)
+                  pos = vis;
+            }
          snprintf(mod_ui_title, sizeof(mod_ui_title), "%s%s (%u de %u)",
-               ((unsigned)ol->index == (unsigned)mod_main_page) ? "* " : "",
-               ol->active->name, (unsigned)ol->index + 1, (unsigned)ol->size);
+               (mod_main_name[0] && !strcmp(ol->active->name, mod_main_name)) ? "* " : "",
+               ol->active->name, pos, vis);
+      }
       else
          snprintf(mod_ui_title, sizeof(mod_ui_title), "?");
       lab[7] = mod_ui_title;
@@ -208,8 +218,11 @@ static void mod_ui_press(int b)
    if (b == 7)
    {
       input_overlay_t *ol = input_driver_st.overlay_ptr;
-      if (ol)
-         mod_main_page = (int)ol->index;
+      if (ol && ol->active)
+      {
+         strlcpy(mod_main_name, ol->active->name, sizeof(mod_main_name));
+         mod_toast("Pagina principal marcada. Vale depois de Salvar.");
+      }
       return;
    }
    if (b == 5 || b == 6)
@@ -738,6 +751,11 @@ trocar(
     "         float ddx = (x - mod_editor_grab_dx) - t->x_shift;\n"
     "         if (fabsf(x - mod_tap_x) > 0.02f || fabsf(y - mod_tap_y) > 0.02f)\n"
     "            mod_tap_n = 0;\n",
+)
+trocar(
+    INPUT,
+    "   input_overlay_set_eightway_diagonal_sensitivity();\n\n   /* Trigger viewport recalculation",
+    "   input_overlay_set_eightway_diagonal_sensitivity();\n   if (!(ol->flags & INPUT_OVERLAY_IS_OSK))\n      mod_apply_main_page(ol);\n\n   /* Trigger viewport recalculation",
 )
 trocar(
     INPUT,

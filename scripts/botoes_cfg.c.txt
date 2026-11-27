@@ -726,7 +726,7 @@ static void mod_reload_check(input_overlay_t *ol)
       mod_rm_confirm  = false;
       mod_editor_sel  = -1;
       mod_grp_n       = 0;
-      if (mod_reload_page > 0 && (size_t)mod_reload_page < ol->size
+      if (mod_reload_page >= 0 && (size_t)mod_reload_page < ol->size
             && (unsigned)mod_reload_page != (unsigned)ol->index)
       {
          ol->next_index = (unsigned)mod_reload_page;

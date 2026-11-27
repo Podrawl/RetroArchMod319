@@ -6,6 +6,7 @@ static size_t      mod_snap_n  = 0;
 static const void *mod_snap_id = NULL;
 static char        mod_snap_path[PATH_MAX_LENGTH];
 static char        mod_last_saved[PATH_MAX_LENGTH];
+static char        mod_main_name[64];             /* pagina principal (nome); vai no .cfg como mod_main_page */
 static char        mod_origin[PATH_MAX_LENGTH];   /* .cfg de onde veio o arquivo temporario */
 
 static bool mod_is_temp(const char *path)
@@ -24,6 +25,40 @@ static void mod_toast(const char *m)
 {
    runloop_msg_queue_push(m, strlen(m), 1, 480, true, NULL,
          MESSAGE_QUEUE_ICON_DEFAULT, MESSAGE_QUEUE_CATEGORY_INFO);
+}
+
+/* procura a linha: mod_main_page = "nome" */
+static bool mod_find_main(const char *buf, size_t len, char *out, size_t cap)
+{
+   const char *p = buf, *end = buf + len;
+   while (p < end)
+   {
+      const char *eol = (const char*)memchr(p, '\n', (size_t)(end - p));
+      size_t      n   = eol ? (size_t)(eol - p) : (size_t)(end - p);
+      if (n > 13 && !strncmp(p, "mod_main_page", 13))
+      {
+         char t[256];
+         const char *q;
+         size_t m = n < sizeof(t) - 1 ? n : sizeof(t) - 1;
+         memcpy(t, p, m);
+         t[m] = '\0';
+         q = strchr(t, '=');
+         if (q)
+         {
+            size_t l;
+            q++;
+            while (*q == ' ' || *q == '\t' || *q == '"')
+               q++;
+            strlcpy(out, q, cap);
+            l = strlen(out);
+            while (l > 0 && (out[l - 1] == ' ' || out[l - 1] == '\r' || out[l - 1] == '"'))
+               out[--l] = '\0';
+            return out[0] != '\0';
+         }
+      }
+      p += eol ? n + 1 : n;
+   }
+   return false;
 }
 
 /* Guarda os valores originais de todas as paginas (uma vez por overlay carregado). */
@@ -54,6 +89,45 @@ static void mod_snap_take(input_overlay_t *ol)
    mod_snap_n  = n;
    mod_snap_id = ol->overlays;
    strlcpy(mod_snap_path, ol->path, sizeof(mod_snap_path));
+   /* pagina principal gravada no .cfg */
+   mod_main_name[0] = '\0';
+   {
+      void   *mb = NULL;
+      int64_t ml = 0;
+      if (ol->path[0] && filestream_read_file(ol->path, &mb, &ml) && mb && ml > 0)
+         mod_find_main((const char*)mb, (size_t)ml, mod_main_name, sizeof(mod_main_name));
+      free(mb);
+   }
+}
+
+/* Ao carregar qualquer overlay (jogo, troca de .cfg): vai para a pagina marcada como principal */
+static void mod_apply_main_page(input_overlay_t *ol)
+{
+   void   *mb = NULL;
+   int64_t ml = 0;
+   char    nm[64];
+   size_t  i;
+   bool    tmp = false;
+   if (!ol || !ol->overlays || !ol->path[0])
+      return;
+   if (!filestream_read_file(ol->path, &mb, &ml) || !mb || ml <= 0)
+   {
+      free(mb);
+      return;
+   }
+   nm[0] = '\0';
+   if (mod_find_main((const char*)mb, (size_t)ml, nm, sizeof(nm)))
+      for (i = 0; i < ol->size; i++)
+         if (!strcmp(ol->overlays[i].name, nm))
+         {
+            if (i != (size_t)ol->index)
+            {
+               ol->next_index = (unsigned)i;
+               command_event(CMD_EVENT_OVERLAY_NEXT, &tmp);
+            }
+            break;
+         }
+   free(mb);
 }
 
 static bool mod_cfg_is_mod(const char *path)
@@ -128,6 +202,11 @@ static char *mod_apply_moves(input_overlay_t *ol, const char *buf, size_t len,
       size_t      adv = eol ? n + 1 : n;
       bool        done = false;
       char        t[1024];
+      if (mod_main_name[0] && n > 13 && !strncmp(p, "mod_main_page", 13))
+      {
+         p += adv;
+         continue;
+      }
       unsigned    o, d;
       int         nn = 0;
       if (n > 0 && n < sizeof(t))
@@ -201,6 +280,12 @@ static char *mod_apply_moves(input_overlay_t *ol, const char *buf, size_t len,
          olen += adv;
       }
       p += adv;
+   }
+   if (mod_main_name[0])
+   {
+      if (olen > 0 && out[olen - 1] != '\n')
+         out[olen++] = '\n';
+      olen += (size_t)snprintf(out + olen, cap - olen, "mod_main_page = \"%s\"\n", mod_main_name);
    }
    *olen_out    = olen;
    *changed_out = changed;
