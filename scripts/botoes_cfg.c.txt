@@ -230,7 +230,12 @@ static void mod_reg_build(input_overlay_t *ol)
             struct mod_di *d = &di[mod_pg_off(ol, (unsigned)p) + (size_t)mod_grp[g]];
             srt[g]                      = mod_grp[g];
             seen[mod_grp[g]]            = true;
-            snprintf(ms[g], sizeof(ms[g]), "%s|%s|", d->name, d->img);
+            /* botoes iguais com imagens de tamanhos diferentes (L1, L1_smaller...) contam como um so;
+             * so "nul", "null" e "overlay_next" se distinguem pela imagem */
+            if (!strcmp(d->name, "nul") || !strcmp(d->name, "null") || !strcmp(d->name, "overlay_next"))
+               snprintf(ms[g], sizeof(ms[g]), "%s|%s|", d->name, d->img);
+            else
+               snprintf(ms[g], sizeof(ms[g]), "%s||", d->name);
          }
          seen[i] = true;
          qsort(ms, (size_t)ng, sizeof(ms[0]), mod_str_cmp);
@@ -673,7 +678,7 @@ static char *mod_cfg_remove(const char *buf, size_t len, unsigned P,
 /* nome da aba: nome do .cfg sem extensao e sem -mod */
 static void mod_cfg_system_name(input_overlay_t *ol, char *o, size_t cap)
 {
-   const char *b = ol ? path_basename(ol->path) : "";
+   const char *b = ol ? path_basename(mod_eff_path(ol->path)) : "";
    size_t l;
    strlcpy(o, b, cap);
    l = strlen(o);

@@ -568,6 +568,7 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                         &p_dispwidget->gfx_widget_fonts.regular);
                   gfx_display_scissor_begin(p_disp, userdata, video_info->dims,
                         vx, vy, VIDEO_SCALE_PACK(vw, vh));
+                  gfx_display_blend_begin(dispctx, userdata);
                   if (cnt == 0)
                   {
                      gfx_display_draw_text(
@@ -638,6 +639,7 @@ DESENHO = r'''   /* MOD: botoes do editor de overlay (tamanho da tela do jogo) *
                            1.0f, false, 0.0f, false);
                      p_dispwidget->gfx_widget_fonts.regular.usage_count++;
                   }
+                  gfx_display_blend_end(dispctx, userdata);
                   gfx_widgets_flush_text(video_info->dims,
                         &p_dispwidget->gfx_widget_fonts.regular);
                   if (dispctx && dispctx->scissor_end)
