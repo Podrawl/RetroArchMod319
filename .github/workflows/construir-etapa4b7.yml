@@ -1,0 +1,81 @@
+name: Etapa 4b7 - adicionar sem salvar
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.3.1"
+      - name: Baixar código oficial
+        run: |
+          git clone --depth 1 -q https://github.com/libretro/RetroArch.git ra
+          git -C ra fetch --depth 1 -q origin 0247447b60c4a9905fc5dd353ab7b3114b23768f
+          git -C ra checkout -q FETCH_HEAD
+          git -C ra log -1 --format="%H %s"
+      - name: Instalar NDK e ferramentas pedidas
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;29.0.14206865" "build-tools;36.0.0" "platforms;android-36" > /dev/null || true
+      - name: Trocar nome do pacote e do app (só isso)
+        run: |
+          python3 -I scripts/patch_pacote.py ra/pkg/android/phoenix/build.gradle
+          python3 -I scripts/patch_etapa1.py ra
+          python3 -I scripts/patch_etapa2.py ra
+          python3 -I scripts/patch_etapa2c.py ra
+          python3 -I scripts/patch_etapa2d.py ra
+          python3 -I scripts/patch_voltar_abre_menu.py ra
+          python3 -I scripts/patch_analogico.py ra
+          python3 -I scripts/patch_copias.py ra
+          cd ra && git diff --stat > ../01-ANALISE_diff.txt; cat ../01-ANALISE_diff.txt
+      - name: Compilar
+        run: |
+          set +e
+          START=$(date +%s)
+          cd ra/pkg/android/phoenix
+          G=gradle; [ -x ./gradlew ] && G=./gradlew
+          $G assembleAarch64Release --no-daemon \
+            -PRELEASE_STORE_FILE=$GITHUB_WORKSPACE/chaves/retroarchmod.jks \
+            -PRELEASE_STORE_PASSWORD=senha-de-teste \
+            -PRELEASE_KEY_ALIAS=teste \
+            -PRELEASE_KEY_PASSWORD=senha-de-teste > $GITHUB_WORKSPACE/build.log 2>&1
+          echo "codigo=$? tempo=$(( $(date +%s) - START ))" > $GITHUB_WORKSPACE/tempo.txt
+          exit 0
+      - name: Conferir APK
+        run: |
+          set +e
+          mkdir -p 01-ANALISE/etapa4b7
+          APK=$(find ra/pkg/android/phoenix -name "*.apk" | head -1)
+          echo "$APK" > 01-ANALISE/etapa4b7/apk.txt
+          cp tempo.txt 01-ANALISE/etapa4b7/tempo.txt
+          cp 01-ANALISE_diff.txt 01-ANALISE/etapa4b7/diff.txt
+          (cd ra && git diff) > 01-ANALISE/etapa4b7/mudancas.diff
+          grep -n -i 'error:\|FAILED\|undefined' build.log | head -40 > 01-ANALISE/etapa4b7/erros.txt; tail -40 build.log > 01-ANALISE/etapa4b7/fim-do-log.txt
+          if [ -n "$APK" ]; then
+            cp "$APK" retroarch-mod-etapa4b7.apk
+            AAPT2=$(ls $ANDROID_HOME/build-tools/36.0.0/aapt2)
+            $AAPT2 dump badging "$APK" 2>&1 | grep -E "^package:|application-label:|sdkVersion|native-code" > 01-ANALISE/etapa4b7/badging.txt
+            $ANDROID_HOME/build-tools/36.0.0/apksigner verify --print-certs "$APK" 2>&1 | head -5 > 01-ANALISE/etapa4b7/assinatura.txt
+            ls -l "$APK" > 01-ANALISE/etapa4b7/tamanho.txt
+          fi
+          grep -rn "com.retroarch" ra/pkg/android/phoenix/AndroidManifest.xml | head -20 > 01-ANALISE/etapa4b7/manifest-com-retroarch.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RetroArchMod-etapa4b7
+          path: retroarch-mod-etapa4b7.apk
+          if-no-files-found: warn
+      - name: Guardar relatórios
+        run: |
+          git config user.name "bot"; git config user.email "bot@example.com"
+          git add 01-ANALISE/etapa4b7
+          git commit -m "Resultado da etapa 1" && git pull --rebase -q && git push

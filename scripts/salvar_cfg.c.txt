@@ -6,6 +6,19 @@ static size_t      mod_snap_n  = 0;
 static const void *mod_snap_id = NULL;
 static char        mod_snap_path[PATH_MAX_LENGTH];
 static char        mod_last_saved[PATH_MAX_LENGTH];
+static char        mod_origin[PATH_MAX_LENGTH];   /* .cfg de onde veio o arquivo temporario */
+
+static bool mod_is_temp(const char *path)
+{
+   const char *b = path_basename(path);
+   return !strcmp(b, "_mod_temp_.cfg");
+}
+
+/* o .cfg "de verdade" que o usuario esta editando (o temporario aponta para a origem) */
+static const char *mod_eff_path(const char *loaded)
+{
+   return (mod_is_temp(loaded) && mod_origin[0]) ? mod_origin : loaded;
+}
 
 static void mod_toast(const char *m)
 {
@@ -218,8 +231,8 @@ static void mod_save_cfg(bool overwrite)
    dst[0] = '\0';
    if (overwrite)
    {
-      if (mod_cfg_is_mod(ol->path))
-         strlcpy(dst, ol->path, sizeof(dst));
+      if (mod_cfg_is_mod(mod_eff_path(ol->path)))
+         strlcpy(dst, mod_eff_path(ol->path), sizeof(dst));
       else if (mod_last_saved[0] && mod_cfg_is_mod(mod_last_saved))
          strlcpy(dst, mod_last_saved, sizeof(dst));
       else
@@ -230,7 +243,7 @@ static void mod_save_cfg(bool overwrite)
       }
    }
    else
-      mod_new_dst(ol->path, dst, sizeof(dst));
+      mod_new_dst(mod_eff_path(ol->path), dst, sizeof(dst));
    out = mod_apply_moves(ol, (const char*)buf, (size_t)len, &olen, &changed, ex, sizeof(ex));
    if (!out)
    {
@@ -246,7 +259,7 @@ static void mod_save_cfg(bool overwrite)
       free(chk);
       strlcpy(mod_last_saved, dst, sizeof(mod_last_saved));
       snprintf(msg, sizeof(msg), "Salvo: %s a partir de %s (%u botoes alterados%s)%s",
-            path_basename(dst), path_basename(ol->path), (unsigned)changed, ex,
+            path_basename(dst), path_basename(mod_eff_path(ol->path)), (unsigned)changed, ex,
             ok ? "" : " [conferencia do arquivo FALHOU]");
    }
    else

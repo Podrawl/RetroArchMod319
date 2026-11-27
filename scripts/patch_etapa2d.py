@@ -121,7 +121,8 @@ int input_overlay_editor_ui(int *r, const char **lab, int max)
       mod_grid_open = false;
       mod_grid_down = false;
    }
-   if (mod_editor_active && (mod_reload_wait > 0 || mod_apply_left > 0))
+   mod_temp_tick();
+   if (mod_reload_wait > 0 || mod_apply_left > 0)
       mod_reload_check(input_driver_st.overlay_ptr);
    if (!mod_editor_active || mod_editor_wait_close || mod_ui_timer <= 0 || max < 18)
       return 0;
